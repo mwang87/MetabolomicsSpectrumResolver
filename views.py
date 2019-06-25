@@ -26,9 +26,26 @@ def example_spectrum_grab():
     spectrum = parsetext(response.text)
     return json.dumps(spectrum)
 
+@app.route('/spectrum/',methods=['GET'])
+def renderspectrum():
+    # todo - parameterise URL
+    task = request.args.get('task')
+    filename = request.args.get('file')
+    scan = request.args.get('scan')
+    # task = 'c95481f0c53d42e78a61bf899e9f9adb'
+    # filename = 'FILE-%3Espectra%2Fspecs_ms.mgf'
+    # scan = '1941'
+    request_url = 'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?task={}&invoke=annotatedSpectrumImageText&block=0&file={}&scan={}&peptide=*..*&force=false&_=1561457932129'.format(
+        task,filename,scan
+    )
+    response = requests.get(request_url)
+    spectrum = parsetext(response.text)
+    return render_template('spectrum.html',peaks=json.dumps(spectrum['peaks']))
+
 @app.route('/lori',methods=['GET'])
 def lorikeet_example():
-    return render_template('example_use.html')
+    # render the lorikeet example - ensures that js and css is being imported
+    return render_template('example_use.html',text = "boo")
 
 def parsetext(text):
     lines = text.split('\n')
