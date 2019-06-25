@@ -54,6 +54,7 @@ def renderspectrum():
     spectrum_plotter_plot.spectrum(spec)
     plt.savefig("test.svg")
 
+    
     spectrum_svg = open('test.svg').read()
 
 
