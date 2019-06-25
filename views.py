@@ -20,6 +20,7 @@ def testapi():
     return json.dumps(return_obj)
 
 @app.route('/test', methods=['GET'])
+# to be deleted - just simon experimenting..
 def example_spectrum_grab():
     request_url = 'https://massive.ucsd.edu/ProteoSAFe/DownloadResultFile?invoke=annotatedSpectrumImageText&block=0&file=FILE-%3EMSV000079514%2Fccms_peak%2FRAW%2FFrontal%20cortex%2FLTQ-Orbitrap%20Elite%2F85%2FAdult_Frontalcortex_bRP_Elite_85_f09.mzXML&scan=17555&peptide=*..*&uploadfile=True&task=4f2ac74ea114401787a7e96e143bb4a1'
     response = requests.get(request_url)
@@ -28,13 +29,9 @@ def example_spectrum_grab():
 
 @app.route('/spectrum/',methods=['GET'])
 def renderspectrum():
-    # todo - parameterise URL
     task = request.args.get('task')
     filename = request.args.get('file')
     scan = request.args.get('scan')
-    # task = 'c95481f0c53d42e78a61bf899e9f9adb'
-    # filename = 'FILE-%3Espectra%2Fspecs_ms.mgf'
-    # scan = '1941'
     request_url = 'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?task={}&invoke=annotatedSpectrumImageText&block=0&file={}&scan={}&peptide=*..*&force=false&_=1561457932129'.format(
         task,filename,scan
     )
