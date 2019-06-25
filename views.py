@@ -8,6 +8,8 @@ import csv
 import json
 import uuid
 import requests
+import qrcode
+
 
 from spectrum_utils import spectrum as spectrum_plotter_spectrum
 from spectrum_utils import plot as spectrum_plotter_plot
@@ -53,10 +55,7 @@ def renderspectrum():
 
     spectrum_plotter_plot.spectrum(spec)
     plt.savefig("test.svg")
-
-    
     spectrum_svg = open('test.svg').read()
-
 
     return render_template('spectrum.html', \
         peaks=json.dumps(spectrum['peaks']), \
@@ -65,6 +64,20 @@ def renderspectrum():
         filename=filename, \
         scan=scan,
         spectrum_svg=spectrum_svg)
+
+@app.route("/qrcode")
+def generateQRImage():
+    task = request.args.get('task')
+    filename = request.args.get('file')
+    scan = request.args.get('scan')
+
+    identifier = "mzdata:GNPSTASK-%s:%s:scan:%s" % (task, filename, scan)
+
+    #QR Code Rendering
+    qr_image = qrcode.make(identifier)
+    qr_image.save("image.png")
+
+    return send_file("image.png")
 
 @app.route('/lori',methods=['GET'])
 def lorikeet_example():
