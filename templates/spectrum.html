@@ -1,0 +1,30 @@
+(% extends "minimal.html" %)
+
+(% block content %)
+
+<div>
+        <div id="lorikeet"></div>
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+    
+        /* render the spectrum with the given options */
+        $("#lorikeet").specview({   
+                                    peaks: peaks,
+                                    showIonTable: false,
+                                    showViewingOptions: true,
+                                    showOptionsTable: false,
+                                    showSequenceInfo: false,
+                                    labelImmoniumIons: false,
+                                    labelPrecursorPeak: false,
+                                });	
+    
+    });
+    
+    var peaks = (( peaks ));
+</script>
+
+(% endblock %)
