@@ -36,12 +36,12 @@ def renderspectrum():
         task,filename,scan
     )
 
-    print(request_url)
     response = requests.get(request_url)
     spectrum = parsetext(response.text)
 
-    print(spectrum)
-    return render_template('spectrum.html',peaks=json.dumps(spectrum['peaks']))
+    identifer = "mzdata:GNPSTASK-%s:%s:scan:%s" % (task, filename, scan)
+
+    return render_template('spectrum.html',peaks=json.dumps(spectrum['peaks']), identifier=identifer, task=task, filename=filename, scan=scan)
 
 @app.route('/lori',methods=['GET'])
 def lorikeet_example():
