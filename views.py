@@ -9,6 +9,11 @@ import json
 import uuid
 import requests
 
+from spectrum_utils import spectrum as spectrum_plotter_spectrum
+from spectrum_utils import plot as spectrum_plotter_plot
+import matplotlib.pyplot as plt
+
+
 @app.route('/', methods=['GET'])
 def renderhomepage():
     return render_template('index.html')
@@ -39,9 +44,26 @@ def renderspectrum():
     response = requests.get(request_url)
     spectrum = parsetext(response.text)
 
-    identifer = "mzdata:GNPSTASK-%s:%s:scan:%s" % (task, filename, scan)
+    identifier = "mzdata:GNPSTASK-%s:%s:scan:%s" % (task, filename, scan)
 
-    return render_template('spectrum.html',peaks=json.dumps(spectrum['peaks']), identifier=identifer, task=task, filename=filename, scan=scan)
+    masses, intentisities = zip(*spectrum['peaks'])
+
+    spec = spectrum_plotter_spectrum.MsmsSpectrum(identifier, 0.0, 0.0,
+                            masses, intentisities)
+
+    spectrum_plotter_plot.spectrum(spec)
+    plt.savefig("test.svg")
+
+    spectrum_svg = open('test.svg').read()
+
+
+    return render_template('spectrum.html', \
+        peaks=json.dumps(spectrum['peaks']), \
+        identifier=identifier, \
+        task=task, \
+        filename=filename, \
+        scan=scan,
+        spectrum_svg=spectrum_svg)
 
 @app.route('/lori',methods=['GET'])
 def lorikeet_example():

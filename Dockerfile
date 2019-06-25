@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 MAINTAINER Mingxun Wang "mwang87@gmail.com"
 
 RUN apt-get update -y
@@ -10,6 +10,8 @@ RUN pip3 install requests
 RUN pip3 install requests-cache
 RUN pip3 install gunicorn
 RUN pip3 install xmltodict
+RUN pip3 install qrcode[pil]
+RUN pip3 install spectrum_utils
 
 COPY . /app
 WORKDIR /app
