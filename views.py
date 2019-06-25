@@ -32,11 +32,15 @@ def renderspectrum():
     task = request.args.get('task')
     filename = request.args.get('file')
     scan = request.args.get('scan')
-    request_url = 'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?task={}&invoke=annotatedSpectrumImageText&block=0&file={}&scan={}&peptide=*..*&force=false&_=1561457932129'.format(
+    request_url = 'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?task={}&invoke=annotatedSpectrumImageText&block=0&file=FILE->{}&scan={}&peptide=*..*&force=false&_=1561457932129'.format(
         task,filename,scan
     )
+
+    print(request_url)
     response = requests.get(request_url)
     spectrum = parsetext(response.text)
+
+    print(spectrum)
     return render_template('spectrum.html',peaks=json.dumps(spectrum['peaks']))
 
 @app.route('/lori',methods=['GET'])
