@@ -16,6 +16,8 @@ from spectrum_utils import plot as spectrum_plotter_plot
 import matplotlib.pyplot as plt
 
 
+SERVER = 'http://localhost:5000'
+
 @app.route('/', methods=['GET'])
 def renderhomepage():
     return render_template('index.html')
@@ -36,45 +38,74 @@ def example_spectrum_grab():
 
 @app.route('/spectrum/',methods=['GET'])
 def renderspectrum():
-    task = request.args.get('task')
-    filename = request.args.get('file')
-    scan = request.args.get('scan')
-    request_url = 'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?task={}&invoke=annotatedSpectrumImageText&block=0&file=FILE->{}&scan={}&peptide=*..*&force=false&_=1561457932129'.format(
-        task,filename,scan
-    )
+    usi = request.args.get('usi')
+    if usi.split(':')[1].startswith('GNPSTASK'):
+        spectrum = parse_gnps(usi)
 
-    response = requests.get(request_url)
-    spectrum = parsetext(response.text)
-
-    identifier = "mzdata:GNPSTASK-%s:%s:scan:%s" % (task, filename, scan)
-
-    masses, intentisities = zip(*spectrum['peaks'])
-
-    spec = spectrum_plotter_spectrum.MsmsSpectrum(identifier, 0.0, 0.0,
-                            masses, intentisities)
-
-    spectrum_plotter_plot.spectrum(spec)
-    plt.savefig("test.svg")
-    spectrum_svg = open('test.svg').read()
+    identifier = usi
 
     return render_template('spectrum.html', \
         peaks=json.dumps(spectrum['peaks']), \
         identifier=identifier, \
-        task=task, \
-        filename=filename, \
-        scan=scan,
-        spectrum_svg=spectrum_svg)
+        )
 
-@app.route("/qrcode")
+
+def parse_gnps(usi):
+    tokens = usi.split(':')
+    task= tokens[1].split('-')[1]
+    filename = tokens[2]
+    scan = tokens[4]
+    request_url = 'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?task={}&invoke=annotatedSpectrumImageText&block=0&file=FILE->{}&scan={}&peptide=*..*&force=false&_=1561457932129'.format(
+        task,filename,scan
+    )
+    print(request_url)
+
+    response = requests.get(request_url)
+    spectrum = parsetext(response.text)
+    return spectrum
+
+
+@app.route("/svg/")
+def generateSVG():
+    usi = request.args.get('usi')
+    if usi.split(':')[1].startswith('GNPSTASK'):
+        spectrum = parse_gnps(usi)
+
+    masses, intentisities = zip(*spectrum['peaks'])
+
+    fig = plt.figure(figsize=(10,6))
+
+    spec = spectrum_plotter_spectrum.MsmsSpectrum(usi, 0.0, 0.0,
+                            masses, intentisities)
+
+    
+    spectrum_plotter_plot.spectrum(spec)
+    
+    fig.suptitle(usi,fontsize=10)
+    # ax = plt.gca()
+    # h = plt.text(0.9,1.01,'usi link',url=SERVER+'/spectrum/?usi=' + usi ,transform=ax.transAxes)
+    plt.savefig("/temp/test.svg")
+
+    spectrum_svg = open('/temp/test.svg').read()
+    spectrum_svg = spectrum_svg.replace('white-space:pre;','')
+    with open("/temp/test.svg",'w') as f:
+        f.write(spectrum_svg)
+    return send_file("/temp/test.svg",mimetype='image/svg+xml')
+
+
+
+@app.route("/qrcode/")
 def generateQRImage():
-    task = request.args.get('task')
-    filename = request.args.get('file')
-    scan = request.args.get('scan')
+    # task = request.args.get('task')
+    # filename = request.args.get('file')
+    # scan = request.args.get('scan')
 
-    identifier = "mzdata:GNPSTASK-%s:%s:scan:%s" % (task, filename, scan)
+    # identifier = "mzdata:GNPSTASK-%s:%s:scan:%s" % (task, filename, scan)
+
+    identifier = request.args.get('usi')
 
     #QR Code Rendering
-    qr_image = qrcode.make(identifier)
+    qr_image = qrcode.make(SERVER + '/spectrum/?usi=' + identifier)
     qr_image.save("image.png")
 
     return send_file("image.png")
