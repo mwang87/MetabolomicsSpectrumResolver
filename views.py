@@ -9,13 +9,16 @@ import json
 import uuid
 import requests
 import qrcode
+import requests
+import requests_cache
+
 
 
 from spectrum_utils import spectrum as spectrum_plotter_spectrum
 from spectrum_utils import plot as spectrum_plotter_plot
 import matplotlib.pyplot as plt
 
-
+requests_cache.install_cache('demo_cache',expire_after=300)
 SERVER = 'http://localhost:5000'
 
 @app.route('/', methods=['GET'])
@@ -67,11 +70,30 @@ def parse_gnps(usi):
 
 @app.route("/svg/")
 def generateSVG():
+
+    try:
+        xmin = float(request.args.get('xmin',None))
+    except:
+        xmin = None
+
+    try:
+        xmax = float(request.args.get('xmax',None))
+    except:
+        xmax = None
+
     usi = request.args.get('usi')
     if usi.split(':')[1].startswith('GNPSTASK'):
         spectrum = parse_gnps(usi)
 
+
+    if 'rescale' in request.args:
+        if xmin:
+            spectrum['peaks'] = list(filter(lambda x: x[0]>=xmin,spectrum['peaks']))
+        if xmax:
+            spectrum['peaks'] = list(filter(lambda x: x[0]<=xmax,spectrum['peaks']))
     masses, intentisities = zip(*spectrum['peaks'])
+
+    
 
     fig = plt.figure(figsize=(10,6))
 
@@ -79,8 +101,19 @@ def generateSVG():
                             masses, intentisities)
 
     
+
+
     spectrum_plotter_plot.spectrum(spec)
+    old_x_range = plt.xlim()
+    new_x_range = list(old_x_range)
+    if xmin:
+        new_x_range[0] = xmin
+    if xmax:
+        new_x_range[1] = xmax
     
+    plt.xlim(new_x_range)
+
+
     fig.suptitle(usi,fontsize=10)
     # ax = plt.gca()
     # h = plt.text(0.9,1.01,'usi link',url=SERVER+'/spectrum/?usi=' + usi ,transform=ax.transAxes)
