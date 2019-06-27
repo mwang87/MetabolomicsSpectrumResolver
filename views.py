@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 
 requests_cache.install_cache('demo_cache',expire_after=300)
 SERVER = 'http://localhost:5000'
+MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 
 @app.route('/', methods=['GET'])
 def renderhomepage():
@@ -44,14 +45,31 @@ def renderspectrum():
     usi = request.args.get('usi')
     if usi.split(':')[1].startswith('GNPSTASK'):
         spectrum = parse_gnps(usi)
+    elif usi.split(':')[1].startswith('MS2LDATASK'):
+        spectrum = parse_ms2lda(usi)
 
     identifier = usi
-
+    print(spectrum['peaks'])
     return render_template('spectrum.html', \
         peaks=json.dumps(spectrum['peaks']), \
         identifier=identifier, \
         )
 
+
+def parse_ms2lda(usi):
+    tokens = usi.split(':')
+    experiment_id = tokens[1].split('-')[1]
+    filename = tokens[2]
+    document_id = tokens[4]
+    request_url = MS2LDA_SERVER + 'get_doc/?experiment_id={}&document_id={}'.format(
+        experiment_id,
+        document_id,
+    )
+    response = requests.get(request_url)
+    peak_list = [(m,i) for m,i in json.loads(response.text)]
+    peak_list.sort(key = lambda x: x[0])
+    spectrum = {'peaks':peak_list}
+    return spectrum
 
 def parse_gnps(usi):
     tokens = usi.split(':')
@@ -84,6 +102,8 @@ def generateSVG():
     usi = request.args.get('usi')
     if usi.split(':')[1].startswith('GNPSTASK'):
         spectrum = parse_gnps(usi)
+    elif usi.split(':')[1].startswith('MS2LDATASK'):
+        spectrum = parse_ms2lda(usi)
 
 
     if 'rescale' in request.args:
