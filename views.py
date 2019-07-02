@@ -185,13 +185,16 @@ def generateSVG():
     fig.suptitle(usi,fontsize=10)
     # ax = plt.gca()
     # h = plt.text(0.9,1.01,'usi link',url=SERVER+'/spectrum/?usi=' + usi ,transform=ax.transAxes)
-    plt.savefig("/temp/test.svg")
 
-    spectrum_svg = open('/temp/test.svg').read()
+    output_filename = os.path.join("/temp", str(uuid.uuid4()) + ".svg")
+
+    plt.savefig(output_filename)
+
+    spectrum_svg = open(output_filename).read()
     spectrum_svg = spectrum_svg.replace('white-space:pre;','')
-    with open("/temp/test.svg",'w') as f:
+    with open(output_filename,'w') as f:
         f.write(spectrum_svg)
-    return send_file("/temp/test.svg",mimetype='image/svg+xml')
+    return send_file(output_filename,mimetype='image/svg+xml')
 
 
 
