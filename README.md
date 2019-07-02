@@ -31,6 +31,9 @@ Supported USI Types
 
 [mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](http://localhost:5000/spectrum/?usi=mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
 
+
+## Deprecated Material
+
 Test URLs for GNPS plotting:
 
 task c95481f0c53d42e78a61bf899e9f9adb
