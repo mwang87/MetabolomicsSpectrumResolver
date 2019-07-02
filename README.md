@@ -27,7 +27,6 @@ Supported USI Types
 
 [mzspec:GNPSLIBRARY:CCMSLIB00005436077](http://localhost:5000/spectrum/?usi=mzspec:GNPSLIBRARY:CCMSLIB00005436077)
 
-
 ### ProteoXchange Repository Data
 
 [mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](http://localhost:5000/spectrum/?usi=mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
