@@ -17,7 +17,7 @@ Supported USI Types
 
 ### MS2LDA
 
-[mzdata:MS2LDATASK-38:blah:document:43062](http://localhost:5000/spectrum/?usi=mzdata:MS2LDATASK-38:blah:document:43062)
+[mzspec:MS2LDATASK-38:blah:document:43062](http://localhost:5000/spectrum/?usi=mzspec:MS2LDATASK-38:blah:document:43062)
 
 ### GNPS Molecular Networking Spectra
 
