@@ -18,6 +18,7 @@ from spectrum_utils import plot as spectrum_plotter_plot
 import matplotlib.pyplot as plt
 
 requests_cache.install_cache('demo_cache',expire_after=300)
+
 SERVER = 'http://localhost:5000'
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 
@@ -43,9 +44,10 @@ def renderspectrum():
         spectrum = parse_gnps_library(usi)
     elif usi_identifier.startswith('MS2LDATASK'):
         spectrum = parse_ms2lda(usi)
-
+    elif usi_identifier.startswith('PXD000561'):
+        spectrum = parse_MSV_PXD(usi)
+    
     identifier = usi
-    print(spectrum['peaks'])
     return render_template('spectrum.html', \
         peaks=json.dumps(spectrum['peaks']), \
         identifier=identifier, \
@@ -103,6 +105,29 @@ def parse_gnps_library(usi):
 
     return spectrum
 
+#parsign MSV or PXD library
+def parse_MSV_PXD(usi):
+    tokens = usi.split(':')
+
+    dataset_identifier = tokens[1]
+    filename = tokens[2]
+    scan = tokens[4]
+
+    lookup_url = "https://massive.ucsd.edu/ProteoSAFe/QuerySpectrum?id=mzspec:%s:%s:scan:%s" % (dataset_identifier, filename, scan)
+    lookup_response = requests.get(lookup_url)
+
+    lookup_dict = lookup_response.json()
+    for found_scan in lookup_dict["row_data"]:
+        if "mzML" in found_scan["file_descriptor"] or "mzXML" in found_scan["file_descriptor"] or "MGF" in found_scan["file_descriptor"] or "mgf" in found_scan["file_descriptor"]:
+            request_url = 'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?task={}&invoke=annotatedSpectrumImageText&block=0&file=FILE->{}&scan={}&peptide=*..*&force=false&uploadfile=True'.format(
+                "4f2ac74ea114401787a7e96e143bb4a1",found_scan["file_descriptor"],scan
+            )
+
+            spectrum_response = requests.get(request_url)
+
+            spectrum = parsing.parse_gnps_peak_text(spectrum_response.text)
+            return spectrum
+    return None
 
 @app.route("/svg/")
 def generateSVG():
@@ -127,6 +152,8 @@ def generateSVG():
         spectrum = parse_gnps_library(usi)
     elif usi_identifier.startswith('MS2LDATASK'):
         spectrum = parse_ms2lda(usi)
+    elif usi_identifier.startswith('PXD000561'):
+        spectrum = parse_MSV_PXD(usi)
 
 
     if 'rescale' in request.args:
