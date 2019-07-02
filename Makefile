@@ -1,11 +1,11 @@
 build:
-	docker build -t flasktemplate .
+	docker build -t metabolomicsusi .
 
 bash:
-	docker run -it -p 5000:5000 --rm --name flasktemplate flasktemplate bash
+	docker run -it -p 5000:5000 --rm --name metabolomicsusi metabolomicsusi bash
 
 interactive:
-	docker run -it -p 5000:5000 -v $(PWD)/temp:/temp --rm --name flasktemplate flasktemplate /app/run_server.sh
+	docker run -it -p 5000:5000 -v $(PWD)/temp:/temp --rm --name metabolomicsusi metabolomicsusi /app/run_server.sh
 
 server:
-	docker run -it -p 5011:5000 --rm --name flasktemplate flasktemplate /app/run_server.sh
+	docker run -d -p 5011:5000 --rm --name metabolomicsusi metabolomicsusi /app/run_server.sh
