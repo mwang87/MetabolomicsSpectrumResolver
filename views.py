@@ -11,8 +11,7 @@ import requests
 import qrcode
 import requests
 import requests_cache
-
-
+import parsing
 
 from spectrum_utils import spectrum as spectrum_plotter_spectrum
 from spectrum_utils import plot as spectrum_plotter_plot
@@ -32,20 +31,17 @@ def testapi():
     return_obj["status"] = "fail"
     return json.dumps(return_obj)
 
-@app.route('/test', methods=['GET'])
-# to be deleted - just simon experimenting..
-def example_spectrum_grab():
-    request_url = 'https://massive.ucsd.edu/ProteoSAFe/DownloadResultFile?invoke=annotatedSpectrumImageText&block=0&file=FILE-%3EMSV000079514%2Fccms_peak%2FRAW%2FFrontal%20cortex%2FLTQ-Orbitrap%20Elite%2F85%2FAdult_Frontalcortex_bRP_Elite_85_f09.mzXML&scan=17555&peptide=*..*&uploadfile=True&task=4f2ac74ea114401787a7e96e143bb4a1'
-    response = requests.get(request_url)
-    spectrum = parsetext(response.text)
-    return json.dumps(spectrum)
-
 @app.route('/spectrum/',methods=['GET'])
 def renderspectrum():
     usi = request.args.get('usi')
-    if usi.split(':')[1].startswith('GNPSTASK'):
-        spectrum = parse_gnps(usi)
-    elif usi.split(':')[1].startswith('MS2LDATASK'):
+
+    usi_identifier = usi.split(":")[1]
+
+    if usi_identifier.startswith('GNPSTASK'):
+        spectrum = parse_gnps_task(usi)
+    elif usi_identifier.startswith('GNPSLIBRARY'):
+        spectrum = parse_gnps_library(usi)
+    elif usi_identifier.startswith('MS2LDATASK'):
         spectrum = parse_ms2lda(usi)
 
     identifier = usi
@@ -55,7 +51,7 @@ def renderspectrum():
         identifier=identifier, \
         )
 
-
+#parsign MS2LDA in ms2lda.org
 def parse_ms2lda(usi):
     tokens = usi.split(':')
     experiment_id = tokens[1].split('-')[1]
@@ -71,9 +67,11 @@ def parse_ms2lda(usi):
     spectrum = {'peaks':peak_list}
     return spectrum
 
-def parse_gnps(usi):
+#parsign GNPS clustered spectra in Molecular Networking
+def parse_gnps_task(usi):
     tokens = usi.split(':')
-    task= tokens[1].split('-')[1]
+
+    task = tokens[1].split('-')[1]
     filename = tokens[2]
     scan = tokens[4]
     request_url = 'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?task={}&invoke=annotatedSpectrumImageText&block=0&file=FILE->{}&scan={}&peptide=*..*&force=false&_=1561457932129'.format(
@@ -82,7 +80,27 @@ def parse_gnps(usi):
     print(request_url)
 
     response = requests.get(request_url)
-    spectrum = parsetext(response.text)
+    spectrum = parsing.parse_gnps_peak_text(response.text)
+    return spectrum
+
+#parsign GNPS library
+def parse_gnps_library(usi):
+    tokens = usi.split(':')
+
+    identifier= tokens[2]
+    
+    request_url = "https://gnps.ucsd.edu/ProteoSAFe/SpectrumCommentServlet?SpectrumID=%s" % (identifier)
+
+    print(request_url)
+
+    response = requests.get(request_url)
+
+    peaks = json.loads(response.json()["spectruminfo"]["peaks_json"])    
+
+    spectrum = {}
+    spectrum['peaks'] = peaks
+    spectrum['n_peaks'] = len(peaks)
+
     return spectrum
 
 
@@ -100,9 +118,14 @@ def generateSVG():
         xmax = None
 
     usi = request.args.get('usi')
-    if usi.split(':')[1].startswith('GNPSTASK'):
-        spectrum = parse_gnps(usi)
-    elif usi.split(':')[1].startswith('MS2LDATASK'):
+
+    usi_identifier = usi.split(":")[1]
+
+    if usi_identifier.startswith('GNPSTASK'):
+        spectrum = parse_gnps_task(usi)
+    elif usi_identifier.startswith('GNPSLIBRARY'):
+        spectrum = parse_gnps_library(usi)
+    elif usi_identifier.startswith('MS2LDATASK'):
         spectrum = parse_ms2lda(usi)
 
 
@@ -121,8 +144,6 @@ def generateSVG():
                             masses, intentisities)
 
     
-
-
     spectrum_plotter_plot.spectrum(spec)
     old_x_range = plt.xlim()
     new_x_range = list(old_x_range)
@@ -163,24 +184,33 @@ def generateQRImage():
 
     return send_file("image.png")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/lori',methods=['GET'])
 def lorikeet_example():
     # render the lorikeet example - ensures that js and css is being imported
     return render_template('example_use.html',text = "boo")
 
-def parsetext(text):
-    lines = text.split('\n')
-    # first 8 lines are header
-    lines = lines[8:]
-    peaks = []
-    for line in lines:
-        tokens = line.split()
-        if len(tokens) == 0: # final line?
-            continue 
-        peaks.append((float(tokens[0]),float(tokens[1])))
-    peaks.sort(key = lambda x: x[0]) # make sure sorted by m/z
-    spectrum = {}
-    spectrum['peaks'] = peaks
-    spectrum['n_peaks'] = len(peaks)
-    return spectrum
+
     
+
+
+@app.route('/test', methods=['GET'])
+# to be deleted - just simon experimenting..
+def example_spectrum_grab():
+    request_url = 'https://massive.ucsd.edu/ProteoSAFe/DownloadResultFile?invoke=annotatedSpectrumImageText&block=0&file=FILE-%3EMSV000079514%2Fccms_peak%2FRAW%2FFrontal%20cortex%2FLTQ-Orbitrap%20Elite%2F85%2FAdult_Frontalcortex_bRP_Elite_85_f09.mzXML&scan=17555&peptide=*..*&uploadfile=True&task=4f2ac74ea114401787a7e96e143bb4a1'
+    response = requests.get(request_url)
+    spectrum = parsetext(response.text)
+    return json.dumps(spectrum)
