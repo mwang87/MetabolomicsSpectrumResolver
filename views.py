@@ -24,7 +24,7 @@ MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 
 @app.route('/', methods=['GET'])
 def renderhomepage():
-    return render_template('index.html')
+    return render_template('homepage.html')
 
 @app.route('/heartbeat', methods=['GET'])
 def testapi():
