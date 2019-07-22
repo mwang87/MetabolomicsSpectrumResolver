@@ -1,0 +1,47 @@
+(% extends "minimal.html" %)
+
+(% block content %)
+
+<div class="row">
+    <div class="col-sm"></div>
+    <div class="col-sm text-center">
+        <h2>Metabolomics Spectrum Identifier Resolver</h2>
+    </div>
+    <div class="col-sm"></div>
+</div>
+
+<div class="row">
+    <div class="col-sm"></div>
+    <div class="col-sm text-center">
+            Helps to resolve Universal Spectrum Identifiers (USI) for metabolomics data (e.g. GNPS Spectral Libraries, GNPS Molecular Networking Spectra, MS2LDA Motifs, MassIVE public spectra)
+    </div>
+    <div class="col-sm"></div>
+</div>
+
+<br>
+<hr>
+
+<div id="displayer">
+    <div class="row">
+    <div class="col-sm"></div>
+    <div class="col-sm">
+        <div class="text-center" >
+            <input type="text" class="form-control" name="identifier" id="identifier" placeholder="Enter Spectrum Identifier">
+        </div>
+    </div>
+    <div class="col-sm">
+        <div class="text-center" >
+            <button id="analyzebutton" class="btn btn-primary" onclick="myFunction()" >Resolve Identifier</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+        function myFunction() {
+            remote_url = "/spectrum?usi=" + $("#identifier").val()
+            window.location.assign(remote_url);
+        }
+</script>
+
+(% endblock %)
