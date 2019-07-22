@@ -53,7 +53,7 @@ def renderspectrum():
         identifier=identifier, \
         )
 
-#parsign MS2LDA in ms2lda.org
+#parsing MS2LDA in ms2lda.org
 def parse_ms2lda(usi):
     tokens = usi.split(':')
     experiment_id = tokens[1].split('-')[1]
@@ -69,7 +69,7 @@ def parse_ms2lda(usi):
     spectrum = {'peaks':peak_list}
     return spectrum
 
-#parsign GNPS clustered spectra in Molecular Networking
+#parsing GNPS clustered spectra in Molecular Networking
 def parse_gnps_task(usi):
     tokens = usi.split(':')
 
@@ -85,7 +85,7 @@ def parse_gnps_task(usi):
     spectrum = parsing.parse_gnps_peak_text(response.text)
     return spectrum
 
-#parsign GNPS library
+#parsing GNPS library
 def parse_gnps_library(usi):
     tokens = usi.split(':')
 
@@ -105,7 +105,7 @@ def parse_gnps_library(usi):
 
     return spectrum
 
-#parsign MSV or PXD library
+#parsing MSV or PXD library
 def parse_MSV_PXD(usi):
     tokens = usi.split(':')
 
@@ -222,7 +222,7 @@ def generateQRImage():
 
 
 
-
+### Testing Below ###
 
 
 
