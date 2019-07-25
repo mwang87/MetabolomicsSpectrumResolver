@@ -35,22 +35,11 @@ def testapi():
 @app.route('/spectrum/',methods=['GET'])
 def renderspectrum():
     usi = request.args.get('usi')
+    spectrum = parse_USI(usi)
 
-    usi_identifier = usi.split(":")[1]
-
-    if usi_identifier.startswith('GNPSTASK'):
-        spectrum = parse_gnps_task(usi)
-    elif usi_identifier.startswith('GNPSLIBRARY'):
-        spectrum = parse_gnps_library(usi)
-    elif usi_identifier.startswith('MS2LDATASK'):
-        spectrum = parse_ms2lda(usi)
-    elif usi_identifier.startswith('PXD000561'):
-        spectrum = parse_MSV_PXD(usi)
-    
-    identifier = usi
     return render_template('spectrum.html', \
         peaks=json.dumps(spectrum['peaks']), \
-        identifier=identifier, \
+        identifier=usi, \
         )
 
 #parsing MS2LDA in ms2lda.org
@@ -129,6 +118,48 @@ def parse_MSV_PXD(usi):
             return spectrum
     return None
 
+def parse_MTBLS(usi):
+    tokens = usi.split(':')
+
+    dataset_identifier = tokens[1]
+    filename = tokens[2]
+    scan = tokens[4]
+
+    all_datasets = requests.get("https://massive.ucsd.edu/ProteoSAFe/datasets_json.jsp").json()["datasets"]
+    massive_identifier = None
+
+    for dataset in all_datasets:
+        if dataset_identifier in dataset["title"]:
+            massive_identifier = dataset["dataset"]
+            break
+
+    if massive_identifier == None:
+        return None
+
+    return parse_MSV_PXD("mzspec:%s:%s:scan:%s" % (massive_identifier, filename, scan))
+    
+def parse_MetabolomicsWorkbench(usi):
+    tokens = usi.split(':')
+
+    dataset_identifier = tokens[1]
+    filename = tokens[2]
+    scan = tokens[4]
+
+    all_datasets = requests.get("https://massive.ucsd.edu/ProteoSAFe/datasets_json.jsp").json()["datasets"]
+    massive_identifier = None
+
+    for dataset in all_datasets:
+        if dataset_identifier in dataset["title"]:
+            massive_identifier = dataset["dataset"]
+            break
+
+    if massive_identifier == None:
+        return None
+
+    return parse_MSV_PXD("mzspec:%s:%s:scan:%s" % (massive_identifier, filename, scan))
+    
+
+
 @app.route("/svg/")
 def generateSVG():
 
@@ -143,17 +174,7 @@ def generateSVG():
         xmax = None
 
     usi = request.args.get('usi')
-
-    usi_identifier = usi.split(":")[1]
-
-    if usi_identifier.startswith('GNPSTASK'):
-        spectrum = parse_gnps_task(usi)
-    elif usi_identifier.startswith('GNPSLIBRARY'):
-        spectrum = parse_gnps_library(usi)
-    elif usi_identifier.startswith('MS2LDATASK'):
-        spectrum = parse_ms2lda(usi)
-    elif usi_identifier.startswith('PXD000561'):
-        spectrum = parse_MSV_PXD(usi)
+    spectrum = parse_USI(usi)
 
 
     if 'rescale' in request.args:
@@ -217,7 +238,25 @@ def generateQRImage():
 
 
 
+def parse_USI(usi):
+    usi_identifier = usi.split(":")[1]
 
+    if usi_identifier.startswith('GNPSTASK'):
+        spectrum = parse_gnps_task(usi)
+    elif usi_identifier.startswith('GNPSLIBRARY'):
+        spectrum = parse_gnps_library(usi)
+    elif usi_identifier.startswith('MS2LDATASK'):
+        spectrum = parse_ms2lda(usi)
+    elif usi_identifier.startswith('PXD'):
+        spectrum = parse_MSV_PXD(usi)
+    elif usi_identifier.startswith('MSV'):
+        spectrum = parse_MSV_PXD(usi)
+    elif usi_identifier.startswith('MTBLS'):
+        spectrum = parse_MTBLS(usi)
+    elif usi_identifier.startswith('ST'):
+        spectrum = parse_MetabolomicsWorkbench(usi)
+        
+    return spectrum
 
 
 

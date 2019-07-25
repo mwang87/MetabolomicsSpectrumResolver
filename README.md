@@ -31,6 +31,19 @@ Supported USI Types
 
 [mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](http://localhost:5000/spectrum/?usi=mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
 
+### MassIVE/GNPS Repository Data
+
+[mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](http://localhost:5000/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
+
+### Metabolights Repository Data
+
+[mzspec:MTBLS38:(-)-epigallocatechin:scan:2](http://localhost:5000/spectrum/?usi=mzspec:MTBLS38:(-)-epigallocatechin:scan:2)
+[mzspec:MSV000082791:(-)-epigallocatechin:scan:2](http://localhost:5000/spectrum/?usi=mzspec:MSV000082791:(-)-epigallocatechin:scan:2)
+
+### Metabolomics Workbench Repository Data
+
+[mzspec:ST000003:iPSC-T1R1:scan:3](http://localhost:5000/spectrum/?usi=mzspec:ST000003:iPSC-T1R1:scan:3)
+[mzspec:MSV000082680:iPSC-T1R1:scan:3](http://localhost:5000/spectrum/?usi=mzspec:MSV000082680:iPSC-T1R1:scan:3)
 
 ## Deprecated Material
 
