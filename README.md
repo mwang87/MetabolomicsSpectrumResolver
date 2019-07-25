@@ -34,6 +34,7 @@ Supported USI Types
 ### MassIVE/GNPS Repository Data
 
 [mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](http://localhost:5000/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
+[mzdata:MSV000078556:m0__RA10_01_2335:scan:604](http://localhost:5000/spectrum/?usi=mzdata:MSV000078556:m0__RA10_01_2335:scan:604)
 
 ### Metabolights Repository Data
 
