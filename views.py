@@ -158,34 +158,16 @@ def parse_MetabolomicsWorkbench(usi):
 
     return parse_MSV_PXD("mzspec:%s:%s:scan:%s" % (massive_identifier, filename, scan))
     
-
-
-@app.route("/svg/")
-def generateSVG():
-
-    try:
-        xmin = float(request.args.get('xmin',None))
-    except:
-        xmin = None
-
-    try:
-        xmax = float(request.args.get('xmax',None))
-    except:
-        xmax = None
-
-    usi = request.args.get('usi')
+def generate_figure(usi,format,xmin = None,xmax = None, rescale = False, label = False):
     spectrum = parse_USI(usi)
 
-
-    if 'rescale' in request.args:
+    if rescale:
         if xmin:
             spectrum['peaks'] = list(filter(lambda x: x[0]>=xmin,spectrum['peaks']))
         if xmax:
             spectrum['peaks'] = list(filter(lambda x: x[0]<=xmax,spectrum['peaks']))
+
     masses, intentisities = zip(*spectrum['peaks'])
-
-    
-
     fig = plt.figure(figsize=(10,6))
 
     spec = spectrum_plotter_spectrum.MsmsSpectrum(usi, 0.0, 0.0,
@@ -201,21 +183,64 @@ def generateSVG():
         new_x_range[1] = xmax
     
     plt.xlim(new_x_range)
-
-
     fig.suptitle(usi,fontsize=10)
-    # ax = plt.gca()
-    # h = plt.text(0.9,1.01,'usi link',url=SERVER+'/spectrum/?usi=' + usi ,transform=ax.transAxes)
 
-    output_filename = os.path.join("/temp", str(uuid.uuid4()) + ".svg")
-
+    if label:
+        labels = generate_labels(spectrum['peaks'],xmin,xmax)
+        for label in labels:
+            plt.text(label[0],label[1],label[2])
+    
+    output_filename = os.path.join("/temp", str(uuid.uuid4()) + "." + format)
     plt.savefig(output_filename)
 
+    return output_filename
+
+    
+   
+@app.route("/png/")
+def generatePNG():
+    usi = request.args.get('usi')
+    xmin,xmax,rescale,label = get_plot_pars(request)
+    output_filename = generate_figure(usi,'png',xmin = xmin,xmax = xmax,rescale = rescale,label = label)
+    return send_file(output_filename,mimetype='image/png')
+
+def get_plot_pars(request):
+    try:
+        xmin = float(request.args.get('xmin',None))
+    except:
+        xmin = None
+
+    try:
+        xmax = float(request.args.get('xmax',None))
+    except:
+        xmax = None
+    
+    if 'rescale' in request.args:
+        rescale = True
+    else:
+        rescale = False
+
+    if 'label' in request.args:
+        label = True
+    else:
+        label = False
+    
+    return xmin,xmax,rescale,label
+
+@app.route("/svg/")
+def generateSVG():
+    usi = request.args.get('usi')
+    xmin,xmax,rescale,label = get_plot_pars(request)
+    output_filename = generate_figure(usi,'svg',xmin = xmin,xmax = xmax,rescale = rescale, label = label)
+    fix_svg(output_filename)    
+    return send_file(output_filename,mimetype='image/svg+xml')
+
+def fix_svg(output_filename):
+    # remove the whitespace issue
     spectrum_svg = open(output_filename).read()
     spectrum_svg = spectrum_svg.replace('white-space:pre;','')
     with open(output_filename,'w') as f:
         f.write(spectrum_svg)
-    return send_file(output_filename,mimetype='image/svg+xml')
 
 @app.route("/json/")
 def peak_json():
@@ -234,6 +259,19 @@ def peak_csv():
             writer.writerow(line)
     return send_file(output_filename,mimetype='text/csv',as_attachment=True,attachment_filename="peaks.csv")
 
+# crude peak label generation!
+def generate_labels(spectra,xmin,xmax):
+    if xmin:
+        spectra = list(filter(lambda x: x[0] >= xmin,spectra))
+    if xmax:
+        spectra = list(filter(lambda x: x[0] <= xmax,spectra))
+    base_intensity = max([s[1] for s in spectra])
+    spectra = list(filter(lambda x: x[1] >= base_intensity*0.5,spectra))
+    print(spectra)
+    labels = []
+    for s in spectra:
+        labels.append((s[0],0.01+s[1]/base_intensity,str(s[0])))
+    return labels
 
 @app.route("/qrcode/")
 def generateQRImage():
