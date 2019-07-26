@@ -46,6 +46,16 @@ Supported USI Types
 [mzspec:ST000003:iPSC-T1R1:scan:3](http://localhost:5000/spectrum/?usi=mzspec:ST000003:iPSC-T1R1:scan:3)
 [mzspec:MSV000082680:iPSC-T1R1:scan:3](http://localhost:5000/spectrum/?usi=mzspec:MSV000082680:iPSC-T1R1:scan:3)
 
+## Additional arguments for plotting views
+
+xmin: minimum mz value
+xmax: maximum mz value
+rescale: include 'rescale' if you want the plot to rescale such that the biggest peak within [xmin,xmax] is plotted as 100%
+label: include 'label' if you want the plot to label peaks that have intensity >50% of the biggest peak within [xmin,xmax]
+
+e.g. 
+[mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](http://localhost:5000/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555&xmin=400&xmax=500&rescale&label)
+
 ## Deprecated Material
 
 Test URLs for GNPS plotting:
