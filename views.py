@@ -217,6 +217,22 @@ def generateSVG():
         f.write(spectrum_svg)
     return send_file(output_filename,mimetype='image/svg+xml')
 
+@app.route("/json/")
+def peak_json():
+    usi = request.args.get('usi')
+    spectrum = parse_USI(usi)
+    return jsonify(spectrum)
+
+@app.route("/csv/")
+def peak_csv():
+    usi = request.args.get('usi')
+    spectrum = parse_USI(usi)
+    output_filename = os.path.join("/temp",str(uuid.uuid4()) + ".csv")
+    with open(output_filename,'w') as f:
+        writer = csv.writer(f)
+        for line in spectrum['peaks']:
+            writer.writerow(line)
+    return send_file(output_filename,mimetype='text/csv',as_attachment=True,attachment_filename="peaks.csv")
 
 
 @app.route("/qrcode/")
