@@ -19,6 +19,10 @@ Supported USI Types
 
 [mzspec:MS2LDATASK-38:document:43062](http://localhost:5000/spectrum/?usi=mzspec:MS2LDATASK-38:document:43062)
 
+### MOTIFDB
+
+[mzspec:MOTIFDB:motif:171163](http://localhost:5000/spectrum/?usi=mzspec:MOTIFDB:motif:171163)
+
 ### GNPS Molecular Networking Spectra
 
 [mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943](http://localhost:5000/spectrum/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943)
