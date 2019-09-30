@@ -47,7 +47,7 @@ def parse_ms2lda(usi):
     tokens = usi.split(':')
     experiment_id = tokens[1].split('-')[1]
     filename = tokens[2]
-    document_id = tokens[4]
+    document_id = tokens[3]
     request_url = MS2LDA_SERVER + 'get_doc/?experiment_id={}&document_id={}'.format(
         experiment_id,
         document_id,
