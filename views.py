@@ -21,6 +21,7 @@ requests_cache.install_cache('demo_cache',expire_after=300)
 
 SERVER = 'http://localhost:5000'
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
+MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
 
 @app.route('/', methods=['GET'])
 def renderhomepage():
@@ -57,6 +58,19 @@ def parse_ms2lda(usi):
     peak_list.sort(key = lambda x: x[0])
     spectrum = {'peaks':peak_list}
     return spectrum
+
+#parsing motifdb from ms2lda.org
+def parse_motifdb(usi):
+    # e.g. mzspec:MOTIFDB:motif:motif_id
+    tokens = usi.split(':')
+    motif_id = tokens[3]
+    request_url = MOTIFDB_SERVER + 'get_motif/{}'.format(motif_id)
+    response = requests.get(request_url)
+    peak_list = [(m,i) for m,i in json.loads(response.text)]
+    peak_list.sort(key = lambda x: x[0])
+    spectrum = {'peaks':peak_list}
+    return spectrum
+
 
 #parsing GNPS clustered spectra in Molecular Networking
 def parse_gnps_task(usi):
@@ -309,6 +323,8 @@ def parse_USI(usi):
         spectrum = parse_MTBLS(usi)
     elif usi_identifier.startswith('ST'):
         spectrum = parse_MetabolomicsWorkbench(usi)
+    elif usi_identifier.startswith('MOTIFDB'):
+        spectrum = parse_motifdb(usi)
         
     return spectrum
 
