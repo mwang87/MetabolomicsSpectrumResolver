@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 requests_cache.install_cache('demo_cache',expire_after=300)
 
-SERVER = 'http://localhost:5000'
+SERVER = 'https://metabolomics-usi.ucsd.edu'
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
 
