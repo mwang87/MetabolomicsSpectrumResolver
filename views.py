@@ -275,16 +275,20 @@ def peak_csv():
 
 # crude peak label generation!
 def generate_labels(spectra,xmin,xmax):
+    overall_base_intensity = max([s[1] for s in spectra])
     if xmin:
         spectra = list(filter(lambda x: x[0] >= xmin,spectra))
     if xmax:
         spectra = list(filter(lambda x: x[0] <= xmax,spectra))
     base_intensity = max([s[1] for s in spectra])
+
+
+
     spectra = list(filter(lambda x: x[1] >= base_intensity*0.5,spectra))
     print(spectra)
     labels = []
     for s in spectra:
-        labels.append((s[0],0.01+s[1]/base_intensity,str(s[0])))
+        labels.append((s[0],0.01+s[1]/overall_base_intensity,str(s[0])))
     return labels
 
 @app.route("/qrcode/")
