@@ -1,0 +1,17 @@
+version: '3'
+services:
+  metabolomicsusi-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: metabolomicsusi-web
+    ports:
+    - "5087:5000"
+    volumes:
+        - ./output:/output:rw
+    networks:
+      - default
+    restart: on-failure
+    command: /app/run_server.sh
+
+
