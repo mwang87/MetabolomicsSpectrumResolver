@@ -19,9 +19,9 @@ class CustomFlask(Flask):
 app = CustomFlask(__name__)
 app.config.from_object(__name__)
 
-app.config['UPLOAD_FOLDER'] = './tempuploads'
+app.config['TEMPFOLDER'] = '/tmp'
 
 try:
-    os.mkdir(app.config['UPLOAD_FOLDER'])
+    os.mkdir(app.config['TEMPFOLDER'])
 except:
-    print("Cannot Create", app.config['UPLOAD_FOLDER'])
+    print("Cannot Create", app.config['TEMPFOLDER'])
