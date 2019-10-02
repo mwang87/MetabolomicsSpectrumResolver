@@ -204,7 +204,7 @@ def generate_figure(usi,format,xmin = None,xmax = None, rescale = False, label =
         for label in labels:
             plt.text(label[0],label[1],label[2])
     
-    output_filename = os.path.join("/temp", str(uuid.uuid4()) + "." + format)
+    output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + "." + format)
     plt.savefig(output_filename)
 
     return output_filename
@@ -266,7 +266,7 @@ def peak_json():
 def peak_csv():
     usi = request.args.get('usi')
     spectrum = parse_USI(usi)
-    output_filename = os.path.join("/temp",str(uuid.uuid4()) + ".csv")
+    output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + ".csv")
     with open(output_filename,'w') as f:
         writer = csv.writer(f)
         for line in spectrum['peaks']:
