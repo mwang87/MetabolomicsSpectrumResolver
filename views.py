@@ -200,9 +200,9 @@ def generate_figure(usi,format,xmin = None,xmax = None, rescale = False, label =
     fig.suptitle(usi,fontsize=10)
 
     if label:
-        labels = generate_labels(spectrum['peaks'],xmin,xmax)
+        labels = generate_labels_emma(spectrum['peaks'],xmin,xmax)
         for label in labels:
-            plt.text(label[0],label[1],label[2])
+            plt.text(label[0],label[1],label[2],rotation=90)
     
     output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + "." + format)
     plt.savefig(output_filename)
@@ -289,6 +289,42 @@ def generate_labels(spectra,xmin,xmax):
     labels = []
     for s in spectra:
         labels.append((s[0],0.01+s[1]/overall_base_intensity,str(s[0])))
+    return labels
+
+def generate_labels_emma(spectra,xmin,xmax):
+    if xmin and xmax:
+        exclusion_mz = (xmax - xmin) / 20
+    else:
+        local_xmin = min([s[0] for s in spectra])
+        local_xmax = max([s[0] for s in spectra])
+        exclusion_mz = (local_xmax - local_xmin) / 20
+    overall_base_intensity = max([s[1] for s in spectra])
+    if xmin:
+        spectra = list(filter(lambda x: x[0] >= xmin,spectra))
+    if xmax:
+        spectra = list(filter(lambda x: x[0] <= xmax,spectra))
+    base_intensity = max([s[1] for s in spectra])
+
+
+    # sort spectra in descending intensity
+    labeled_mz = []
+    labels = []
+    spectra.sort(key = lambda x: x[1],reverse = True)
+    for mz,intensity in spectra:
+        if intensity < base_intensity*0.1:
+            break
+        else:
+            # check exclusion
+            excluded = False
+            for m in labeled_mz:
+                if mz >= m - exclusion_mz and mz <= m + exclusion_mz:
+                    excluded = True
+                    break
+            if not excluded:
+                labeled_mz.append(mz)
+                labels.append((mz,0.01+intensity/overall_base_intensity,"{:.2f}".format(mz)))
+            
+
     return labels
 
 @app.route("/qrcode/")
