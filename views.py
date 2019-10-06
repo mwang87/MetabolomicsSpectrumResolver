@@ -292,12 +292,18 @@ def generate_labels(spectra,xmin,xmax):
     return labels
 
 def generate_labels_emma(spectra,xmin,xmax):
-    if xmin and xmax:
-        exclusion_mz = (xmax - xmin) / 20
-    else:
+    if not xmin:
         local_xmin = min([s[0] for s in spectra])
+    else:
+        local_xmin = xmin
+    
+    if not xmax:
         local_xmax = max([s[0] for s in spectra])
-        exclusion_mz = (local_xmax - local_xmin) / 20
+    else:
+        local_xmax = xmax
+    
+    exclusion_mz = (local_xmax - local_xmin) / 20 # max 20 labels..
+        
     overall_base_intensity = max([s[1] for s in spectra])
     if xmin:
         spectra = list(filter(lambda x: x[0] >= xmin,spectra))
