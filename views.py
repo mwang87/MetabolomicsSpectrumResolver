@@ -328,7 +328,7 @@ def generate_labels_emma(spectra,xmin,xmax):
                     break
             if not excluded:
                 labeled_mz.append(mz)
-                labels.append((mz,0.01+intensity/overall_base_intensity,"{:.2f}".format(mz)))
+                labels.append((mz,0.01+intensity/overall_base_intensity,"{:.4f}".format(mz)))
             
 
     return labels
