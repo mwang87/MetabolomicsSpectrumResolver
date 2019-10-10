@@ -204,6 +204,7 @@ def generate_figure(usi,format,xmin = None,xmax = None, rescale = False, label =
         for label in labels:
             plt.text(label[0],label[1],label[2],rotation=70)
     
+    
     output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + "." + format)
     plt.savefig(output_filename)
 
