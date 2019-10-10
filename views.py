@@ -217,7 +217,7 @@ def generate_figure(usi, extension, **kwargs):
 def generatePNG():
     usi = request.args.get('usi')
     plot_pars = get_plot_pars(request)
-    output_filename = generate_figure(usi,'png',plot_pars)
+    output_filename = generate_figure(usi, 'png', **plot_pars)
     return send_file(output_filename,mimetype='image/png')
 
 def get_plot_pars(request):
@@ -258,8 +258,8 @@ def get_plot_pars(request):
 def generateSVG():
     usi = request.args.get('usi')
     plot_pars = get_plot_pars(request)
-    output_filename = generate_figure(usi,'svg',plot_pars)
-    fix_svg(output_filename)    
+    output_filename = generate_figure(usi, 'svg', **plot_pars)
+    fix_svg(output_filename)
     return send_file(output_filename,mimetype='image/svg+xml')
 
 def fix_svg(output_filename):
