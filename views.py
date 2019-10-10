@@ -182,40 +182,36 @@ def parse_MetabolomicsWorkbench(usi):
 
     return parse_MSV_PXD("mzspec:%s:%s:scan:%s" % (massive_identifier, filename, scan))
 
-def generate_figure(usi,format,plot_pars):
-    spectrum = parse_USI(usi)
 
+def generate_figure(usi, extension, **kwargs):
     fig = plt.figure(figsize=(10, 6))
 
-    masses, intensities = zip(*spectrum['peaks'])
+    masses, intensities = zip(*parse_USI(usi)['peaks'])
     spec = spectrum_plotter_spectrum.MsmsSpectrum(
         usi, 0.0, 0, masses, intensities)
     spec.scale_intensity(max_intensity=1)
 
-    if plot_pars['rescale']:
-        spec.set_mz_range(plot_pars.get('xmin'), plot_pars.get('xmax'))
+    if kwargs.get('rescale', False):
+        spec.set_mz_range(kwargs.get('xmin'), kwargs.get('xmax'))
 
-    if plot_pars['label']:
-        annotate_mz = generate_labels(spec, plot_pars['thresh'])
+    if kwargs.get('label', False):
+        annotate_mz = generate_labels(spec, kwargs.get('thresh', 0.05))
         for mz in annotate_mz:
             spec.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=f'{mz:.4f}')
 
     spectrum_plotter_plot.spectrum(spec, annot_kws={'rotation': 70})
 
-    old_x_range = plt.xlim()
-    new_x_range = list(old_x_range)
-    if plot_pars['xmin']:
-        new_x_range[0] = plot_pars['xmin']
-    if plot_pars['xmax']:
-        new_x_range[1] = plot_pars['xmax']
+    xmin, xmax = plt.xlim()
+    plt.xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
 
-    plt.xlim(new_x_range)
-    fig.suptitle(usi,fontsize=10)
+    fig.suptitle(usi, fontsize=10)
 
-    output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + "." + format)
+    output_filename = os.path.join(app.config['TEMPFOLDER'],
+                                   f'{uuid.uuid4()}.{extension}')
     plt.savefig(output_filename)
 
     return output_filename
+
 
 @app.route("/png/")
 def generatePNG():
