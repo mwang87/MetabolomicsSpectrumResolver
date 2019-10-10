@@ -44,6 +44,20 @@ def renderspectrum():
         identifier=usi, \
         )
 
+@app.route('/mirror/',methods=['GET'])
+def renderspectrum():
+    usi1 = request.args.get('usi1')
+    usi2 = request.args.get('usi2')
+    spectrum1 = parse_USI(usi1)
+    spectrum2 = parse_USI(usi2)
+
+    return render_template('mirror.html', \
+        peaks1=json.dumps(spectrum1['peaks']), \
+        peaks2=json.dumps(spectrum2['peaks']), \
+        identifier1=usi1, \
+        identifier2=usi2, \
+        )
+
 #parsing MS2LDA in ms2lda.org
 def parse_ms2lda(usi):
     tokens = usi.split(':')

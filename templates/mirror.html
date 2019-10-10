@@ -1,0 +1,191 @@
+(% extends "minimal.html" %)
+
+(% block content %)
+
+<div class="container-fluid">
+    <div class="panel panel-default">
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                <h2>Spectrum Values</h2>
+            </div>
+            <div class="col-sm"></div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                Universal Spectrum Identifier
+                <br>
+                ((identifier))
+                <br>
+                <a href="/json/?usi=((identifier1))">Download peaks as json</a>
+                <br>
+                <a href="/csv/?usi=((identifier1))">Download peaks as csv</a>
+            </div>
+            <div class="col-sm"></div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                    <div id="lorikeet"></div>
+            </div>
+            <div class="col-sm"></div>
+        </div>
+
+        <hr>
+    
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                Spectrum SVG
+            </div>
+            <div class="col-sm"></div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                <img src="/svg/?usi=((identifier))">
+            </div>
+            <div class="col-sm">
+                <a href="/svg/?usi=((identifier))" download="((identifier)).svg">
+                    <button class="btn btn-primary" >Download SVG</button>
+                </a>
+                <a href="/png/?usi=((identifier))" download="((identifier)).png">
+                    <button class="btn btn-primary" >Download PNG</button>
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                <img src="/svg/?usi=((identifier))&label">
+            </div>
+            <div class="col-sm">
+                <a href="/svg/?usi=((identifier))&label" download="((identifier)).svg">
+                    <button class="btn btn-primary" >Download SVG</button>
+                </a>
+                <a href="/png/?usi=((identifier))&label" download="((identifier)).png">
+                    <button class="btn btn-primary" >Download PNG</button>
+                </a>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                <img id="spectrumrender" src="/svg/?usi=((identifier))&label">
+            </div>
+            <div class="col-sm">
+                <h2>Drawing Controls</h2>
+                <br>
+                <div class="form-group row"> 
+                    <label for="showlabel">Show Labels</label>
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        <select id="showlabel" class="form-control">
+                            <option selected>Yes</option>
+                            <option>No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col">
+                        <input type="text" id="thresh" class="form-control" placeholder="Label Threshold - Percent">
+                    </div>
+                    
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        <input type="text" id="xmin" class="form-control" placeholder="Min m/z">
+                    </div>
+                    <div class="col">
+                        <input type="text" id="xmax" class="form-control" placeholder="Max m/z">
+                    </div>
+                </div>
+                <br>
+                <button class="btn btn-primary" onclick=updateFigure()>Update</button>
+                <hr>
+                <a id="controlsvgdownload" href="/svg/?usi=((identifier))&label" download="((identifier)).svg">
+                    <button class="btn btn-primary" >Download SVG</button>
+                </a>
+                <a id="controlpngdownload" href="/png/?usi=((identifier))&label" download="((identifier)).png">
+                    <button class="btn btn-primary" >Download PNG</button>
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+                <div class="col-sm"></div>
+                <div class="col-sm text-center">
+                    QR Code
+                </div>
+                <div class="col-sm"></div>
+        </div>
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                <img src="/qrcode/?usi=((identifier))"></img>
+            </div>
+            <div class="col-sm"></div>
+        </div>
+
+</div>
+
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+    
+        /* render the spectrum with the given options */
+        $("#lorikeet").specview({   
+            peaks: peaks,
+            showIonTable: false,
+            showViewingOptions: true,
+            showOptionsTable: false,
+            showSequenceInfo: false,
+            labelImmoniumIons: false,
+            labelPrecursorPeak: false,
+        });
+    
+    });
+    
+    var peaks = (( peaks ));
+    var usi = '((identifier))';
+
+    function updateFigure() {
+        svg_url = "/svg/?usi=" + usi + "&"
+        png_url = "/svg/?usi=" + usi + "&"
+
+        draw_parameters = ""
+        
+        if($("#showlabel").val() == "Yes"){
+            draw_parameters += "label&"
+        }
+        if($("#thresh").val().length > 0){
+            thresh = parseFloat($("#thresh").val()) / 100
+            draw_parameters += `thresh=${thresh}&`
+        }
+        if($("#xmin").val().length > 0){
+            xmin = $("#xmin").val()
+            draw_parameters += `xmin=${xmin}&rescale&`
+        }
+        if($("#xmax").val().length > 0){
+            xmax = $("#xmax").val()
+            draw_parameters += `xmax=${xmax}&rescale&`
+        }
+
+        $("#spectrumrender")[0].src = svg_url + draw_parameters
+        $("#controlsvgdownload")[0].href = svg_url + draw_parameters
+        $("#controlpngdownload")[0].href = png_url + draw_parameters
+    }
+</script>
+
+(% endblock %)
