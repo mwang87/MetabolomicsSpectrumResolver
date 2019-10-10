@@ -111,6 +111,13 @@
                 </div>
                 <br>
                 <button class="btn btn-primary" onclick=updateFigure()>Update</button>
+                <hr>
+                <a id="controlsvgdownload" href="/svg/?usi=((identifier))&label" download="((identifier)).svg">
+                    <button class="btn btn-primary" >Download SVG</button>
+                </a>
+                <a id="controlpngdownload" href="/png/?usi=((identifier))&label" download="((identifier)).png">
+                    <button class="btn btn-primary" >Download PNG</button>
+                </a>
             </div>
         </div>
 
@@ -154,25 +161,30 @@
     var usi = '((identifier))';
 
     function updateFigure() {
-        src_url = "/svg/?usi=" + usi + "&"
+        svg_url = "/svg/?usi=" + usi + "&"
+        png_url = "/svg/?usi=" + usi + "&"
+
+        draw_parameters = ""
         
         if($("#showlabel").val() == "Yes"){
-            src_url += "label&"
+            draw_parameters += "label&"
         }
         if($("#thresh").val().length > 0){
             thresh = parseFloat($("#thresh").val()) / 100
-            src_url += `thresh=${thresh}&`
+            draw_parameters += `thresh=${thresh}&`
         }
         if($("#xmin").val().length > 0){
             xmin = $("#xmin").val()
-            src_url += `xmin=${xmin}&rescale&`
+            draw_parameters += `xmin=${xmin}&rescale&`
         }
         if($("#xmax").val().length > 0){
             xmax = $("#xmax").val()
-            src_url += `xmax=${xmax}&rescale&`
+            draw_parameters += `xmax=${xmax}&rescale&`
         }
 
-        $("#spectrumrender")[0].src = src_url
+        $("#spectrumrender")[0].src = svg_url + draw_parameters
+        $("#controlsvgdownload")[0].href = svg_url + draw_parameters
+        $("#controlpngdownload")[0].href = png_url + draw_parameters
     }
 </script>
 
