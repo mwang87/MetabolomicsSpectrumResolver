@@ -211,7 +211,8 @@ def generate_figure(usi,format,xmin = None,xmax = None, rescale = False, label =
     if label:
         labels = generate_labels_emma(spectrum['peaks'],xmin,xmax)
         for label in labels:
-            plt.text(label[0],label[1],label[2],rotation=90)
+            plt.text(label[0],label[1],label[2],rotation=70)
+    
     
     output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + "." + format)
     plt.savefig(output_filename)
