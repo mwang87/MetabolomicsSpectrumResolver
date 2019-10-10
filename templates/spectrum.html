@@ -165,11 +165,11 @@
         }
         if($("#xmin").val().length > 0){
             xmin = $("#xmin").val()
-            src_url += `xmin=${xmin}&`
+            src_url += `xmin=${xmin}&rescale&`
         }
         if($("#xmax").val().length > 0){
             xmax = $("#xmax").val()
-            src_url += `xmax=${xmax}&`
+            src_url += `xmax=${xmax}&rescale&`
         }
 
         $("#spectrumrender")[0].src = src_url
