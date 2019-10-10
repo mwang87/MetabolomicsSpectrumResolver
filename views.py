@@ -172,14 +172,14 @@ def parse_MetabolomicsWorkbench(usi):
 
     return parse_MSV_PXD("mzspec:%s:%s:scan:%s" % (massive_identifier, filename, scan))
     
-def generate_figure(usi,format,xmin = None,xmax = None, rescale = False, label = False):
+def generate_figure(usi,format,plot_pars):
     spectrum = parse_USI(usi)
 
-    if rescale:
-        if xmin:
-            spectrum['peaks'] = list(filter(lambda x: x[0]>=xmin,spectrum['peaks']))
-        if xmax:
-            spectrum['peaks'] = list(filter(lambda x: x[0]<=xmax,spectrum['peaks']))
+    if plot_pars['rescale']:
+        if plot_pars['xmin']:
+            spectrum['peaks'] = list(filter(lambda x: x[0]>=plot_pars['xmin'],spectrum['peaks']))
+        if plot_pars['xmax']:
+            spectrum['peaks'] = list(filter(lambda x: x[0]<=plot_pars['xmax'],spectrum['peaks']))
 
     masses, intentisities = zip(*spectrum['peaks'])
     fig = plt.figure(figsize=(10,6))
@@ -191,20 +191,20 @@ def generate_figure(usi,format,xmin = None,xmax = None, rescale = False, label =
     spectrum_plotter_plot.spectrum(spec)
     old_x_range = plt.xlim()
     new_x_range = list(old_x_range)
-    if xmin:
-        new_x_range[0] = xmin
-    if xmax:
-        new_x_range[1] = xmax
+    if plot_pars['xmin']:
+        new_x_range[0] = plot_pars['xmin']
+    if plot_pars['xmax']:
+        new_x_range[1] = plot_pars['xmax']
     
     plt.xlim(new_x_range)
     fig.suptitle(usi,fontsize=10)
 
-    if label:
-        labels = generate_labels_emma(spectrum['peaks'],xmin,xmax)
+    if plot_pars['label']:
+        labels = generate_labels(spectrum['peaks'],plot_pars['xmin'],plot_pars['xmax'],plot_pars['thresh'])
         for label in labels:
             plt.text(label[0],label[1],label[2],rotation=70)
     
-    
+
     output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + "." + format)
     plt.savefig(output_filename)
 
@@ -215,8 +215,8 @@ def generate_figure(usi,format,xmin = None,xmax = None, rescale = False, label =
 @app.route("/png/")
 def generatePNG():
     usi = request.args.get('usi')
-    xmin,xmax,rescale,label = get_plot_pars(request)
-    output_filename = generate_figure(usi,'png',xmin = xmin,xmax = xmax,rescale = rescale,label = label)
+    plot_pars = get_plot_pars(request)
+    output_filename = generate_figure(usi,'png',plot_pars)
     return send_file(output_filename,mimetype='image/png')
 
 def get_plot_pars(request):
@@ -240,13 +240,24 @@ def get_plot_pars(request):
     else:
         label = False
     
-    return xmin,xmax,rescale,label
+    try:
+        thresh = float(request.args.get('thresh',None))
+    except:
+        thresh = 0.1
+
+    plot_pars = {'xmin':xmin,
+                 'xmax':xmax,
+                 'rescale':rescale,
+                 'label':label,
+                 'thresh':thresh}
+    
+    return plot_pars
 
 @app.route("/svg/")
 def generateSVG():
     usi = request.args.get('usi')
-    xmin,xmax,rescale,label = get_plot_pars(request)
-    output_filename = generate_figure(usi,'svg',xmin = xmin,xmax = xmax,rescale = rescale, label = label)
+    plot_pars = get_plot_pars(request)
+    output_filename = generate_figure(usi,'svg',plot_pars)
     fix_svg(output_filename)    
     return send_file(output_filename,mimetype='image/svg+xml')
 
@@ -274,25 +285,8 @@ def peak_csv():
             writer.writerow(line)
     return send_file(output_filename,mimetype='text/csv',as_attachment=True,attachment_filename="peaks.csv")
 
-# crude peak label generation!
-def generate_labels(spectra,xmin,xmax):
-    overall_base_intensity = max([s[1] for s in spectra])
-    if xmin:
-        spectra = list(filter(lambda x: x[0] >= xmin,spectra))
-    if xmax:
-        spectra = list(filter(lambda x: x[0] <= xmax,spectra))
-    base_intensity = max([s[1] for s in spectra])
 
-
-
-    spectra = list(filter(lambda x: x[1] >= base_intensity*0.5,spectra))
-    print(spectra)
-    labels = []
-    for s in spectra:
-        labels.append((s[0],0.01+s[1]/overall_base_intensity,str(s[0])))
-    return labels
-
-def generate_labels_emma(spectra,xmin,xmax):
+def generate_labels(spectra,xmin,xmax,thresh):
     if not xmin:
         local_xmin = min([s[0] for s in spectra])
     else:
@@ -318,7 +312,7 @@ def generate_labels_emma(spectra,xmin,xmax):
     labels = []
     spectra.sort(key = lambda x: x[1],reverse = True)
     for mz,intensity in spectra:
-        if intensity < base_intensity*0.1:
+        if intensity < base_intensity*thresh:
             break
         else:
             # check exclusion
