@@ -190,11 +190,9 @@ def generate_figure(usi,format,plot_pars):
         if plot_pars['xmax']:
             spectrum['peaks'] = list(filter(lambda x: x[0]<=plot_pars['xmax'],spectrum['peaks']))
 
-    masses, intentisities = zip(*spectrum['peaks'])
+    masses, intensities = zip(*spectrum['peaks'])
     fig = plt.figure(figsize=(10,6))
-
-    spec = spectrum_plotter_spectrum.MsmsSpectrum(usi, 0.0, 0.0,
-                            masses, intentisities)
+        usi, 0.0, 0, masses, intensities)
 
     
     spectrum_plotter_plot.spectrum(spec)
