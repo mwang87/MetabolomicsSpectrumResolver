@@ -91,6 +91,14 @@
                     <button id="analyzebutton" class="btn btn-primary" >MassBank Library Spectrum</button>
                 </a>
             </div>
+
+            <br>
+
+            <div class="text-center" >
+                <a href="/mirror/?usi1=mzdata:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002">
+                    <button id="analyzebutton" class="btn btn-primary" >Mirror Spectrum</button>
+                </a>
+            </div>
         </div>
         <div class="col-sm">
         </div>
@@ -100,10 +108,10 @@
 
 
 <script>
-        function myFunction() {
-            remote_url = "/spectrum?usi=" + $("#identifier").val()
-            window.location.assign(remote_url);
-        }
+    function myFunction() {
+        remote_url = "/spectrum?usi=" + $("#identifier").val()
+        window.location.assign(remote_url);
+    }
 </script>
 
 (% endblock %)

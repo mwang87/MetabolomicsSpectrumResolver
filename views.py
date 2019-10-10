@@ -45,7 +45,7 @@ def renderspectrum():
         )
 
 @app.route('/mirror/',methods=['GET'])
-def renderspectrum():
+def rendermirrorspectrum():
     usi1 = request.args.get('usi1')
     usi2 = request.args.get('usi2')
     spectrum1 = parse_USI(usi1)
@@ -233,12 +233,52 @@ def generate_figure(usi,format,plot_pars):
 
     return output_filename
 
+
+def generate_mirror_figure(usi1,usi2,format,plot_pars):
+    spectrum1 = parse_USI(usi1)
+    spectrum2 = parse_USI(usi2)
+
+    masses1, intentisities1 = zip(*spectrum1['peaks'])
+    masses2, intentisities2 = zip(*spectrum2['peaks'])
+    fig = plt.figure(figsize=(10,6))
+
+    spec1 = spectrum_plotter_spectrum.MsmsSpectrum(usi1, 0.0, 0.0,
+                            masses1, intentisities1)
+    spec2 = spectrum_plotter_spectrum.MsmsSpectrum(usi2, 0.0, 0.0,
+                            masses2, intentisities2)
+
+    
+    spectrum_plotter_plot.mirror(spec1, spec2)
+    old_x_range = plt.xlim()
+    new_x_range = list(old_x_range)
+    if plot_pars['xmin']:
+        new_x_range[0] = plot_pars['xmin']
+    if plot_pars['xmax']:
+        new_x_range[1] = plot_pars['xmax']
+    
+    plt.xlim(new_x_range)
+    fig.suptitle(usi1 + "=" + usi2,fontsize=10)
+
+    output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + "." + format)
+    plt.savefig(output_filename)
+
+    return output_filename
+
 @app.route("/png/")
 def generatePNG():
     usi = request.args.get('usi')
     plot_pars = get_plot_pars(request)
     output_filename = generate_figure(usi,'png',plot_pars)
     return send_file(output_filename,mimetype='image/png')
+
+@app.route("/png/mirror/")
+def generateMirrorPNG():
+    usi1 = request.args.get('usi1')
+    usi2 = request.args.get('usi2')
+    plot_pars = get_plot_pars(request)
+    output_filename = generate_mirror_figure(usi1, usi2,'png',plot_pars)
+    return send_file(output_filename,mimetype='image/png')
+
 
 def get_plot_pars(request):
     try:
@@ -281,6 +321,14 @@ def generateSVG():
     output_filename = generate_figure(usi,'svg',plot_pars)
     fix_svg(output_filename)    
     return send_file(output_filename,mimetype='image/svg+xml')
+
+@app.route("/svg/mirror/")
+def generateMirrorSVG():
+    usi1 = request.args.get('usi1')
+    usi2 = request.args.get('usi2')
+    plot_pars = get_plot_pars(request)
+    output_filename = generate_mirror_figure(usi1, usi2,'png',plot_pars)
+    return send_file(output_filename,mimetype='image/png')
 
 def fix_svg(output_filename):
     # remove the whitespace issue
