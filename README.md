@@ -31,6 +31,10 @@ Supported USI Types
 
 [mzspec:GNPSLIBRARY:CCMSLIB00005436077](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:GNPSLIBRARY:CCMSLIB00005436077)
 
+### Massbank Library Spectra
+
+[mzdata:MASSBANK:BSU00002](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MASSBANK:BSU00002)
+
 ### ProteoXchange Repository Data
 
 [mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
