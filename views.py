@@ -22,6 +22,7 @@ requests_cache.install_cache('demo_cache',expire_after=300)
 SERVER = 'https://metabolomics-usi.ucsd.edu'
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
+MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
 
 @app.route('/', methods=['GET'])
 def renderhomepage():
@@ -71,6 +72,18 @@ def parse_motifdb(usi):
     spectrum = {'peaks':peak_list}
     return spectrum
 
+#parsing massbank entry
+def parse_massbank(usi):
+    # e.g. mzspec:MASSBANK:motif:motif_id
+    tokens = usi.split(':')
+    massbank_id = tokens[2]
+    request_url = MASSBANK_SERVER + '{}'.format(massbank_id)
+    response = requests.get(request_url)
+    peaks_string = response.json()["spectrum"]
+    peak_list = [(float(peak.split(":")[0]), float(peak.split(":")[1])) for peak in peaks_string.split(" ")]
+    peak_list.sort(key = lambda x: x[0])
+    spectrum = {'peaks':peak_list}
+    return spectrum
 
 #parsing GNPS clustered spectra in Molecular Networking
 def parse_gnps_task(usi):
@@ -82,7 +95,6 @@ def parse_gnps_task(usi):
     request_url = 'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?task={}&invoke=annotatedSpectrumImageText&block=0&file=FILE->{}&scan={}&peptide=*..*&force=false&_=1561457932129'.format(
         task,filename,scan
     )
-    print(request_url)
 
     response = requests.get(request_url)
     spectrum = parsing.parse_gnps_peak_text(response.text)
@@ -96,10 +108,7 @@ def parse_gnps_library(usi):
     
     request_url = "https://gnps.ucsd.edu/ProteoSAFe/SpectrumCommentServlet?SpectrumID=%s" % (identifier)
 
-    print(request_url)
-
     response = requests.get(request_url)
-
     peaks = json.loads(response.json()["spectruminfo"]["peaks_json"])    
 
     spectrum = {}
@@ -209,8 +218,6 @@ def generate_figure(usi,format,xmin = None,xmax = None, rescale = False, label =
 
     return output_filename
 
-    
-   
 @app.route("/png/")
 def generatePNG():
     usi = request.args.get('usi')
@@ -335,12 +342,6 @@ def generate_labels_emma(spectra,xmin,xmax):
 
 @app.route("/qrcode/")
 def generateQRImage():
-    # task = request.args.get('task')
-    # filename = request.args.get('file')
-    # scan = request.args.get('scan')
-
-    # identifier = "mzdata:GNPSTASK-%s:%s:scan:%s" % (task, filename, scan)
-
     identifier = request.args.get('usi')
 
     #QR Code Rendering
@@ -371,6 +372,8 @@ def parse_USI(usi):
         spectrum = parse_MetabolomicsWorkbench(usi)
     elif usi_identifier.startswith('MOTIFDB'):
         spectrum = parse_motifdb(usi)
+    elif usi_identifier.startswith('MASSBANK'):
+        spectrum = parse_massbank(usi)
         
     return spectrum
 
