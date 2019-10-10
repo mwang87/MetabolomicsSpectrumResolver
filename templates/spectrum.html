@@ -160,7 +160,7 @@
             src_url += "label&"
         }
         if($("#thresh").val().length > 0){
-            thresh = $("#thresh").val()
+            thresh = parseFloat($("#thresh").val()) / 100
             src_url += `thresh=${thresh}&`
         }
         if($("#xmin").val().length > 0){
