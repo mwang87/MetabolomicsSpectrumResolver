@@ -78,6 +78,43 @@
         <hr>
 
         <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                <img id="spectrumrender" src="/svg/?usi=((identifier))&label">
+            </div>
+            <div class="col-sm">
+                <h2>Drawing Controls</h2>
+                <br>
+                <div class="form-group row"> 
+                    <label for="showlabel">Show Labels</label>
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        <select id="showlabel" class="form-control">
+                            <option selected>Yes</option>
+                            <option>No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col">
+                        <input type="text" id="thresh" class="form-control" placeholder="Label Threshold - Percent">
+                    </div>
+                    
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        <input type="text" id="xmin" class="form-control" placeholder="Min m/z">
+                    </div>
+                    <div class="col">
+                        <input type="text" id="xmax" class="form-control" placeholder="Max m/z">
+                    </div>
+                </div>
+                <br>
+                <button class="btn btn-primary" onclick=updateFigure()>Update</button>
+            </div>
+        </div>
+
+        <div class="row">
                 <div class="col-sm"></div>
                 <div class="col-sm text-center">
                     QR Code
@@ -102,18 +139,41 @@
     
         /* render the spectrum with the given options */
         $("#lorikeet").specview({   
-                                    peaks: peaks,
-                                    showIonTable: false,
-                                    showViewingOptions: true,
-                                    showOptionsTable: false,
-                                    showSequenceInfo: false,
-                                    labelImmoniumIons: false,
-                                    labelPrecursorPeak: false,
-                                });	
+            peaks: peaks,
+            showIonTable: false,
+            showViewingOptions: true,
+            showOptionsTable: false,
+            showSequenceInfo: false,
+            labelImmoniumIons: false,
+            labelPrecursorPeak: false,
+        });
     
     });
     
     var peaks = (( peaks ));
+    var usi = '((identifier))';
+
+    function updateFigure() {
+        src_url = "/svg/?usi=" + usi + "&"
+        
+        if($("#showlabel").val() == "Yes"){
+            src_url += "label&"
+        }
+        if($("#thresh").val().length > 0){
+            thresh = $("#thresh").val()
+            src_url += `thresh=${thresh}&`
+        }
+        if($("#xmin").val().length > 0){
+            xmin = $("#xmin").val()
+            src_url += `xmin=${xmin}&`
+        }
+        if($("#xmax").val().length > 0){
+            xmax = $("#xmax").val()
+            src_url += `xmax=${xmax}&`
+        }
+
+        $("#spectrumrender")[0].src = src_url
+    }
 </script>
 
 (% endblock %)
