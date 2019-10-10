@@ -180,21 +180,19 @@ def parse_MetabolomicsWorkbench(usi):
         return None
 
     return parse_MSV_PXD("mzspec:%s:%s:scan:%s" % (massive_identifier, filename, scan))
-    
+
 def generate_figure(usi,format,plot_pars):
     spectrum = parse_USI(usi)
 
-    if plot_pars['rescale']:
-        if plot_pars['xmin']:
-            spectrum['peaks'] = list(filter(lambda x: x[0]>=plot_pars['xmin'],spectrum['peaks']))
-        if plot_pars['xmax']:
-            spectrum['peaks'] = list(filter(lambda x: x[0]<=plot_pars['xmax'],spectrum['peaks']))
+    fig = plt.figure(figsize=(10, 6))
 
     masses, intensities = zip(*spectrum['peaks'])
-    fig = plt.figure(figsize=(10,6))
+    spec = spectrum_plotter_spectrum.MsmsSpectrum(
         usi, 0.0, 0, masses, intensities)
 
-    
+    if plot_pars['rescale']:
+        spec.set_mz_range(plot_pars.get('xmin'), plot_pars.get('xmax'))
+
     spectrum_plotter_plot.spectrum(spec)
     old_x_range = plt.xlim()
     new_x_range = list(old_x_range)
