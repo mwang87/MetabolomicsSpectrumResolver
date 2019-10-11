@@ -37,6 +37,29 @@
     </div>
 </div>
 
+<br>
+<hr>
+
+<div id="displayer">
+    <div class="row">
+        <div class="col-sm">
+                <div class="text-center" >
+                    <input type="text" class="form-control" name="identifier" id="identifier1" placeholder="Enter Spectrum Identifier 1">
+                </div>
+        </div>
+        <div class="col-sm">
+            <div class="text-center" >
+                <input type="text" class="form-control" name="identifier" id="identifier2" placeholder="Enter Spectrum Identifier 2">
+            </div>
+        </div>
+        <div class="col-sm">
+            <div class="text-center" >
+                <button id="analyzebutton" class="btn btn-primary" onclick="resolveMirror()" >Resolve Mirror Identifiers</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <hr>
 
 
@@ -91,6 +114,14 @@
                     <button id="analyzebutton" class="btn btn-primary" >MassBank Library Spectrum</button>
                 </a>
             </div>
+
+            <br>
+
+            <div class="text-center" >
+                <a href="/mirror/?usi1=mzdata:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002">
+                    <button id="analyzebutton" class="btn btn-primary" >Mirror Spectrum</button>
+                </a>
+            </div>
         </div>
         <div class="col-sm">
         </div>
@@ -100,10 +131,18 @@
 
 
 <script>
-        function myFunction() {
-            remote_url = "/spectrum?usi=" + $("#identifier").val()
-            window.location.assign(remote_url);
-        }
+    function myFunction() {
+        remote_url = "/spectrum?usi=" + $("#identifier").val()
+        window.location.assign(remote_url);
+    }
+
+    function resolveMirror() {
+        usi1 = $("#identifier1").val();
+        usi2 = $("#identifier2").val();
+        remote_url = `/mirror?usi1=${usi1}&usi2=${usi2}`
+        window.location.assign(remote_url);
+    }
 </script>
 
 (% endblock %)
+
