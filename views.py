@@ -29,6 +29,10 @@ MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
 def renderhomepage():
     return render_template('homepage.html')
 
+@app.route('/contributors', methods=['GET'])
+def contributors():
+    return render_template('contributors.html')
+
 @app.route('/heartbeat', methods=['GET'])
 def testapi():
     return_obj = {}
