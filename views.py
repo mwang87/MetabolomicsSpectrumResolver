@@ -12,6 +12,7 @@ import qrcode
 import requests
 import requests_cache
 import parsing
+import numpy as np
 
 from spectrum_utils import spectrum as spectrum_plotter_spectrum
 from spectrum_utils import plot as spectrum_plotter_plot
@@ -194,45 +195,36 @@ def parse_MetabolomicsWorkbench(usi):
         return None
 
     return parse_MSV_PXD("mzspec:%s:%s:scan:%s" % (massive_identifier, filename, scan))
-    
-def generate_figure(usi,format,plot_pars):
-    spectrum = parse_USI(usi)
 
-    if plot_pars['rescale']:
-        if plot_pars['xmin']:
-            spectrum['peaks'] = list(filter(lambda x: x[0]>=plot_pars['xmin'],spectrum['peaks']))
-        if plot_pars['xmax']:
-            spectrum['peaks'] = list(filter(lambda x: x[0]<=plot_pars['xmax'],spectrum['peaks']))
 
-    masses, intentisities = zip(*spectrum['peaks'])
-    fig = plt.figure(figsize=(10,6))
+def generate_figure(usi, extension, **kwargs):
+    fig = plt.figure(figsize=(10, 6))
 
-    spec = spectrum_plotter_spectrum.MsmsSpectrum(usi, 0.0, 0.0,
-                            masses, intentisities)
+    masses, intensities = zip(*parse_USI(usi)['peaks'])
+    spec = spectrum_plotter_spectrum.MsmsSpectrum(
+        usi, 0.0, 0, masses, intensities)
+    spec.scale_intensity(max_intensity=1)
 
-    
-    spectrum_plotter_plot.spectrum(spec)
-    old_x_range = plt.xlim()
-    new_x_range = list(old_x_range)
-    if plot_pars['xmin']:
-        new_x_range[0] = plot_pars['xmin']
-    if plot_pars['xmax']:
-        new_x_range[1] = plot_pars['xmax']
-    
-    plt.xlim(new_x_range)
-    fig.suptitle(usi,fontsize=10)
+    if kwargs.get('rescale', False):
+        spec.set_mz_range(kwargs.get('xmin'), kwargs.get('xmax'))
 
-    if plot_pars['label']:
-        labels = generate_labels(spectrum['peaks'],plot_pars['xmin'],plot_pars['xmax'],plot_pars['thresh'])
-        for label in labels:
-            plt.text(label[0],label[1],label[2],rotation=70)
-    
+    if kwargs.get('label', False):
+        annotate_mz = generate_labels(spec, kwargs.get('thresh', 0.05))
+        for mz in annotate_mz:
+            spec.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=f'{mz:.4f}')
 
-    output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + "." + format)
+    spectrum_plotter_plot.spectrum(spec, annot_kws={'rotation': 70})
+
+    xmin, xmax = plt.xlim()
+    plt.xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
+
+    fig.suptitle(usi, fontsize=10)
+
+    output_filename = os.path.join(app.config['TEMPFOLDER'],
+                                   f'{uuid.uuid4()}.{extension}')
     plt.savefig(output_filename)
 
     return output_filename
-
 
 def generate_mirror_figure(usi1,usi2,format,plot_pars):
     spectrum1 = parse_USI(usi1)
@@ -268,7 +260,7 @@ def generate_mirror_figure(usi1,usi2,format,plot_pars):
 def generatePNG():
     usi = request.args.get('usi')
     plot_pars = get_plot_pars(request)
-    output_filename = generate_figure(usi,'png',plot_pars)
+    output_filename = generate_figure(usi, 'png', **plot_pars)
     return send_file(output_filename,mimetype='image/png')
 
 @app.route("/png/mirror/")
@@ -318,8 +310,8 @@ def get_plot_pars(request):
 def generateSVG():
     usi = request.args.get('usi')
     plot_pars = get_plot_pars(request)
-    output_filename = generate_figure(usi,'svg',plot_pars)
-    fix_svg(output_filename)    
+    output_filename = generate_figure(usi, 'svg', **plot_pars)
+    fix_svg(output_filename)
     return send_file(output_filename,mimetype='image/svg+xml')
 
 @app.route("/svg/mirror/")
@@ -355,47 +347,21 @@ def peak_csv():
     return send_file(output_filename,mimetype='text/csv',as_attachment=True,attachment_filename="peaks.csv")
 
 
-def generate_labels(spectra,xmin,xmax,thresh):
-    if not xmin:
-        local_xmin = min([s[0] for s in spectra])
-    else:
-        local_xmin = xmin
-    
-    if not xmax:
-        local_xmax = max([s[0] for s in spectra])
-    else:
-        local_xmax = xmax
-    
-    exclusion_mz = (local_xmax - local_xmin) / 20 # max 20 labels..
-        
-    overall_base_intensity = max([s[1] for s in spectra])
-    if xmin:
-        spectra = list(filter(lambda x: x[0] >= xmin,spectra))
-    if xmax:
-        spectra = list(filter(lambda x: x[0] <= xmax,spectra))
-    base_intensity = max([s[1] for s in spectra])
+def generate_labels(spec, intensity_threshold):
+    mz_exclusion_window = (spec.mz[-1] - spec.mz[0]) / 20  # Max 20 labels.
 
-
-    # sort spectra in descending intensity
+    # Annotate peaks in decreasing intensity order.
     labeled_mz = []
-    labels = []
-    spectra.sort(key = lambda x: x[1],reverse = True)
-    for mz,intensity in spectra:
-        if intensity < base_intensity*thresh:
+    order = np.argsort(spec.intensity)[::-1]
+    for mz, intensity in zip(spec.mz[order], spec.intensity[order]):
+        if intensity < intensity_threshold:
             break
         else:
-            # check exclusion
-            excluded = False
-            for m in labeled_mz:
-                if mz >= m - exclusion_mz and mz <= m + exclusion_mz:
-                    excluded = True
-                    break
-            if not excluded:
+            if not any([abs(mz - already_labeled_mz) <= mz_exclusion_window
+                        for already_labeled_mz in labeled_mz]):
                 labeled_mz.append(mz)
-                labels.append((mz,0.01+intensity/overall_base_intensity,"{:.4f}".format(mz)))
-            
 
-    return labels
+    return labeled_mz
 
 @app.route("/qrcode/")
 def generateQRImage():
