@@ -226,7 +226,7 @@ def generate_figure(usi, extension, **kwargs):
 
     return output_filename
 
-def generate_mirror_figure(usi1,usi2,format,plot_pars):
+def generate_mirror_figure(usi1, usi2, format, **kwargs):
     spectrum1 = parse_USI(usi1)
     spectrum2 = parse_USI(usi2)
 
@@ -239,17 +239,22 @@ def generate_mirror_figure(usi1,usi2,format,plot_pars):
     spec2 = spectrum_plotter_spectrum.MsmsSpectrum(usi2, 0.0, 0.0,
                             masses2, intentisities2)
 
+
+    if kwargs.get('rescale', False):
+        spec1.set_mz_range(kwargs.get('xmin'), kwargs.get('xmax'))
+        spec2.set_mz_range(kwargs.get('xmin'), kwargs.get('xmax'))
+
+    if kwargs.get('label', False):
+        annotate_mz1 = generate_labels(spec1, kwargs.get('thresh', 0.05))
+        for mz in annotate_mz1:
+            spec1.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=f'{mz:.4f}')
     
     spectrum_plotter_plot.mirror(spec1, spec2)
-    old_x_range = plt.xlim()
-    new_x_range = list(old_x_range)
-    if plot_pars['xmin']:
-        new_x_range[0] = plot_pars['xmin']
-    if plot_pars['xmax']:
-        new_x_range[1] = plot_pars['xmax']
-    
-    plt.xlim(new_x_range)
-    fig.suptitle(usi1 + "=" + usi2,fontsize=10)
+
+    xmin, xmax = plt.xlim()
+    plt.xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
+
+    fig.suptitle(usi1 + "=" + usi2, fontsize=10)
 
     output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + "." + format)
     plt.savefig(output_filename)
@@ -268,7 +273,7 @@ def generateMirrorPNG():
     usi1 = request.args.get('usi1')
     usi2 = request.args.get('usi2')
     plot_pars = get_plot_pars(request)
-    output_filename = generate_mirror_figure(usi1, usi2,'png',plot_pars)
+    output_filename = generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
     return send_file(output_filename,mimetype='image/png')
 
 
@@ -319,7 +324,7 @@ def generateMirrorSVG():
     usi1 = request.args.get('usi1')
     usi2 = request.args.get('usi2')
     plot_pars = get_plot_pars(request)
-    output_filename = generate_mirror_figure(usi1, usi2,'png',plot_pars)
+    output_filename = generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
     return send_file(output_filename,mimetype='image/png')
 
 def fix_svg(output_filename):
