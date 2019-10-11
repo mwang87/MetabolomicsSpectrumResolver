@@ -1,0 +1,148 @@
+(% extends "minimal.html" %)
+
+(% block content %)
+
+<div class="container-fluid">
+    <div class="panel panel-default">
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                <h2>Spectrum Values</h2>
+            </div>
+            <div class="col-sm"></div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                Universal Spectrum Identifier
+                <br>
+                ((identifier1)) mirror ((identifier2))
+            </div>
+            <div class="col-sm"></div>
+        </div>
+
+        <hr>
+    
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                Spectrum SVG
+            </div>
+            <div class="col-sm"></div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                <img src="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))">
+            </div>
+            <div class="col-sm">
+                <a href="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))" download="((identifier1))_((identifier2)).svg">
+                    <button class="btn btn-primary" >Download SVG</button>
+                </a>
+                <a href="/png/mirror?usi=((identifier1))&usi2=((identifier2))" download="((identifier1))_((identifier2)).svg">
+                    <button class="btn btn-primary" >Download PNG</button>
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                <img src="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))&label">
+            </div>
+            <div class="col-sm">
+                <a href="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))&label" download="((identifier1))_((identifier2)).svg">
+                    <button class="btn btn-primary" >Download SVG</button>
+                </a>
+                <a href="/png/mirror?usi=((identifier1))&usi2=((identifier2))&label" download="((identifier1))_((identifier2)).svg">
+                    <button class="btn btn-primary" >Download PNG</button>
+                </a>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <div class="col-sm"></div>
+            <div class="col-sm text-center">
+                <img id="spectrumrender" src="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))&label">
+            </div>
+            <div class="col-sm">
+                <h2>Drawing Controls</h2>
+                <br>
+                <div class="form-group row"> 
+                    <label for="showlabel">Show Labels</label>
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        <select id="showlabel" class="form-control">
+                            <option selected>Yes</option>
+                            <option>No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col">
+                        <input type="text" id="thresh" class="form-control" placeholder="Label Threshold - Percent">
+                    </div>
+                    
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        <input type="text" id="xmin" class="form-control" placeholder="Min m/z">
+                    </div>
+                    <div class="col">
+                        <input type="text" id="xmax" class="form-control" placeholder="Max m/z">
+                    </div>
+                </div>
+                <br>
+                <button class="btn btn-primary" onclick=updateFigure()>Update</button>
+                <hr>
+                <a id="controlsvgdownload" href="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))&label" download="((identifier1))_((identifier2)).svg">
+                    <button class="btn btn-primary" >Download SVG</button>
+                </a>
+                <a id="controlpngdownload" href="/png/mirror?usi1=((identifier1))&usi2=((identifier2))&label" download="((identifier1))_((identifier2)).png">
+                    <button class="btn btn-primary" >Download PNG</button>
+                </a>
+            </div>
+        </div>
+</div>
+
+
+
+<script type="text/javascript">
+
+    var usi1 = '((identifier1))';
+    var usi2 = '((identifier2))';
+
+    function updateFigure() {
+        svg_url = "/svg/mirror?usi1=" + usi1 + "&usi2=" + usi2 + "&"
+        png_url = "/svg/mirror?usi1=" + usi1 + "&usi2=" + usi2 + "&"
+
+        draw_parameters = ""
+        
+        if($("#showlabel").val() == "Yes"){
+            draw_parameters += "label&"
+        }
+        if($("#thresh").val().length > 0){
+            thresh = parseFloat($("#thresh").val()) / 100
+            draw_parameters += `thresh=${thresh}&`
+        }
+        if($("#xmin").val().length > 0){
+            xmin = $("#xmin").val()
+            draw_parameters += `xmin=${xmin}&rescale&`
+        }
+        if($("#xmax").val().length > 0){
+            xmax = $("#xmax").val()
+            draw_parameters += `xmax=${xmax}&rescale&`
+        }
+
+        $("#spectrumrender")[0].src = svg_url + draw_parameters
+        $("#controlsvgdownload")[0].href = svg_url + draw_parameters
+        $("#controlpngdownload")[0].href = png_url + draw_parameters
+    }
+</script>
+
+(% endblock %)
