@@ -213,7 +213,7 @@ def generate_figure(usi, extension, **kwargs):
         for mz in annotate_mz:
             spec.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=f'{mz:.4f}')
 
-    spectrum_plotter_plot.spectrum(spec, annot_kws={'rotation': 70})
+    spectrum_plotter_plot.spectrum(spec, annot_kws={'rotation': kwargs.get('rotation', 70)})
 
     xmin, xmax = plt.xlim()
     plt.xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
@@ -299,15 +299,21 @@ def get_plot_pars(request):
         label = False
     
     try:
-        thresh = float(request.args.get('thresh',None))
+        thresh = float(request.args.get('thresh', None))
     except:
         thresh = 0.1
+
+    try:
+        rotation = float(request.args.get('rotation', None))
+    except:
+        rotation = 70
 
     plot_pars = {'xmin':xmin,
                  'xmax':xmax,
                  'rescale':rescale,
                  'label':label,
-                 'thresh':thresh}
+                 'thresh':thresh,
+                 'rotation':rotation}
     
     return plot_pars
 
@@ -379,8 +385,6 @@ def generateQRImage():
     return send_file("image.png")
 
 
-
-
 def parse_USI(usi):
     usi_identifier = usi.split(":")[1]
 
@@ -418,9 +422,6 @@ def parse_USI(usi):
 def lorikeet_example():
     # render the lorikeet example - ensures that js and css is being imported
     return render_template('example_use.html',text = "boo")
-
-
-    
 
 
 @app.route('/test', methods=['GET'])
