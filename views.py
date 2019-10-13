@@ -133,6 +133,7 @@ def parse_gnps_library(usi):
     spectrum = {}
     spectrum['peaks'] = peaks
     spectrum['n_peaks'] = len(peaks)
+    spectrum['precursor_mz'] = float(response.json()["annotations"][0]["Precursor_MZ"])
 
     return spectrum
 
@@ -348,6 +349,12 @@ def fix_svg(output_filename):
 def peak_json():
     usi = request.args.get('usi')
     spectrum = parse_USI(usi)
+
+    #Return for JSON includes, peaks, n_peaks, and precursor_mz
+
+    if "precursor_mz" not in spectrum:
+        spectrum["precursor_mz"] = 0
+
     return jsonify(spectrum)
 
 @app.route("/csv/")

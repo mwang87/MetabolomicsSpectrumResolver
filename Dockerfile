@@ -14,5 +14,7 @@ RUN conda install -n rdkit -c conda-forge xmltodict
 RUN conda install -n rdkit -c conda-forge qrcode
 RUN conda install -n rdkit -c conda-forge requests-cache
 
+RUN apt-get install -y libxrender-dev
+
 COPY . /app
 WORKDIR /app
