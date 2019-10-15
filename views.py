@@ -215,17 +215,17 @@ def _prepare_spectrum(usi, **kwargs):
 
 
 def generate_figure(usi, extension, **kwargs):
-    fig = plt.figure(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     spec = _prepare_spectrum(usi, **kwargs)
 
     spectrum_plotter_plot.spectrum(
-        spec, annot_kws={'rotation': kwargs.get('rotation', 70)})
+        spec, annot_kws={'rotation': kwargs.get('rotation', 70)}, ax=ax)
 
-    xmin, xmax = plt.xlim()
-    plt.xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
+    xmin, xmax = ax.get_xlim()
+    ax.set_xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
     if kwargs.get('label', False):
-        plt.ylim(0, 1.5)
+        ax.set_ylim(0, 1.5)
 
     fig.suptitle(usi, fontsize=10)
 
@@ -237,17 +237,17 @@ def generate_figure(usi, extension, **kwargs):
 
 
 def generate_mirror_figure(usi1, usi2, extension, **kwargs):
-    fig = plt.figure(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     spec1 = _prepare_spectrum(usi1, **kwargs)
     spec2 = _prepare_spectrum(usi2, **kwargs)
 
-    spectrum_plotter_plot.mirror(spec1, spec2)
+    spectrum_plotter_plot.mirror(spec1, spec2, ax=ax)
 
-    xmin, xmax = plt.xlim()
-    plt.xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
+    xmin, xmax = ax.get_xlim()
+    ax.set_xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
     if kwargs.get('label', False):
-        plt.ylim(-1.5, 1.5)
+        ax.set_ylim(-1.5, 1.5)
 
     fig.suptitle(f'{usi1}={usi2}', fontsize=10)
 
