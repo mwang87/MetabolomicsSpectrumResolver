@@ -110,6 +110,12 @@
                     </div>
                 </div>
                 <br>
+                <div class="form-group row">
+                    <div class="col">
+                        <input type="text" id="rotation" class="form-control" placeholder="Rotation angle (70 default)">
+                    </div>
+                </div>
+                <br>
                 <button class="btn btn-primary" onclick=updateFigure()>Update</button>
                 <hr>
                 <a id="controlsvgdownload" href="/svg/?usi=((identifier))&label" download="((identifier)).svg">
@@ -181,7 +187,11 @@
             xmax = $("#xmax").val()
             draw_parameters += `xmax=${xmax}&rescale&`
         }
-
+        if($("#rotation").val().length > 0){
+            rotation = $("#rotation").val()
+            draw_parameters += `rotation=${rotation}&`
+        }
+        
         $("#spectrumrender")[0].src = svg_url + draw_parameters
         $("#controlsvgdownload")[0].href = svg_url + draw_parameters
         $("#controlpngdownload")[0].href = png_url + draw_parameters

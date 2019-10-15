@@ -29,6 +29,10 @@ MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
 def renderhomepage():
     return render_template('homepage.html')
 
+@app.route('/contributors', methods=['GET'])
+def contributors():
+    return render_template('contributors.html')
+
 @app.route('/heartbeat', methods=['GET'])
 def testapi():
     return_obj = {}
@@ -129,6 +133,7 @@ def parse_gnps_library(usi):
     spectrum = {}
     spectrum['peaks'] = peaks
     spectrum['n_peaks'] = len(peaks)
+    spectrum['precursor_mz'] = float(response.json()["annotations"][0]["Precursor_MZ"])
 
     return spectrum
 
@@ -210,7 +215,7 @@ def _prepare_spectrum(usi, **kwargs):
         annotate_mz = generate_labels(spec, kwargs.get('thresh', 0.05))
         for mz in annotate_mz:
             spec.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=f'{mz:.4f}')
-
+            
     return spec
 
 
@@ -296,16 +301,22 @@ def get_plot_pars(request):
         label = False
 
     try:
-        thresh = float(request.args.get('thresh',None))
+        thresh = float(request.args.get('thresh', None))
     except:
         thresh = 0.1
+
+    try:
+        rotation = float(request.args.get('rotation', None))
+    except:
+        rotation = 70
 
     plot_pars = {'xmin':xmin,
                  'xmax':xmax,
                  'rescale':rescale,
                  'label':label,
-                 'thresh':thresh}
-
+                 'thresh':thresh,
+                 'rotation':rotation}
+    
     return plot_pars
 
 @app.route("/svg/")
@@ -335,6 +346,12 @@ def fix_svg(output_filename):
 def peak_json():
     usi = request.args.get('usi')
     spectrum = parse_USI(usi)
+
+    #Return for JSON includes, peaks, n_peaks, and precursor_mz
+
+    if "precursor_mz" not in spectrum:
+        spectrum["precursor_mz"] = 0
+
     return jsonify(spectrum)
 
 @app.route("/csv/")

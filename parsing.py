@@ -12,4 +12,5 @@ def parse_gnps_peak_text(text):
     spectrum = {}
     spectrum['peaks'] = peaks
     spectrum['n_peaks'] = len(peaks)
+    spectrum['precursor_mz'] = 0
     return spectrum
