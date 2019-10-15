@@ -197,9 +197,7 @@ def parse_MetabolomicsWorkbench(usi):
     return parse_MSV_PXD("mzspec:%s:%s:scan:%s" % (massive_identifier, filename, scan))
 
 
-def generate_figure(usi, extension, **kwargs):
-    fig = plt.figure(figsize=(10, 6))
-
+def _prepare_spectrum(usi, **kwargs):
     masses, intensities = zip(*parse_USI(usi)['peaks'])
     spec = spectrum_plotter_spectrum.MsmsSpectrum(
         usi, 0.0, 0, masses, intensities)
@@ -213,7 +211,16 @@ def generate_figure(usi, extension, **kwargs):
         for mz in annotate_mz:
             spec.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=f'{mz:.4f}')
 
-    spectrum_plotter_plot.spectrum(spec, annot_kws={'rotation': 70})
+    return spec
+
+
+def generate_figure(usi, extension, **kwargs):
+    fig = plt.figure(figsize=(10, 6))
+
+    spec = _prepare_spectrum(usi, **kwargs)
+
+    spectrum_plotter_plot.spectrum(
+        spec, annot_kws={'rotation': kwargs.get('rotation', 70)})
 
     xmin, xmax = plt.xlim()
     plt.xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
@@ -226,37 +233,22 @@ def generate_figure(usi, extension, **kwargs):
 
     return output_filename
 
-def generate_mirror_figure(usi1, usi2, format, **kwargs):
-    spectrum1 = parse_USI(usi1)
-    spectrum2 = parse_USI(usi2)
 
-    masses1, intentisities1 = zip(*spectrum1['peaks'])
-    masses2, intentisities2 = zip(*spectrum2['peaks'])
-    fig = plt.figure(figsize=(10,6))
+def generate_mirror_figure(usi1, usi2, extension, **kwargs):
+    fig = plt.figure(figsize=(10, 6))
 
-    spec1 = spectrum_plotter_spectrum.MsmsSpectrum(usi1, 0.0, 0.0,
-                            masses1, intentisities1)
-    spec2 = spectrum_plotter_spectrum.MsmsSpectrum(usi2, 0.0, 0.0,
-                            masses2, intentisities2)
+    spec1 = _prepare_spectrum(usi1, **kwargs)
+    spec2 = _prepare_spectrum(usi2, **kwargs)
 
-
-    if kwargs.get('rescale', False):
-        spec1.set_mz_range(kwargs.get('xmin'), kwargs.get('xmax'))
-        spec2.set_mz_range(kwargs.get('xmin'), kwargs.get('xmax'))
-
-    if kwargs.get('label', False):
-        annotate_mz1 = generate_labels(spec1, kwargs.get('thresh', 0.05))
-        for mz in annotate_mz1:
-            spec1.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=f'{mz:.4f}')
-    
     spectrum_plotter_plot.mirror(spec1, spec2)
 
     xmin, xmax = plt.xlim()
     plt.xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
 
-    fig.suptitle(usi1 + "=" + usi2, fontsize=10)
+    fig.suptitle(f'{usi1}={usi2}', fontsize=10)
 
-    output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + "." + format)
+    output_filename = os.path.join(app.config['TEMPFOLDER'],
+                                   f'{uuid.uuid4()}.{extension}')
     plt.savefig(output_filename)
 
     return output_filename
