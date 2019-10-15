@@ -224,6 +224,8 @@ def generate_figure(usi, extension, **kwargs):
 
     xmin, xmax = plt.xlim()
     plt.xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
+    if kwargs.get('label', False):
+        plt.ylim(0, 1.5)
 
     fig.suptitle(usi, fontsize=10)
 
@@ -244,6 +246,8 @@ def generate_mirror_figure(usi1, usi2, extension, **kwargs):
 
     xmin, xmax = plt.xlim()
     plt.xlim(kwargs.get('xmin', xmin), kwargs.get('xmax', xmax))
+    if kwargs.get('label', False):
+        plt.ylim(-1.5, 1.5)
 
     fig.suptitle(f'{usi1}={usi2}', fontsize=10)
 
@@ -290,7 +294,7 @@ def get_plot_pars(request):
         label = True
     else:
         label = False
-    
+
     try:
         thresh = float(request.args.get('thresh',None))
     except:
@@ -301,7 +305,7 @@ def get_plot_pars(request):
                  'rescale':rescale,
                  'label':label,
                  'thresh':thresh}
-    
+
     return plot_pars
 
 @app.route("/svg/")
