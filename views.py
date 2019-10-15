@@ -120,11 +120,11 @@ def parse_gnps_library(usi):
     tokens = usi.split(':')
 
     identifier= tokens[2]
-    
+
     request_url = "https://gnps.ucsd.edu/ProteoSAFe/SpectrumCommentServlet?SpectrumID=%s" % (identifier)
 
     response = requests.get(request_url)
-    peaks = json.loads(response.json()["spectruminfo"]["peaks_json"])    
+    peaks = json.loads(response.json()["spectruminfo"]["peaks_json"])
 
     spectrum = {}
     spectrum['peaks'] = peaks
@@ -175,7 +175,7 @@ def parse_MTBLS(usi):
         return None
 
     return parse_MSV_PXD("mzspec:%s:%s:scan:%s" % (massive_identifier, filename, scan))
-    
+
 def parse_MetabolomicsWorkbench(usi):
     tokens = usi.split(':')
 
@@ -261,6 +261,7 @@ def generate_mirror_figure(usi1, usi2, format, **kwargs):
 
     return output_filename
 
+
 @app.route("/png/")
 def generatePNG():
     usi = request.args.get('usi')
@@ -287,7 +288,7 @@ def get_plot_pars(request):
         xmax = float(request.args.get('xmax',None))
     except:
         xmax = None
-    
+
     if 'rescale' in request.args:
         rescale = True
     else:
@@ -379,8 +380,6 @@ def generateQRImage():
     return send_file("image.png")
 
 
-
-
 def parse_USI(usi):
     usi_identifier = usi.split(":")[1]
 
@@ -402,7 +401,7 @@ def parse_USI(usi):
         spectrum = parse_motifdb(usi)
     elif usi_identifier.startswith('MASSBANK'):
         spectrum = parse_massbank(usi)
-        
+
     return spectrum
 
 
@@ -418,9 +417,6 @@ def parse_USI(usi):
 def lorikeet_example():
     # render the lorikeet example - ensures that js and css is being imported
     return render_template('example_use.html',text = "boo")
-
-
-    
 
 
 @app.route('/test', methods=['GET'])
