@@ -204,10 +204,22 @@ def parse_MetabolomicsWorkbench(usi):
 
 
 def _prepare_spectrum(usi, **kwargs):
-    masses, intensities = zip(*parse_USI(usi)['peaks'])
+    usi_data = parse_USI(usi)
+    masses, intensities = zip(*usi_data['peaks'])
+    precursor_mz = usi_data.get('precursor_mz',0)
+    if kwargs.get('plot_precursor',False):
+        max_intensity = max(intensities)
+        masses = list(masses)
+        masses.append(precursor_mz)
+        intensities = list(intensities)
+        intensities.append(max_intensity)
+
     spec = spectrum_plotter_spectrum.MsmsSpectrum(
         usi, 0.0, 0, masses, intensities)
     spec.scale_intensity(max_intensity=1)
+
+    if kwargs.get('plot_precursor',False):
+        spec.annotate_mz_fragment(precursor_mz,0,0.01,'Da',text='Precursor')
 
     if kwargs.get('rescale', False):
         spec.set_mz_range(kwargs.get('xmin'), kwargs.get('xmax'))
@@ -301,6 +313,11 @@ def get_plot_pars(request):
     else:
         label = False
 
+    if 'plot_precursor' in request.args:
+        plot_precursor = True
+    else:
+        plot_precursor = False
+
     try:
         thresh = float(request.args.get('thresh', None))
     except:
@@ -316,7 +333,8 @@ def get_plot_pars(request):
                  'rescale':rescale,
                  'label':label,
                  'thresh':thresh,
-                 'rotation':rotation}
+                 'rotation':rotation,
+                 'plot_precursor':plot_precursor}
     
     return plot_pars
 
