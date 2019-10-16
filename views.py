@@ -207,7 +207,7 @@ def _prepare_spectrum(usi, **kwargs):
     usi_data = parse_USI(usi)
     masses, intensities = zip(*usi_data['peaks'])
     precursor_mz = usi_data.get('precursor_mz',0)
-    if kwargs.get('plot_precursor',False):
+    if kwargs.get('plot_precursor',False) and precursor_mz > 0:
         max_intensity = max(intensities)
         masses = list(masses)
         masses.append(precursor_mz)
@@ -218,7 +218,7 @@ def _prepare_spectrum(usi, **kwargs):
         usi, 0.0, 0, masses, intensities)
     spec.scale_intensity(max_intensity=1)
 
-    if kwargs.get('plot_precursor',False):
+    if kwargs.get('plot_precursor',False) and precursor_mz > 0:
         spec.annotate_mz_fragment(precursor_mz,0,0.01,'Da',text='Precursor')
 
     if kwargs.get('rescale', False):
