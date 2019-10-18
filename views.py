@@ -214,8 +214,10 @@ def _prepare_spectrum(usi, **kwargs):
 
     if kwargs.get('label', False):
         annotate_mz = generate_labels(spec, kwargs.get('thresh', 0.05))
+        label_dp = kwargs.get('label_dp',4)
         for mz in annotate_mz:
-            spec.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=f'{mz:.4f}')
+            lab_text = "{value:.{precision}f}".format(value=mz,precision=label_dp)
+            spec.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=lab_text)
             
     return spec
 
@@ -311,12 +313,18 @@ def get_plot_pars(request):
     except:
         rotation = 70
 
+    try:
+        label_dp = int(request.args.get('label_dp',None))
+    except:
+        label_dp = 4
+
     plot_pars = {'xmin':xmin,
                  'xmax':xmax,
                  'rescale':rescale,
                  'label':label,
                  'thresh':thresh,
-                 'rotation':rotation}
+                 'rotation':rotation,
+                 'label_dp':label_dp}
     
     return plot_pars
 
