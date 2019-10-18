@@ -3,7 +3,7 @@ MAINTAINER Mingxun Wang "mwang87@gmail.com"
 
 WORKDIR /app
 RUN apt-get update -y
-RUN conda create -n usi -c anaconda python=3.7 
+RUN conda create -n usi -c rdkit rdkit
 RUN /bin/bash -c "source activate usi"
 RUN echo "source activate usi" > ~/.bashrc
 RUN conda install -n usi -c anaconda flask
