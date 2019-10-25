@@ -11,16 +11,6 @@
             </div>
             <div class="col-sm"></div>
         </div>
-        <hr>
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                Universal Spectrum Identifier
-                <br>
-                ((identifier1)) mirror ((identifier2))
-            </div>
-            <div class="col-sm"></div>
-        </div>
 
         <hr>
     
@@ -32,45 +22,17 @@
             <div class="col-sm"></div>
         </div>
 
-
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                <img src="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))">
-            </div>
-            <div class="col-sm">
-                <a href="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))" download="((identifier1))_((identifier2)).svg">
-                    <button class="btn btn-primary" >Download SVG</button>
-                </a>
-                <a href="/png/mirror?usi=((identifier1))&usi2=((identifier2))" download="((identifier1))_((identifier2)).svg">
-                    <button class="btn btn-primary" >Download PNG</button>
-                </a>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                <img src="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))&label">
-            </div>
-            <div class="col-sm">
-                <a href="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))&label" download="((identifier1))_((identifier2)).svg">
-                    <button class="btn btn-primary" >Download SVG</button>
-                </a>
-                <a href="/png/mirror?usi=((identifier1))&usi2=((identifier2))&label" download="((identifier1))_((identifier2)).svg">
-                    <button class="btn btn-primary" >Download PNG</button>
-                </a>
-            </div>
-        </div>
-
-        <hr>
-
         <div class="row">
             <div class="col-sm"></div>
             <div class="col-sm text-center">
                 <img id="spectrumrender" src="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))&label">
             </div>
-            <div class="col-sm">
+            <div class="col-sm"></div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-6 text-center">
                 <h2>Drawing Controls</h2>
                 <br>
                 <div class="form-group row"> 
@@ -97,16 +59,19 @@
                         <input type="text" id="xmax" class="form-control" placeholder="Max m/z">
                     </div>
                 </div>
-                <br>
                 <button class="btn btn-primary" onclick=updateFigure()>Update</button>
-                <hr>
+                <br>
+                <br>
                 <a id="controlsvgdownload" href="/svg/mirror?usi1=((identifier1))&usi2=((identifier2))&label" download="((identifier1))_((identifier2)).svg">
                     <button class="btn btn-primary" >Download SVG</button>
                 </a>
                 <a id="controlpngdownload" href="/png/mirror?usi1=((identifier1))&usi2=((identifier2))&label" download="((identifier1))_((identifier2)).png">
                     <button class="btn btn-primary" >Download PNG</button>
                 </a>
+                <br>
+                <br>
             </div>
+            <div class="col-sm-3"></div>
         </div>
 </div>
 
