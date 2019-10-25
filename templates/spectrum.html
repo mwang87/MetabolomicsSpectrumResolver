@@ -28,8 +28,10 @@
         <hr>
         <div class="row">
             <div class="col-sm"></div>
-            <div class="col-sm text-center">
+            <div class="col-sm">
+                <div class="row justify-content-center">
                     <div id="lorikeet"></div>
+                </div>
             </div>
             <div class="col-sm"></div>
         </div>
@@ -44,45 +46,17 @@
             <div class="col-sm"></div>
         </div>
 
-
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                <img src="/svg/?usi=((identifier))">
-            </div>
-            <div class="col-sm">
-                <a href="/svg/?usi=((identifier))" download="((identifier)).svg">
-                    <button class="btn btn-primary" >Download SVG</button>
-                </a>
-                <a href="/png/?usi=((identifier))" download="((identifier)).png">
-                    <button class="btn btn-primary" >Download PNG</button>
-                </a>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                <img src="/svg/?usi=((identifier))&label">
-            </div>
-            <div class="col-sm">
-                <a href="/svg/?usi=((identifier))&label" download="((identifier)).svg">
-                    <button class="btn btn-primary" >Download SVG</button>
-                </a>
-                <a href="/png/?usi=((identifier))&label" download="((identifier)).png">
-                    <button class="btn btn-primary" >Download PNG</button>
-                </a>
-            </div>
-        </div>
-
-        <hr>
-
         <div class="row">
             <div class="col-sm"></div>
             <div class="col-sm text-center">
                 <img id="spectrumrender" src="/svg/?usi=((identifier))&label">
             </div>
-            <div class="col-sm">
+            <div class="col-sm"></div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-6 text-center">
                 <h2>Drawing Controls</h2>
                 <br>
                 <div class="form-group row"> 
@@ -114,15 +88,14 @@
                         <input type="text" id="xmax" class="form-control" placeholder="Max m/z">
                     </div>
                 </div>
-                <br>
                 <div class="form-group row">
                     <div class="col">
-                        <input type="text" id="rotation" class="form-control" placeholder="Rotation angle (70 default)">
+                        <input type="text" id="rotation" class="form-control" placeholder="Label rotation angle (70 default)">
                     </div>
                 </div>
-                <br>
                 <button class="btn btn-primary" onclick=updateFigure()>Update</button>
-                <hr>
+                <br>
+                <br>
                 <a id="controlsvgdownload" href="/svg/?usi=((identifier))&label" download="((identifier)).svg">
                     <button class="btn btn-primary" >Download SVG</button>
                 </a>
@@ -130,8 +103,9 @@
                     <button class="btn btn-primary" >Download PNG</button>
                 </a>
             </div>
+            <div class="col-sm-3"></div>
         </div>
-
+        <hr>
         <div class="row">
                 <div class="col-sm"></div>
                 <div class="col-sm text-center">
