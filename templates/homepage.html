@@ -3,19 +3,19 @@
 (% block content %)
 
 <div class="row">
-    <div class="col-sm"></div>
-    <div class="col-sm text-center">
+    <div class="col-sm-3"></div>
+    <div class="col-sm-6 text-center">
         <h2>Metabolomics Spectrum Identifier Resolver</h2>
     </div>
-    <div class="col-sm"></div>
+    <div class="col-sm-3"></div>
 </div>
 
 <div class="row">
-    <div class="col-sm"></div>
-    <div class="col-sm text-center">
+    <div class="col-sm-3"></div>
+    <div class="col-sm-6 text-center">
             Helps to resolve Universal Spectrum Identifiers (USI) for metabolomics data (e.g. GNPS Spectral Libraries, GNPS Molecular Networking Spectra, MS2LDA Motifs, Massbank Spectra, MassIVE public spectra)
     </div>
-    <div class="col-sm"></div>
+    <div class="col-sm-3"></div>
 </div>
 
 <br>
@@ -23,52 +23,60 @@
 
 <div id="displayer">
     <div class="row">
-        <div class="col-sm"></div>
-        <div class="col-sm">
-            <div class="text-center" >
-                <input type="text" class="form-control" name="identifier" id="identifier" placeholder="Enter Spectrum Identifier">
-            </div>
-        </div>
-        <div class="col-sm">
-            <div class="text-center" >
-                <button id="analyzebutton" class="btn btn-primary" onclick="myFunction()" >Resolve Identifier</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<br>
-<hr>
-
-<div id="displayer">
-    <div class="row">
-        <div class="col-sm">
-                <div class="text-center" >
-                    <input type="text" class="form-control" name="identifier" id="identifier1" placeholder="Enter Spectrum Identifier 1">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+            <div class="row">
+                <div class="col-sm-4"></div>
+                <div class="col-sm-4">
+                    <div class="text-center" >
+                        <input type="text" class="form-control" name="identifier" id="identifier" placeholder="Enter Spectrum Identifier">
+                    </div>
                 </div>
+                <div class="col-sm-4">
+                    <div class="text-center" >
+                        <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" onclick="myFunction()" >Resolve Identifier</button>
+                    </div>
+                </div>
+            </div><datagrid></datagrid>
         </div>
-        <div class="col-sm">
-            <div class="text-center" >
-                <input type="text" class="form-control" name="identifier" id="identifier2" placeholder="Enter Spectrum Identifier 2">
-            </div>
-        </div>
-        <div class="col-sm">
-            <div class="text-center" >
-                <button id="analyzebutton" class="btn btn-primary" onclick="resolveMirror()" >Resolve Mirror Identifiers</button>
-            </div>
-        </div>
+        <div class="col-sm-1" ></div>
     </div>
 </div>
 
 <hr>
 
+<div id="displayer">
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="text-center" >
+                        <input type="text" class="form-control" name="identifier" id="identifier1" placeholder="Enter Spectrum Identifier 1">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="text-center" >
+                        <input type="text" class="form-control" name="identifier" id="identifier2" placeholder="Enter Spectrum Identifier 2">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="text-center" >
+                        <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" onclick="resolveMirror()" >Resolve Mirror Identifiers</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-1"></div>
+    </div>
+</div>
 
-
+<hr>
 
 <div id="displayer">
     <div class="row">
-        <div class="col-sm"></div>
-        <div class="col-sm">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
             <div class="text-center" >
                 <h2>
                     Example Identifiers
@@ -76,55 +84,59 @@
             </div>
             
             <hr>
+            <div class="row" justify-content-center>
+                <div class="col-sm-4"></div>
+                <div class="col-sm-4">
+                    <div class="text-center" >
+                        <a href="/spectrum/?usi=mzspec:MS2LDATASK-38:document:43062">
+                            <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >MS2LDA Document Motif</button>
+                        </a>
+                    </div>
 
-            <div class="text-center" >
-                <a href="/spectrum/?usi=mzspec:MS2LDATASK-38:document:43062">
-                    <button id="analyzebutton" class="btn btn-primary" >MS2LDA Document Motif</button>
-                </a>
-            </div>
+                    <br>
 
-            <br>
+                    <div class="text-center" >
+                        <a href="/spectrum/?usi=mzspec:MOTIFDB:motif:171163">
+                            <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >MS2LDA MotifDB</button>
+                        </a>
+                    </div>
 
-            <div class="text-center" >
-                <a href="/spectrum/?usi=mzspec:MOTIFDB:motif:171163">
-                    <button id="analyzebutton" class="btn btn-primary" >MS2LDA MotifDB</button>
-                </a>
-            </div>
+                    <br>
 
-            <br>
+                    <div class="text-center" >
+                        <a href="/spectrum/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943">
+                            <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >GNPS Molecular Networking Spectrum</button>
+                        </a>
+                    </div>
 
-            <div class="text-center" >
-                <a href="/spectrum/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943">
-                    <button id="analyzebutton" class="btn btn-primary" >GNPS Molecular Networking Spectrum</button>
-                </a>
-            </div>
+                    <br>
 
-            <br>
+                    <div class="text-center" >
+                        <a href="/spectrum/?usi=mzspec:GNPSLIBRARY:CCMSLIB00005436077">
+                            <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >GNPS Library Spectrum</button>
+                        </a>
+                    </div>
 
-            <div class="text-center" >
-                <a href="/spectrum/?usi=mzspec:GNPSLIBRARY:CCMSLIB00005436077">
-                    <button id="analyzebutton" class="btn btn-primary" >GNPS Library Spectrum</button>
-                </a>
-            </div>
+                    <br>
 
-            <br>
+                    <div class="text-center" >
+                        <a href="/spectrum/?usi=mzdata:MASSBANK:BSU00002">
+                            <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >MassBank Library Spectrum</button>
+                        </a>
+                    </div>
 
-            <div class="text-center" >
-                <a href="/spectrum/?usi=mzdata:MASSBANK:BSU00002">
-                    <button id="analyzebutton" class="btn btn-primary" >MassBank Library Spectrum</button>
-                </a>
-            </div>
+                    <br>
 
-            <br>
-
-            <div class="text-center" >
-                <a href="/mirror/?usi1=mzdata:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002">
-                    <button id="analyzebutton" class="btn btn-primary" >Mirror Spectrum</button>
-                </a>
-            </div>
+                    <div class="text-center" >
+                        <a href="/mirror/?usi1=mzdata:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002">
+                            <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >Mirror Spectrum</button>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-sm-4"></div>
+            </div> 
         </div>
-        <div class="col-sm">
-        </div>
+        <div class="col-sm-1"></div>
     </div>
 </div>
 
