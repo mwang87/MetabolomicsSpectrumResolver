@@ -18,7 +18,7 @@ from app import app
 
 requests_cache.install_cache('demo_cache', expire_after=300)
 
-SERVER = 'https://metabolomics-usi.ucsd.edu'
+USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
 MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
@@ -400,7 +400,7 @@ def generate_labels(spec, intensity_threshold):
 def generateQRImage():
     identifier = flask.request.args.get('usi')
     # QR code rendering.
-    qr_image = qrcode.make(f'{SERVER}/spectrum/?usi={identifier}')
+    qr_image = qrcode.make(f'{USI_SERVER}spectrum/?usi={identifier}')
     qr_image.save('image.png')
     return flask.send_file('image.png')
 
