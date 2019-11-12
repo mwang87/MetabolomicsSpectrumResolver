@@ -1,22 +1,20 @@
-# views.py
-from flask import abort, jsonify, render_template, request, redirect, url_for, send_file, make_response
-
-from app import app
-
-import os
 import csv
 import json
+import os
 import uuid
-import requests
+
+import flask
+import matplotlib.pyplot as plt
+import numpy as np
 import qrcode
 import requests
 import requests_cache
-import parsing
-import numpy as np
-
 from spectrum_utils import spectrum as spectrum_plotter_spectrum
 from spectrum_utils import plot as spectrum_plotter_plot
-import matplotlib.pyplot as plt
+
+import parsing
+from app import app
+
 
 requests_cache.install_cache('demo_cache',expire_after=300)
 
@@ -25,13 +23,16 @@ MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
 MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
 
+
 @app.route('/', methods=['GET'])
 def renderhomepage():
-    return render_template('homepage.html')
+    return flask.render_template('homepage.html')
+
 
 @app.route('/contributors', methods=['GET'])
 def contributors():
-    return render_template('contributors.html')
+    return flask.render_template('contributors.html')
+
 
 @app.route('/heartbeat', methods=['GET'])
 def testapi():
@@ -39,24 +40,26 @@ def testapi():
     return_obj["status"] = "fail"
     return json.dumps(return_obj)
 
+
 @app.route('/spectrum/',methods=['GET'])
 def renderspectrum():
-    usi = request.args.get('usi')
+    usi = flask.request.args.get('usi')
     spectrum = parse_USI(usi)
 
-    return render_template('spectrum.html', \
+    return flask.render_template('spectrum.html', \
         peaks=json.dumps(spectrum['peaks']), \
         identifier=usi, \
         )
 
+
 @app.route('/mirror/',methods=['GET'])
 def rendermirrorspectrum():
-    usi1 = request.args.get('usi1')
-    usi2 = request.args.get('usi2')
+    usi1 = flask.request.args.get('usi1')
+    usi2 = flask.request.args.get('usi2')
     spectrum1 = parse_USI(usi1)
     spectrum2 = parse_USI(usi2)
 
-    return render_template('mirror.html', \
+    return flask.render_template('mirror.html', \
         peaks1=json.dumps(spectrum1['peaks']), \
         peaks2=json.dumps(spectrum2['peaks']), \
         identifier1=usi1, \
@@ -65,7 +68,7 @@ def rendermirrorspectrum():
 
 @app.errorhandler(500)
 def internal_error(error):
-    return render_template('500.html')
+    return flask.render_template('500.html')
 
 
 #parsing MS2LDA in ms2lda.org
@@ -223,7 +226,7 @@ def _prepare_spectrum(usi, **kwargs):
         for mz in annotate_mz:
             lab_text = "{value:.{precision}f}".format(value=mz,precision=label_dp)
             spec.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=lab_text)
-            
+
     return spec
 
 
@@ -273,18 +276,18 @@ def generate_mirror_figure(usi1, usi2, extension, **kwargs):
 
 @app.route("/png/")
 def generatePNG():
-    usi = request.args.get('usi')
-    plot_pars = get_plot_pars(request)
+    usi = flask.request.args.get('usi')
+    plot_pars = get_plot_pars(flask.request)
     output_filename = generate_figure(usi, 'png', **plot_pars)
-    return send_file(output_filename,mimetype='image/png')
+    return flask.send_file(output_filename,mimetype='image/png')
 
 @app.route("/png/mirror/")
 def generateMirrorPNG():
-    usi1 = request.args.get('usi1')
-    usi2 = request.args.get('usi2')
-    plot_pars = get_plot_pars(request)
+    usi1 = flask.request.args.get('usi1')
+    usi2 = flask.request.args.get('usi2')
+    plot_pars = get_plot_pars(flask.request)
     output_filename = generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
-    return send_file(output_filename,mimetype='image/png')
+    return flask.send_file(output_filename,mimetype='image/png')
 
 
 def get_plot_pars(request):
@@ -330,24 +333,24 @@ def get_plot_pars(request):
                  'thresh':thresh,
                  'rotation':rotation,
                  'label_dp':label_dp}
-    
+
     return plot_pars
 
 @app.route("/svg/")
 def generateSVG():
-    usi = request.args.get('usi')
-    plot_pars = get_plot_pars(request)
+    usi = flask.request.args.get('usi')
+    plot_pars = get_plot_pars(flask.request)
     output_filename = generate_figure(usi, 'svg', **plot_pars)
     fix_svg(output_filename)
-    return send_file(output_filename,mimetype='image/svg+xml')
+    return flask.send_file(output_filename,mimetype='image/svg+xml')
 
 @app.route("/svg/mirror/")
 def generateMirrorSVG():
-    usi1 = request.args.get('usi1')
-    usi2 = request.args.get('usi2')
-    plot_pars = get_plot_pars(request)
+    usi1 = flask.request.args.get('usi1')
+    usi2 = flask.request.args.get('usi2')
+    plot_pars = get_plot_pars(flask.request)
     output_filename = generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
-    return send_file(output_filename,mimetype='image/png')
+    return flask.send_file(output_filename,mimetype='image/png')
 
 def fix_svg(output_filename):
     # remove the whitespace issue
@@ -358,7 +361,7 @@ def fix_svg(output_filename):
 
 @app.route("/json/")
 def peak_json():
-    usi = request.args.get('usi')
+    usi = flask.request.args.get('usi')
     spectrum = parse_USI(usi)
 
     #Return for JSON includes, peaks, n_peaks, and precursor_mz
@@ -366,11 +369,11 @@ def peak_json():
     if "precursor_mz" not in spectrum:
         spectrum["precursor_mz"] = 0
 
-    return jsonify(spectrum)
+    return flask.jsonify(spectrum)
 
 @app.route("/csv/")
 def peak_csv():
-    usi = request.args.get('usi')
+    usi = flask.request.args.get('usi')
     spectrum = parse_USI(usi)
     output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + ".csv")
     with open(output_filename,'w') as f:
@@ -379,7 +382,7 @@ def peak_csv():
         writer.writerow(['mz','intensity'])
         for line in spectrum['peaks']:
             writer.writerow(line)
-    return send_file(output_filename,mimetype='text/csv',as_attachment=True,attachment_filename="peaks.csv")
+    return flask.send_file(output_filename,mimetype='text/csv',as_attachment=True,attachment_filename="peaks.csv")
 
 
 def generate_labels(spec, intensity_threshold):
@@ -400,13 +403,13 @@ def generate_labels(spec, intensity_threshold):
 
 @app.route("/qrcode/")
 def generateQRImage():
-    identifier = request.args.get('usi')
+    identifier = flask.request.args.get('usi')
 
     #QR Code Rendering
     qr_image = qrcode.make(SERVER + '/spectrum/?usi=' + identifier)
     qr_image.save("image.png")
 
-    return send_file("image.png")
+    return flask.send_file("image.png")
 
 
 def parse_USI(usi):
@@ -432,26 +435,3 @@ def parse_USI(usi):
         spectrum = parse_massbank(usi)
 
     return spectrum
-
-
-
-
-### Testing Below ###
-
-
-
-
-
-@app.route('/lori',methods=['GET'])
-def lorikeet_example():
-    # render the lorikeet example - ensures that js and css is being imported
-    return render_template('example_use.html',text = "boo")
-
-
-@app.route('/test', methods=['GET'])
-# to be deleted - just simon experimenting..
-def example_spectrum_grab():
-    request_url = 'https://massive.ucsd.edu/ProteoSAFe/DownloadResultFile?invoke=annotatedSpectrumImageText&block=0&file=FILE-%3EMSV000079514%2Fccms_peak%2FRAW%2FFrontal%20cortex%2FLTQ-Orbitrap%20Elite%2F85%2FAdult_Frontalcortex_bRP_Elite_85_f09.mzXML&scan=17555&peptide=*..*&uploadfile=True&task=4f2ac74ea114401787a7e96e143bb4a1'
-    response = requests.get(request_url)
-    spectrum = parsetext(response.text)
-    return json.dumps(spectrum)
