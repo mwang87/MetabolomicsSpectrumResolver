@@ -63,6 +63,11 @@ def rendermirrorspectrum():
         identifier2=usi2, \
         )
 
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('500.html')
+
+
 #parsing MS2LDA in ms2lda.org
 def parse_ms2lda(usi):
     tokens = usi.split(':')
@@ -370,7 +375,7 @@ def peak_csv():
     output_filename = os.path.join(app.config['TEMPFOLDER'], str(uuid.uuid4()) + ".csv")
     with open(output_filename,'w') as f:
         writer = csv.writer(f)
-        
+
         writer.writerow(['mz','intensity'])
         for line in spectrum['peaks']:
             writer.writerow(line)
