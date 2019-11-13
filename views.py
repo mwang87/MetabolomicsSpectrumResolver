@@ -433,25 +433,3 @@ def parse_USI(usi):
 
     return spectrum
 
-
-
-
-### Testing Below ###
-
-
-
-
-
-@app.route('/lori',methods=['GET'])
-def lorikeet_example():
-    # render the lorikeet example - ensures that js and css is being imported
-    return render_template('example_use.html',text = "boo")
-
-
-@app.route('/test', methods=['GET'])
-# to be deleted - just simon experimenting..
-def example_spectrum_grab():
-    request_url = 'https://massive.ucsd.edu/ProteoSAFe/DownloadResultFile?invoke=annotatedSpectrumImageText&block=0&file=FILE-%3EMSV000079514%2Fccms_peak%2FRAW%2FFrontal%20cortex%2FLTQ-Orbitrap%20Elite%2F85%2FAdult_Frontalcortex_bRP_Elite_85_f09.mzXML&scan=17555&peptide=*..*&uploadfile=True&task=4f2ac74ea114401787a7e96e143bb4a1'
-    response = requests.get(request_url)
-    spectrum = parsetext(response.text)
-    return json.dumps(spectrum)
