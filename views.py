@@ -53,8 +53,8 @@ def render_spectrum():
 @app.route('/mirror/', methods=['GET'])
 def render_mirror_spectrum():
     return flask.render_template('mirror.html',
-                                 usi_top=flask.request.args.get('usi1'),
-                                 usi_bottom=flask.request.args.get('usi2'))
+                                 usi1=flask.request.args.get('usi1'),
+                                 usi2=flask.request.args.get('usi2'))
 
 
 @app.route('/png/')
@@ -89,7 +89,7 @@ def generate_mirror_svg():
     usi2 = flask.request.args.get('usi2')
     plot_pars = _get_plotting_args(flask.request)
     output_filename = _generate_mirror_figure(usi1, usi2, 'svg', **plot_pars)
-    return flask.send_file(output_filename, mimetype='image/png')
+    return flask.send_file(output_filename, mimetype='image/svg+xml')
 
 
 def _generate_figure(usi, extension, **kwargs):
