@@ -167,7 +167,7 @@ def _generate_labels(spec, intensity_threshold):
                 labeled_mz.append(mz)
 
     return labeled_mz
-
+              
 
 def _get_plotting_args(request):
     mz_min = request.args.get('mz_min')
@@ -226,15 +226,44 @@ def peak_csv():
                            as_attachment=True, attachment_filename='peaks.csv')
 
 
-@app.route('/qrcode/')
-def generate_qr_image():
-    usi = flask.request.args.get('usi')
-    # QR code rendering.
-    qr_image = qrcode.make(f'{USI_SERVER}spectrum/?usi={usi}')
-    qr_image.save('image.png')
-    return flask.send_file('image.png')
-
-
 @app.errorhandler(500)
 def internal_error(error):
     return flask.render_template('500.html')
+
+              
+@app.route("/qrcode/")
+def generateQRImage():
+    identifier = request.args.get('usi')
+
+    #QR Code Rendering
+    qr_image = qrcode.make(SERVER + '/spectrum/?usi=' + identifier)
+    qr_image.save("image.png")
+
+    return send_file("image.png")
+
+
+def parse_USI(usi):
+    usi_identifier = usi.split(":")[1]
+
+    if usi_identifier.startswith('GNPSTASK'):
+        spectrum = parse_gnps_task(usi)
+    elif usi_identifier.startswith('GNPSLIBRARY'):
+        spectrum = parse_gnps_library(usi)
+    elif usi_identifier.startswith('MS2LDATASK'):
+        spectrum = parse_ms2lda(usi)
+    elif usi_identifier.startswith('PXD'):
+        spectrum = parse_MSV_PXD(usi)
+    elif usi_identifier.startswith('MSV'):
+        spectrum = parse_MSV_PXD(usi)
+    elif usi_identifier.startswith('MTBLS'):
+        spectrum = parse_MTBLS(usi)
+    elif usi_identifier.startswith('ST'):
+        spectrum = parse_MetabolomicsWorkbench(usi)
+    elif usi_identifier.startswith('MOTIFDB'):
+        spectrum = parse_motifdb(usi)
+    elif usi_identifier.startswith('MASSBANK'):
+        spectrum = parse_massbank(usi)
+
+    return spectrum
+              
+              
