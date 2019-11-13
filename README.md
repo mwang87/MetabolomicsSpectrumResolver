@@ -10,8 +10,14 @@ This tool is meant to be able to show summarize USI's from various sources. It w
 Supported USI Types
 
 1. GNPS Molecular Networking Clustered Spectra
-2. GNPS Spectral Libraries
-3. ProteoXchange Repository Data
+1. GNPS Spectral Libraries
+1. ProteoXchange Repository Data
+1. MS2LDA Reference Motifs
+1. Metabolights Dataset Spectra
+1. Metabolomics Workbench Dataset Spectra
+
+![](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/Python%20package/badge.svg)
+
 
 ## Example USI URLs
 
