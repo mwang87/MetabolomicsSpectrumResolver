@@ -62,13 +62,12 @@ Supported USI Types
 
 ## Additional arguments for plotting views
 
-xmin: minimum mz value
-xmax: maximum mz value
-rescale: include 'rescale' if you want the plot to rescale such that the biggest peak within [xmin,xmax] is plotted as 100%
-label: include 'label' if you want the plot to label peaks that have intensity >50% of the biggest peak within [xmin,xmax]
+mz_min: minimum mz value
+mz_max: maximum mz value
+annotate_peaks: include 'annotate_peaks' if you want the plot to label peaks that have intensity >50% of the biggest peak within [mz_min,mz_max]
 
 e.g. 
-[mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555&xmin=400&xmax=500&rescale&label)
+[mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555&mz_min=400&mz_max=500&annotate_peaks)
 
 ## Deprecated Material
 
