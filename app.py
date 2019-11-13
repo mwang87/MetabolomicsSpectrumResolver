@@ -24,4 +24,4 @@ app.config['TEMPFOLDER'] = '/tmp'
 try:
     os.mkdir(app.config['TEMPFOLDER'])
 except FileExistsError:
-    logging.WARNING(f'Cannot create {app.config["TEMPFOLDER"]}')
+    logging.warning('Cannot create %s', app.config['TEMPFOLDER'])
