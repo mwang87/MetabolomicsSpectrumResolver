@@ -17,9 +17,9 @@
             <div class="col-sm text-center">
                 Universal Spectrum Identifier
                 <br>
-                ((identifier))
+                ((usi))
                 <br>
-                <a href="/json/?usi=((identifier))">Download peaks as json</a>
+                <a href="/json/?usi=((usi))">Download peaks as json</a>
                 <br>
                 <a href="/csv/?usi=((identifier))">Download peaks as csv</a>
                 <br>
@@ -39,7 +39,7 @@
         </div>
 
         <hr>
-    
+
         <div class="row">
             <div class="col-sm"></div>
             <div class="col-sm text-center">
@@ -51,7 +51,7 @@
         <div class="row">
             <div class="col-sm"></div>
             <div class="col-sm text-center">
-                <img id="spectrumrender" src="/svg/?usi=((identifier))&label">
+                <img id="spectrumrender" src="/svg/?usi=((usi))&annotate_peaks">
             </div>
             <div class="col-sm"></div>
         </div>
@@ -61,47 +61,47 @@
             <div class="col-sm-6 text-center">
                 <h2>Drawing Controls</h2>
                 <br>
-                <div class="form-group row"> 
-                    <label for="showlabel">Show Labels</label>
+                <div class="form-group row">
+                    <label for="annotate_peaks">Show Labels</label>
                 </div>
                 <div class="form-group row">
                     <div class="col">
-                        <select id="showlabel" class="form-control">
+                        <select id="annotate_peaks" class="form-control">
                             <option selected>Yes</option>
                             <option>No</option>
                         </select>
                     </div>
-                    
+
                     <div class="col">
-                        <input type="text" id="thresh" class="form-control" placeholder="Label Threshold - Percent">
+                        <input type="text" id="annotate_threshold" class="form-control" placeholder="Label Threshold - Percent">
                     </div>
-                    
+
                 </div>
                 <div class="form-group row">
                     <div class="col">
-                        <input type="text" id="label_dp" class="form-control" placeholder="Label decimal places">
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col">
-                        <input type="text" id="xmin" class="form-control" placeholder="Min m/z">
-                    </div>
-                    <div class="col">
-                        <input type="text" id="xmax" class="form-control" placeholder="Max m/z">
+                        <input type="text" id="annotate_precision" class="form-control" placeholder="Label decimal places">
                     </div>
                 </div>
                 <div class="form-group row">
                     <div class="col">
-                        <input type="text" id="rotation" class="form-control" placeholder="Label rotation angle (70 default)">
+                        <input type="text" id="mz_min" class="form-control" placeholder="Min m/z">
+                    </div>
+                    <div class="col">
+                        <input type="text" id="mz_max" class="form-control" placeholder="Max m/z">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        <input type="text" id="annotation_rotation" class="form-control" placeholder="Label rotation angle (70 default)">
                     </div>
                 </div>
                 <button class="btn btn-primary" onclick=updateFigure()>Update</button>
                 <br>
                 <br>
-                <a id="controlsvgdownload" href="/svg/?usi=((identifier))&label" download="((identifier)).svg">
+                <a id="controlsvgdownload" href="/svg/?usi=((usi))&annotate_peaks" download="((usi)).svg">
                     <button class="btn btn-primary" >Download SVG</button>
                 </a>
-                <a id="controlpngdownload" href="/png/?usi=((identifier))&label" download="((identifier)).png">
+                <a id="controlpngdownload" href="/png/?usi=((usi))&annotate_peaks" download="((usi)).png">
                     <button class="btn btn-primary" >Download PNG</button>
                 </a>
             </div>
@@ -118,7 +118,7 @@
         <div class="row">
             <div class="col-sm"></div>
             <div class="col-sm text-center">
-                <img src="/qrcode/?usi=((identifier))"></img>
+                <img src="/qrcode/?usi=((usi))"/>
             </div>
             <div class="col-sm"></div>
         </div>
@@ -130,9 +130,9 @@
 <script type="text/javascript">
 
     $(document).ready(function () {
-    
-        /* render the spectrum with the given options */
-        $("#lorikeet").specview({   
+
+        /* Render the spectrum with the given options. */
+        $("#lorikeet").specview({
             peaks: peaks,
             showIonTable: false,
             showViewingOptions: true,
@@ -141,45 +141,45 @@
             labelImmoniumIons: false,
             labelPrecursorPeak: false,
         });
-    
+
     });
-    
-    var peaks = (( peaks ));
-    var usi = '((identifier))';
+
+    const peaks = ((peaks));
+    const usi = '((usi))';
 
     function updateFigure() {
-        svg_url = "/svg/?usi=" + usi + "&"
-        png_url = "/svg/?usi=" + usi + "&"
+        let svg_url = "/svg/?usi=" + usi;
+        let png_url = "/svg/?usi=" + usi;
+        let draw_parameters = "";
 
-        draw_parameters = ""
-        
-        if($("#showlabel").val() == "Yes"){
-            draw_parameters += "label&"
+        if($("#annotate_peaks").val() === "Yes"){
+            draw_parameters += "&annotate_peaks"
         }
-        if($("#thresh").val().length > 0){
-            thresh = parseFloat($("#thresh").val()) / 100
-            draw_parameters += `thresh=${thresh}&`
+        if($("#annotate_threshold").val().length > 0){
+            let annotate_threshold = parseFloat($("#annotate_threshold").val()) / 100;
+            draw_parameters += `&annotate_threshold=${annotate_threshold}`;
         }
-        if($("#xmin").val().length > 0){
-            xmin = $("#xmin").val()
-            draw_parameters += `xmin=${xmin}&rescale&`
+        if($("#mz_min").val().length > 0){
+            let mz_min = $("#mz_min").val();
+            draw_parameters += `&rescale&mz_min=${mz_min}`;
         }
-        if($("#xmax").val().length > 0){
-            xmax = $("#xmax").val()
-            draw_parameters += `xmax=${xmax}&rescale&`
+        if($("#mz_max").val().length > 0){
+            let mz_max = $("#mz_max").val();
+            draw_parameters += `&rescale&mz_max=${mz_max}`;
         }
-        if($("#rotation").val().length > 0){
-            rotation = $("#rotation").val()
-            draw_parameters += `rotation=${rotation}&`
+        if($("#annotation_rotation").val().length > 0){
+            let annotation_rotation = $("#annotation_rotation").val();
+            draw_parameters += `&annotation_rotation=${annotation_rotation}`;
         }
-        if($("#label_dp").val().length > 0) {
-            label_dp = $("#label_dp").val()
-            draw_parameters += `label_dp=${label_dp}&`
+        if($("#annotate_precision").val().length > 0) {
+            let annotate_precision = $("#annotate_precision").val();
+            draw_parameters += `&annotate_precision=${annotate_precision}`;
         }
-        
-        $("#spectrumrender")[0].src = svg_url + draw_parameters
-        $("#controlsvgdownload")[0].href = svg_url + draw_parameters
-        $("#controlpngdownload")[0].href = png_url + draw_parameters
+
+        alert(draw_parameters);
+        $("#spectrumrender")[0].src = svg_url + draw_parameters;
+        $("#controlsvgdownload")[0].href = svg_url + draw_parameters;
+        $("#controlpngdownload")[0].href = png_url + draw_parameters;
     }
 </script>
 
