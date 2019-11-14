@@ -154,6 +154,28 @@
         remote_url = `/mirror?usi1=${usi1}&usi2=${usi2}`
         window.location.assign(remote_url);
     }
+
+    var input = document.getElementById("identifier");
+    var input1 = document.getElementById("identifier1")
+    var input2 = document.getElementById("identifier2")
+    input.addEventListener("keyup", function(event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            document.getElementById("analyzebutton").click();
+        }
+    });
+    input1.addEventListener("keyup", function(event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            document.getElementById("analyzebutton").click();
+        }
+    });
+    input2.addEventListener("keyup", function(event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            document.getElementById("analyzebutton").click();
+        }
+    });
 </script>
 
 (% endblock %)
