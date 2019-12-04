@@ -42,12 +42,14 @@ def render_heartbeat():
 def render_spectrum():
     # FIXME: It would be cleaner to remove the Lorikeet renderer or handle this
     #        differently.
-    spectrum = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     peaks = [(float(mz), float(intensity)) for mz, intensity
              in zip(spectrum.mz, spectrum.intensity)]
+
     return flask.render_template('spectrum.html',
                                  usi=flask.request.args.get('usi'),
-                                 peaks=json.dumps(peaks))
+                                 peaks=json.dumps(peaks),
+                                 source_link=source_link)
 
 
 @app.route('/mirror/', methods=['GET'])
@@ -136,7 +138,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
 
 
 def _prepare_spectrum(usi, **kwargs):
-    spectrum = parsing.parse_usi(usi)
+    spectrum, source_link = parsing.parse_usi(usi)
     spectrum.scale_intensity(max_intensity=1)
 
     # TODO: This is not explicitly necessary.
@@ -204,7 +206,7 @@ def _fix_svg_whitespace(output_filename):
 
 @app.route('/json/')
 def peak_json():
-    spectrum = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     # Return for JSON includes, peaks, n_peaks, and precursor_mz.
     spectrum_dict = {'peaks': [(float(mz), float(intensity)) for mz, intensity
                                in zip(spectrum.mz, spectrum.intensity)],
@@ -215,7 +217,7 @@ def peak_json():
 
 @app.route('/csv/')
 def peak_csv():
-    spectrum = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     filename = os.path.join(app.config['TEMPFOLDER'], f'{uuid.uuid4()}.csv')
     with open(filename, 'w') as f:
         writer = csv.writer(f)
