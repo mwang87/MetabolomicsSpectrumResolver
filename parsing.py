@@ -44,7 +44,7 @@ def _parse_gnps_task(usi):
                    f'file=FILE->{filename}&scan={scan}&peptide=*..*&'
                    f'force=false&_=1561457932129')
     mz, intensity = _parse_gnps_peak_text(requests.get(request_url).text)
-    source_link = None
+    source_link = f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task={task}'
     return sus.MsmsSpectrum(usi, 0, 1, mz, intensity), source_link
 
 
@@ -107,7 +107,10 @@ def _parse_msv_pxd(usi):
                            f'uploadfile=True')
             mz, intensity = _parse_gnps_peak_text(
                 requests.get(request_url).text)
-            source_link = None
+            if "PXD" in dataset_identifier:
+                source_link = f'http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID={dataset_identifier}'
+            else:
+                source_link = f'https://massive.ucsd.edu/ProteoSAFe/QueryMSV?id={dataset_identifier}'
             return sus.MsmsSpectrum(usi, 0, 1, mz, intensity), source_link
     raise ValueError('Unsupported/unknown USI')
 
@@ -137,7 +140,7 @@ def _parse_motifdb(usi):
     motif_id = tokens[3]
     request_url = f'{MOTIFDB_SERVER}get_motif/{motif_id}'
     mz, intensity = zip(*json.loads(requests.get(request_url).text))
-    source_link = None
+    source_link = f'http://ms2lda.org/motifdb/motif/{motif_id}/'
     return sus.MsmsSpectrum(usi, 0, 1, mz, intensity), source_link
 
 
