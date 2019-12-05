@@ -124,7 +124,7 @@ def _parse_mtbls(usi):
                                 'datasets_json.jsp').json()['datasets']:
         if dataset_identifier in dataset['title']:
             source_link = f'https://www.ebi.ac.uk/metabolights/{dataset_identifier}'
-            return _parse_msv_pxd(f'mzspec{dataset["dataset"]}:{filename}:'
+            return _parse_msv_pxd(f'mzspec:{dataset["dataset"]}:{filename}:'
                                   f'scan:{scan}'), source_link
     raise ValueError('Unsupported/unknown USI')
 
