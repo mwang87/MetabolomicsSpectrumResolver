@@ -22,22 +22,15 @@
                 <a href="/json/?usi=((usi))">Download peaks as json</a>
                 <br>
                 <a href="/csv/?usi=((identifier))">Download peaks as csv</a>
+                (% if source_link is not none %)
                 <br>
-                <a href="">Link back to source library</a>
+                <a href="((source_link))">Link back to source data</a>
+                (% endif %)
+                
             </div>
             <div class="col-sm"></div>
         </div>
-        <hr>
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm">
-                <div class="row justify-content-center">
-                    <div id="lorikeet"></div>
-                </div>
-            </div>
-            <div class="col-sm"></div>
-        </div>
-
+        
         <hr>
 
         <div class="row">
@@ -130,18 +123,6 @@
 <script type="text/javascript">
 
     $(document).ready(function () {
-
-        /* Render the spectrum with the given options. */
-        $("#lorikeet").specview({
-            peaks: peaks,
-            showIonTable: false,
-            showViewingOptions: true,
-            showOptionsTable: false,
-            showSequenceInfo: false,
-            labelImmoniumIons: false,
-            labelPrecursorPeak: false,
-        });
-
     });
 
     const peaks = ((peaks));
