@@ -66,7 +66,8 @@ def _parse_gnps_library(usi):
     spectrum_dict = requests.get(request_url).json()
     mz, intensity = zip(*json.loads(
         spectrum_dict['spectruminfo']['peaks_json']))
-    source_link = "https://gnps.ucsd.edu/ProteoSAFe/gnpslibraryspectrum.jsp?SpectrumID={}".format(identifier)
+    source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/'
+                   f'gnpslibraryspectrum.jsp?SpectrumID={identifier}')
     return sus.MsmsSpectrum(
         usi, spectrum_dict['annotations'][0]['Precursor_MZ'], 1, mz,
         intensity), \
@@ -107,10 +108,12 @@ def _parse_msv_pxd(usi):
                            f'uploadfile=True')
             mz, intensity = _parse_gnps_peak_text(
                 requests.get(request_url).text)
-            if "PXD" in dataset_identifier:
-                source_link = f'http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID={dataset_identifier}'
+            if 'PXD' in dataset_identifier:
+                source_link = (f'http://proteomecentral.proteomexchange.org/'
+                               f'cgi/GetDataset?ID={dataset_identifier}')
             else:
-                source_link = f'https://massive.ucsd.edu/ProteoSAFe/QueryMSV?id={dataset_identifier}'
+                source_link = (f'https://massive.ucsd.edu/ProteoSAFe/'
+                               f'QueryMSV?id={dataset_identifier}')
             return sus.MsmsSpectrum(usi, 0, 1, mz, intensity), source_link
     raise ValueError('Unsupported/unknown USI')
 
@@ -123,7 +126,8 @@ def _parse_mtbls(usi):
     for dataset in requests.get('https://massive.ucsd.edu/ProteoSAFe/'
                                 'datasets_json.jsp').json()['datasets']:
         if dataset_identifier in dataset['title']:
-            source_link = f'https://www.ebi.ac.uk/metabolights/{dataset_identifier}'
+            source_link = (f'https://www.ebi.ac.uk/'
+                           f'metabolights/{dataset_identifier}')
             return _parse_msv_pxd(f'mzspec:{dataset["dataset"]}:{filename}:'
                                   f'scan:{scan}'), source_link
     raise ValueError('Unsupported/unknown USI')
@@ -162,5 +166,6 @@ def _parse_massbank(usi):
         if metadata['name'] == 'precursor m/z':
             precursor_mz = metadata['value']
             break
-    source_link = "https://massbank.eu/MassBank/RecordDisplay.jsp?id={}".format(massbank_id)
+    source_link = (f'https://massbank.eu/MassBank/'
+                   f'RecordDisplay.jsp?id={massbank_id}')
     return sus.MsmsSpectrum(usi, precursor_mz, 1, mz, intensity), source_link
