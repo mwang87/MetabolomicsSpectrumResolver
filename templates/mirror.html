@@ -12,11 +12,19 @@
         <div class="col-11 my-auto">
             <div class="row">
                 <div class="col-4 font-weight-bold text-right">Universal Spectrum Identifier 1</div>
-                <div class="col-8">((usi1))</div>
+                <div class="col-8">((usi1))
+                    (% if source_link1 is not none %)
+                        &nbsp;<a href="((source_link1))" target="_blank"><i class="fas fa-external-link-alt"></i></a>
+                    (% endif %)
+                </div>
             </div>
             <div class="row">
                 <div class="col-4 font-weight-bold text-right">Universal Spectrum Identifier 2</div>
-                <div class="col-8">((usi2))</div>
+                <div class="col-8">((usi2))
+                    (% if source_link2 is not none %)
+                        &nbsp;<a href="((source_link2))" target="_blank"><i class="fas fa-external-link-alt"></i></a>
+                    (% endif %)
+                </div>
             </div>
             <div class="row mt-2">
                 <div class="col-2 offset-4">

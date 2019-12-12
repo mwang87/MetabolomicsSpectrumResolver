@@ -54,9 +54,12 @@ def render_spectrum():
 
 @app.route('/mirror/', methods=['GET'])
 def render_mirror_spectrum():
+    _, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
+    _, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
     return flask.render_template('mirror.html',
                                  usi1=flask.request.args.get('usi1'),
-                                 usi2=flask.request.args.get('usi2'))
+                                 usi2=flask.request.args.get('usi2'),
+                                 source_link1=source1, source_link2=source2)
 
 
 @app.route('/png/')
