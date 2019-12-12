@@ -262,11 +262,16 @@ def peak_csv():
 
 
 @app.route('/qrcode/')
-def generate_qr_image():
+def generate_qr():
     # QR Code Rendering.
-    identifier = flask.request.args.get('usi')
-    qr_image = qrcode.make(f'{USI_SERVER}/spectrum/?usi={identifier}',
-                           box_size=2)
+    if flask.request.args.get('mirror') != 'true':
+        usi = flask.request.args.get('usi')
+        url = f'{USI_SERVER}spectrum/?usi={usi}'
+    else:
+        usi1 = flask.request.args.get('usi1')
+        usi2 = flask.request.args.get('usi2')
+        url = f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}'
+    qr_image = qrcode.make(url, box_size=2)
     qr_bytes = io.BytesIO()
     qr_image.save(qr_bytes, format='PNG')
     qr_bytes.seek(0)
