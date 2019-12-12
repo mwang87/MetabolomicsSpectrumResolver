@@ -34,9 +34,10 @@ jobs:
         conda install -n usi -c conda-forge xmltodict
         conda install -n usi -c conda-forge qrcode
         conda install -n usi -c conda-forge requests-cache
+        echo "source activate usi" > ~/.bashrc
     - name: Lint with flake8
       run: |
-        bash -c "source activate usi"
+        source activate usi
         pip install flake8
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
