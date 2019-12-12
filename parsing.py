@@ -1,3 +1,4 @@
+import functools
 import json
 
 import requests
@@ -9,6 +10,7 @@ MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
 MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
 
 
+@functools.lru_cache(100)
 def parse_usi(usi):
     usi_identifier = usi.lower().split(':')[1]
     if usi_identifier.startswith('gnpstask'):
