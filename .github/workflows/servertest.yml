@@ -46,5 +46,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
+        export PATH="$HOME/miniconda/bin:$PATH"
+        bash -c "source activate usi"
         pip install nose2
         nose2 -v
