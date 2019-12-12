@@ -114,7 +114,8 @@ def _generate_figure(usi, extension, **kwargs):
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-    ax.set_title(usi)
+    title = ax.set_title(usi)
+    title.set_url(f'{USI_SERVER}spectrum/?usi={usi}')
 
     plt.tight_layout()
 
@@ -144,7 +145,8 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-    ax.set_title(f'Top: {usi1}\nBottom: {usi2}')
+    title = ax.set_title(f'Top: {usi1}\nBottom: {usi2}')
+    title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
 
     plt.tight_layout()
 
