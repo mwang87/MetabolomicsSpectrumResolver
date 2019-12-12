@@ -1,0 +1,103 @@
+<div class="row">
+    <div class="col-6 offset-3">
+        <h3 class="text-center">Drawing Controls</h3>
+        <form>
+            <div class="form-group row">
+                <div class="col-4 col-form-label font-weight-bold text-right">Figure size</div>
+                <div class="col-8 input-group">
+                    <input type="number" id="width" class="form-control" min="1" max="20" value="10" step="any">
+                    <div class="input-group-append">
+                        <span class="input-group-text">"</span>
+                    </div>
+                    <span class="col-form-label">&nbsp;X&nbsp;</span>
+                    <input type="number" id="height" class="form-control" min="1" max="20" value="6" step="any">
+                    <div class="input-group-append">
+                        <span class="input-group-text">"</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-4 col-form-label font-weight-bold text-right">Mass range</div>
+                <div class="col-8 input-group">
+                    <input type="number" id="mz_min" class="form-control" min="0" step="any">
+                    <div class="input-group-append">
+                        <span class="input-group-text"><i>m/z</i></span>
+                    </div>
+                    <span class="col-form-label">&nbsp;&ndash;&nbsp;</span>
+                    <input type="number" id="mz_max" class="form-control" min="0" step="any">
+                    <div class="input-group-append">
+                        <span class="input-group-text"><i>m/z</i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-4 col-form-label font-weight-bold text-right">Intensity range</div>
+                <div class="col-8 input-group">
+                    <span class="col-form-label">Maximum intensity:&nbsp;</span>
+                    <input type="number" id="max_intensity" class="form-control" min="0" max="200" step="1">
+                    <div class="input-group-append">
+                        <span class="input-group-text">&percnt;</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-4 col-form-label font-weight-bold text-right">Grid</div>
+                <div class="col-8">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="grid" checked="checked">
+                        <label class="form-check-label col-form-label" for="grid">&nbsp;Display grid</label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-4 col-form-label font-weight-bold text-right">Peak labeling</div>
+                <div class="col-8">
+                    <div class="form-inline input-group">
+                        <input type="checkbox" class="form-check-input" id="annotate_peaks" checked="checked">
+                        <label class="form-check-label col-form-label" for="annotate_threshold">Minimum intensity:&nbsp;</label>
+                        <input type="number" id="annotate_threshold" class="form-control" min="0" max="100" value="5" step="1">
+                        <div class="input-group-append">
+                            <span class="input-group-text">&percnt;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-4 col-form-label font-weight-bold text-right">Label precision</div>
+                <div class="col-8 input-group">
+                    <span class="col-form-label">Decimal places:&nbsp;</span>
+                    <input type="number" id="annotate_precision" class="form-control" min="0" max="10" value="4" step="1">
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-4 col-form-label font-weight-bold text-right">Label rotation</div>
+                <div class="col-8 input-group">
+                    <input type="number" id="annotation_rotation" class="form-control" min="0" max="90" value="90" step="1">
+                    <div class="input-group-append">
+                        <span class="input-group-text">&deg;</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-2 offset-5">
+                    <button class="btn btn-primary" onclick=updateFigure()>Update</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function getDrawingControls() {
+        return `&width=${$("#width").val()}` +
+            `&height=${$("#height").val()}` +
+            `&mz_min=${$("#mz_min").val()}` +
+            `&mz_max=${$("#mz_max").val()}` +
+            `&max_intensity=${$("#max_intensity").val()}` +
+            `&grid=${$("#grid").attr("checked")}` +
+            `&annotate_peaks=${$("#annotate_peaks").attr("checked")}` +
+            `&annotate_threshold=${$("#annotate_threshold").val()}` +
+            `&annotate_precision=${$("#annotate_precision").val()}` +
+            `&annotation_rotation=${$("#annotation_rotation").val()}`;
+    }
+</script>
