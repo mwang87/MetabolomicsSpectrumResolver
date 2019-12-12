@@ -46,8 +46,10 @@ def render_heartbeat():
 
 @app.route('/spectrum/', methods=['GET'])
 def render_spectrum():
+    _, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     return flask.render_template('spectrum.html',
-                                 usi=flask.request.args.get('usi'))
+                                 usi=flask.request.args.get('usi'),
+                                 source_link=source_link)
 
 
 @app.route('/mirror/', methods=['GET'])
@@ -152,7 +154,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
 
 
 def _prepare_spectrum(usi, **kwargs):
-    spectrum = parsing.parse_usi(usi)
+    spectrum, _ = parsing.parse_usi(usi)
     spectrum.scale_intensity(max_intensity=1)
 
     if kwargs['annotate_peaks']:
@@ -228,7 +230,7 @@ def _get_plotting_args(request):
 
 @app.route('/json/')
 def peak_json():
-    spectrum = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     # Return for JSON includes, peaks, n_peaks, and precursor_mz.
     spectrum_dict = {'peaks': [(float(mz), float(intensity)) for mz, intensity
                                in zip(spectrum.mz, spectrum.intensity)],
@@ -239,7 +241,7 @@ def peak_json():
 
 @app.route('/csv/')
 def peak_csv():
-    spectrum = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     csv_str = io.StringIO()
     writer = csv.writer(csv_str)
     writer.writerow(['mz', 'intensity'])
