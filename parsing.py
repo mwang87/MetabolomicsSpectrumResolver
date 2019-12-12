@@ -1,3 +1,4 @@
+import functools
 import json
 
 import requests
@@ -9,6 +10,7 @@ MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
 MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
 
 
+@functools.lru_cache(100)
 def parse_usi(usi):
     usi_identifier = usi.lower().split(':')[1]
     if usi_identifier.startswith('gnpstask'):
@@ -70,8 +72,7 @@ def _parse_gnps_library(usi):
                    f'gnpslibraryspectrum.jsp?SpectrumID={identifier}')
     return sus.MsmsSpectrum(
         usi, spectrum_dict['annotations'][0]['Precursor_MZ'], 1, mz,
-        intensity), \
-        source_link
+        intensity), source_link
 
 
 # Parse MS2LDA from ms2lda.org.
