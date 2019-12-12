@@ -46,14 +46,8 @@ def render_heartbeat():
 
 @app.route('/spectrum/', methods=['GET'])
 def render_spectrum():
-    # FIXME: It would be cleaner to remove the Lorikeet renderer or handle this
-    #        differently.
-    spectrum = parsing.parse_usi(flask.request.args.get('usi'))
-    peaks = [(float(mz), float(intensity)) for mz, intensity
-             in zip(spectrum.mz, spectrum.intensity)]
     return flask.render_template('spectrum.html',
-                                 usi=flask.request.args.get('usi'),
-                                 peaks=json.dumps(peaks))
+                                 usi=flask.request.args.get('usi'))
 
 
 @app.route('/mirror/', methods=['GET'])
