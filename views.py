@@ -243,14 +243,16 @@ def peak_json():
 @app.route('/csv/')
 def peak_csv():
     spectrum = parsing.parse_usi(flask.request.args.get('usi'))
-    filename = os.path.join(app.config['TEMPFOLDER'], f'{uuid.uuid4()}.csv')
-    with open(filename, 'w') as f:
-        writer = csv.writer(f)
-        writer.writerow(['mz', 'intensity'])
-        for mz, intensity in zip(spectrum.mz, spectrum.intensity):
-            writer.writerow([mz, intensity])
-    return flask.send_file(filename, mimetype='text/csv',
-                           as_attachment=True, attachment_filename='peaks.csv')
+    csv_str = io.StringIO()
+    writer = csv.writer(csv_str)
+    writer.writerow(['mz', 'intensity'])
+    for mz, intensity in zip(spectrum.mz, spectrum.intensity):
+        writer.writerow([mz, intensity])
+    csv_bytes = io.BytesIO()
+    csv_bytes.write(csv_str.getvalue().encode('utf-8'))
+    csv_bytes.seek(0)
+    return flask.send_file(csv_bytes, mimetype='text/csv', as_attachment=True,
+                           attachment_filename=f'{spectrum.identifier}.csv')
 
 
 @app.route('/qrcode/')
