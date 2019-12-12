@@ -1,4 +1,4 @@
-name: Python package
+name: Server Tests
 
 on: [push]
 
@@ -11,6 +11,7 @@ jobs:
       matrix:
         python-version: [3.7]
 
+### We probably should switch to using the Docker version, its a TODO
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
@@ -21,6 +22,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install requests
+        pip install 
     - name: Lint with flake8
       run: |
         pip install flake8
