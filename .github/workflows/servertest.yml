@@ -48,5 +48,6 @@ jobs:
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
         bash -c "source activate usi"
+        conda install -n usi -c bioconda spectrum_utils
         pip install nose2
         nose2 -v
