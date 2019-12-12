@@ -2,110 +2,54 @@
 
 (% block content %)
 
-<div class="container-fluid">
-    <div class="panel panel-default">
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                <h2>Spectrum Values</h2>
-            </div>
-            <div class="col-sm"></div>
+<div class="container">
+    <div class="row">
+        <div class="col text-center">
+            <h2>Spectrum Values</h2>
         </div>
-
-        <hr>
-
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                Spectrum SVG
+    </div>
+    <div class="row h-100">
+        <div class="col-11 my-auto">
+            <div class="row">
+                <div class="col-4 font-weight-bold text-right">Universal Spectrum Identifier 1</div>
+                <div class="col-8">((usi1))</div>
             </div>
-            <div class="col-sm"></div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                <img id="spectrumrender" src="/svg/mirror?usi1=((usi1))&usi2=((usi2))&annotate_peaks"/>
+            <div class="row">
+                <div class="col-4 font-weight-bold text-right">Universal Spectrum Identifier 2</div>
+                <div class="col-8">((usi2))</div>
             </div>
-            <div class="col-sm"></div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm-3"></div>
-            <div class="col-sm-6 text-center">
-                <h2>Drawing Controls</h2>
-                <br>
-                <div class="form-group row">
-                    <label for="annotate_peaks">Show Labels</label>
+            <div class="row mt-2">
+                <div class="col-2 offset-4">
+                    <a class="btn btn-primary" id="download_svg" href="/svg/mirror/?usi1=((usi1))&usi2=((usi2))" download="mirror.svg">
+                        Download as SVG
+                    </a>
                 </div>
-                <div class="form-group row">
-                    <div class="col">
-                        <select id="annotate_peaks" class="form-control">
-                            <option selected>Yes</option>
-                            <option>No</option>
-                        </select>
-                    </div>
-
-                    <div class="col">
-                        <input type="text" id="annotate_threshold" class="form-control" placeholder="Label Threshold - Percent">
-                    </div>
-
+                <div class="col-2">
+                    <a class="btn btn-primary" id="download_png" href="/png/mirror/?usi1=((usi1))&usi2=((usi2))" download="mirror.png">
+                        Download as PNG
+                    </a>
                 </div>
-                <div class="form-group row">
-                    <div class="col">
-                        <input type="text" id="mz_min" class="form-control" placeholder="Min m/z">
-                    </div>
-                    <div class="col">
-                        <input type="text" id="mz_max" class="form-control" placeholder="Max m/z">
-                    </div>
-                </div>
-                <button class="btn btn-primary" onclick=updateFigure()>Update</button>
-                <br>
-                <br>
-                <a id="controlsvgdownload" href="/svg/mirror?usi1=((usi1))&usi2=((usi2))&annotate_peaks" download="((usi1))_((usi2)).svg">
-                    <button class="btn btn-primary" >Download SVG</button>
-                </a>
-                <a id="controlpngdownload" href="/png/mirror?usi1=((usi1))&usi2=((usi2))&annotate_peaks" download="((usi1))_((usi2)).png">
-                    <button class="btn btn-primary" >Download PNG</button>
-                </a>
-                <br>
-                <br>
             </div>
-            <div class="col-sm-3"></div>
         </div>
+        <div class="col-1 my-auto">
+            <img class="mx-auto" src="/qrcode/mirror/?usi1=((usi1))&usi2=((usi2))" alt="qr"/>
+        </div>
+    </div>
+
+    <div class="row">
+        <img class="mx-auto" id="render_spectrum" src="/svg/mirror?usi1=((usi1))&usi2=((usi2))"/>
+    </div>
+
+    (% include 'drawing_controls.html' %)
 </div>
 
-
-
 <script type="text/javascript">
-
-    let usi1 = '((usi1))';
-    let usi2 = '((usi2))';
-
     function updateFigure() {
-        let svg_url = "/svg/mirror?usi1=" + usi1 + "&usi2=" + usi2;
-        let png_url = "/svg/mirror?usi1=" + usi1 + "&usi2=" + usi2;
-        let draw_parameters = "";
-
-        if($("#annotate_peaks").val() === "Yes"){
-            draw_parameters += "&annotate_peaks";
-        }
-        if($("#annotate_threshold").val().length > 0){
-            thresh = parseFloat($("#annotate_threshold").val()) / 100;
-            draw_parameters += `&annotate_threshold=${annotate_threshold}`;
-        }
-        if($("#mz_min").val().length > 0){
-            mz_min = $("#mz_min").val();
-            draw_parameters += `mz_min=${mz_min}&annotate_peaks`;
-        }
-        if($("#mz_max").val().length > 0){
-            mz_max = $("#mz_max").val();
-            draw_parameters += `&mz_max=${mz_max}&annotate_peaks`;
-        }
-
-        $("#spectrumrender")[0].src = svg_url + draw_parameters;
-        $("#controlsvgdownload")[0].href = svg_url + draw_parameters;
-        $("#controlpngdownload")[0].href = png_url + draw_parameters;
+        let svg_url = "/svg/mirror?usi1=((usi1))&usi2=((usi2))";
+        let draw_parameters = getDrawingControls();
+        $("#render_spectrum")[0].src = svg_url + draw_parameters;
+        $("#download_svg")[0].href = svg_url + draw_parameters;
+        $("#download_png")[0].href = "/png/mirror?usi1=((usi1))&usi2=((usi2))" + draw_parameters;
     }
 </script>
 

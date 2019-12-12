@@ -126,18 +126,24 @@ def _generate_figure(usi, extension, **kwargs):
 
 
 def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     sup.mirror(_prepare_spectrum(usi1, **kwargs),
-               _prepare_spectrum(usi2, **kwargs), ax=ax)
+               _prepare_spectrum(usi2, **kwargs),
+               {'annotate_ions': kwargs['annotate_peaks'],
+                'annot_kws': {'rotation': kwargs['annotation_rotation']},
+                'grid': kwargs['grid']}, ax=ax)
 
-    mz_min, mz_max = ax.get_xlim()
-    ax.set_xlim(kwargs.get('mz_min', mz_min), kwargs.get('mz_max', mz_max))
-    # Allow more space if the peaks are annotated.
-    if kwargs['annotate_peaks']:
-        ax.set_ylim(-1.5, 1.5)
+    ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
+    ax.set_ylim(-kwargs['max_intensity'], kwargs['max_intensity'])
 
-    fig.suptitle(f'{usi1}={usi2}', fontsize=10)
+    if not kwargs['grid']:
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.yaxis.set_ticks_position('left')
+        ax.xaxis.set_ticks_position('bottom')
+
+    ax.set_title(f'Top: {usi1}\nBottom: {usi2}')
 
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
