@@ -1,4 +1,5 @@
 import csv
+import io
 import json
 import os
 import uuid
@@ -258,8 +259,10 @@ def generate_qr_image():
     identifier = flask.request.args.get('usi')
     qr_image = qrcode.make(f'{USI_SERVER}/spectrum/?usi={identifier}',
                            box_size=4)
-    qr_image.save('image.png')
-    return flask.send_file('image.png')
+    qr_bytes = io.BytesIO()
+    qr_image.save(qr_bytes, format='PNG')
+    qr_bytes.seek(0)
+    return flask.send_file(qr_bytes, 'image/png')
 
 
 @app.errorhandler(500)
