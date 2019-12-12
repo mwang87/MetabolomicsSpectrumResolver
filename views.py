@@ -256,7 +256,8 @@ def peak_csv():
 def generate_qr_image():
     # QR Code Rendering.
     identifier = flask.request.args.get('usi')
-    qr_image = qrcode.make(f'{USI_SERVER}/spectrum/?usi={identifier}')
+    qr_image = qrcode.make(f'{USI_SERVER}/spectrum/?usi={identifier}',
+                           box_size=4)
     qr_image.save('image.png')
     return flask.send_file('image.png')
 
