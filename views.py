@@ -79,7 +79,6 @@ def generate_svg():
     usi = flask.request.args.get('usi')
     plot_pars = _get_plotting_args(flask.request)
     output_filename = _generate_figure(usi, 'svg', **plot_pars)
-    _fix_svg_whitespace(output_filename)
     return flask.send_file(output_filename, mimetype='image/svg+xml')
 
 
@@ -112,6 +111,8 @@ def _generate_figure(usi, extension, **kwargs):
 
     ax.set_title(usi)
 
+    plt.tight_layout()
+
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
     plt.savefig(output_filename)
@@ -139,6 +140,8 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
         ax.xaxis.set_ticks_position('bottom')
 
     ax.set_title(f'Top: {usi1}\nBottom: {usi2}')
+
+    plt.tight_layout()
 
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
@@ -221,14 +224,6 @@ def _get_plotting_args(request):
         'annotate_threshold': annotate_threshold,
         'annotate_precision': annotate_precision,
         'annotation_rotation': annotation_rotation}
-
-
-def _fix_svg_whitespace(output_filename):
-    # Remove the whitespace issue.
-    with open(output_filename, 'r+') as f:
-        text = f.read().replace('white-space:pre;', '')
-        f.seek(0)
-        f.write(text)
 
 
 @app.route('/json/')
