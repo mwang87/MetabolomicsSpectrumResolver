@@ -20,10 +20,20 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install requests
-        pip install spectrum_utils
-        pip install rdkit
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+        bash miniconda.sh -b -p $HOME/miniconda
+        export PATH="$HOME/miniconda/bin:$PATH"
+        conda config --set always_yes yes --set changeps1 no
+        conda update -q conda
+        conda create -n usi -c rdkit rdkit
+        bash -c "source activate usi"
+        conda install -n usi -c anaconda flask
+        conda install -n usi -c anaconda gunicorn
+        conda install -n usi -c anaconda requests
+        conda install -n usi -c bioconda spectrum_utils
+        conda install -n usi -c conda-forge xmltodict
+        conda install -n usi -c conda-forge qrcode
+        conda install -n usi -c conda-forge requests-cache
     - name: Lint with flake8
       run: |
         pip install flake8
