@@ -2,182 +2,160 @@
 
 (% block content %)
 
-<div class="container-fluid">
-    <div class="panel panel-default">
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                <h2>Spectrum Values</h2>
-            </div>
-            <div class="col-sm"></div>
+<div class="container">
+    <div class="row">
+        <div class="col text-center">
+            <h2>Spectrum Values</h2>
         </div>
-        <hr>
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                Universal Spectrum Identifier
-                <br>
-                ((usi))
-                <br>
-                <a href="/json/?usi=((usi))">Download peaks as json</a>
-                <br>
-                <a href="/csv/?usi=((usi))">Download peaks as csv</a>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="row">
+                <div class="col-4 font-weight-bold text-right">Universal Spectrum Identifier</div>
+                <div class="col-8">((usi))</div>
             </div>
-            <div class="col-sm"></div>
-        </div>
-        <hr>
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm">
-                <div class="row justify-content-center">
-                    <div id="lorikeet"></div>
+            <div class="row mt-2">
+                <div class="col-2 offset-2">
+                    <a class="btn btn-primary" id="download_json" href="/json/?usi=((usi))">
+                        Download as JSON
+                    </a>
+                </div>
+                <div class="col-2">
+                    <a class="btn btn-primary" id="download_csv" href="/csv/?usi=((usi))">
+                        Download as CSV
+                    </a>
+                </div>
+                <div class="col-2">
+                    <a class="btn btn-primary" id="download_svg" href="/svg/?usi=((usi))" download="((usi)).svg">
+                        Download as SVG
+                    </a>
+                </div>
+                <div class="col-2">
+                    <a class="btn btn-primary" id="download_png" href="/png/?usi=((usi))" download="((usi)).png">
+                        Download as PNG
+                    </a>
                 </div>
             </div>
-            <div class="col-sm"></div>
         </div>
+    </div>
 
-        <hr>
+    <div class="row">
+        <img class="mx-auto" id="render_spectrum" src="/svg/?usi=((usi))" alt="((usi))">
+    </div>
 
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                Spectrum SVG
-            </div>
-            <div class="col-sm"></div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                <img id="spectrumrender" src="/svg/?usi=((usi))&annotate_peaks">
-            </div>
-            <div class="col-sm"></div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm-3"></div>
-            <div class="col-sm-6 text-center">
-                <h2>Drawing Controls</h2>
-                <br>
+    <div class="row">
+        <div class="col-6 offset-3">
+            <h3 class="text-center">Drawing Controls</h3>
+            <form>
                 <div class="form-group row">
-                    <label for="annotate_peaks">Show Labels</label>
-                </div>
-                <div class="form-group row">
-                    <div class="col">
-                        <select id="annotate_peaks" class="form-control">
-                            <option selected>Yes</option>
-                            <option>No</option>
-                        </select>
-                    </div>
-
-                    <div class="col">
-                        <input type="text" id="annotate_threshold" class="form-control" placeholder="Label Threshold - Percent">
-                    </div>
-
-                </div>
-                <div class="form-group row">
-                    <div class="col">
-                        <input type="text" id="annotate_precision" class="form-control" placeholder="Label decimal places">
+                    <div class="col-4 col-form-label font-weight-bold text-right">Figure size</div>
+                    <div class="col-8 input-group">
+                        <input type="number" id="width" class="form-control" min="1" max="20" value="10" step="any">
+                        <div class="input-group-append">
+                            <span class="input-group-text">"</span>
+                        </div>
+                        <span class="col-form-label">&nbsp;X&nbsp;</span>
+                        <input type="number" id="height" class="form-control" min="1" max="20" value="6" step="any">
+                        <div class="input-group-append">
+                            <span class="input-group-text">"</span>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group row">
-                    <div class="col">
-                        <input type="text" id="mz_min" class="form-control" placeholder="Min m/z">
-                    </div>
-                    <div class="col">
-                        <input type="text" id="mz_max" class="form-control" placeholder="Max m/z">
+                    <div class="col-4 col-form-label font-weight-bold text-right">Mass range</div>
+                    <div class="col-8 input-group">
+                        <input type="number" id="mz_min" class="form-control" min="0" step="any">
+                        <div class="input-group-append">
+                            <span class="input-group-text"><i>m/z</i></span>
+                        </div>
+                        <span class="col-form-label">&nbsp;&ndash;&nbsp;</span>
+                        <input type="number" id="mz_max" class="form-control" min="0" step="any">
+                        <div class="input-group-append">
+                            <span class="input-group-text"><i>m/z</i></span>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group row">
-                    <div class="col">
-                        <input type="text" id="annotation_rotation" class="form-control" placeholder="Label rotation angle (70 default)">
+                    <div class="col-4 col-form-label font-weight-bold text-right">Intensity range</div>
+                    <div class="col-8 input-group">
+                        <span class="col-form-label">Maximum intensity:&nbsp;</span>
+                        <input type="number" id="max_intensity" class="form-control" min="0" max="200" step="1">
+                        <div class="input-group-append">
+                            <span class="input-group-text">&percnt;</span>
+                        </div>
                     </div>
                 </div>
-                <button class="btn btn-primary" onclick=updateFigure()>Update</button>
-                <br>
-                <br>
-                <a id="controlsvgdownload" href="/svg/?usi=((usi))&annotate_peaks" download="((usi)).svg">
-                    <button class="btn btn-primary" >Download SVG</button>
-                </a>
-                <a id="controlpngdownload" href="/png/?usi=((usi))&annotate_peaks" download="((usi)).png">
-                    <button class="btn btn-primary" >Download PNG</button>
-                </a>
-            </div>
-            <div class="col-sm-3"></div>
-        </div>
-        <hr>
-        <div class="row">
-                <div class="col-sm"></div>
-                <div class="col-sm text-center">
-                    QR Code
+                <div class="form-group row">
+                    <div class="col-4 col-form-label font-weight-bold text-right">Grid</div>
+                    <div class="col-8">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="grid" checked="checked">
+                            <label class="form-check-label col-form-label" for="grid">&nbsp;Display grid</label>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-sm"></div>
+                <div class="form-group row">
+                    <div class="col-4 col-form-label font-weight-bold text-right">Peak labeling</div>
+                    <div class="col-8">
+                        <div class="form-inline input-group">
+                            <input type="checkbox" class="form-check-input" id="annotate_peaks" checked="checked">
+                            <label class="form-check-label col-form-label" for="annotate_threshold">Minimum intensity:&nbsp;</label>
+                            <input type="number" id="annotate_threshold" class="form-control" min="0" max="100" value="5" step="1">
+                            <div class="input-group-append">
+                                <span class="input-group-text">&percnt;</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-4 col-form-label font-weight-bold text-right">Label precision</div>
+                    <div class="col-8 input-group">
+                        <span class="col-form-label">Decimal places:&nbsp;</span>
+                        <input type="number" id="annotate_precision" class="form-control" min="0" max="10" value="4" step="1">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-4 col-form-label font-weight-bold text-right">Label rotation</div>
+                    <div class="col-8 input-group">
+                        <input type="number" id="annotation_rotation" class="form-control" min="0" max="90" value="90" step="1">
+                        <div class="input-group-append">
+                            <span class="input-group-text">&deg;</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-2 offset-5">
+                        <button class="btn btn-primary" onclick=updateFigure()>Update</button>
+                    </div>
+                </div>
+            </form>
         </div>
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-sm text-center">
-                <img src="/qrcode/?usi=((usi))"/>
-            </div>
-            <div class="col-sm"></div>
-        </div>
+    </div>
 
+    <div class="row">
+        <div class="col">
+            <h3 class="text-center">QR Code</h3>
+            <img class="mx-auto" src="/qrcode/?usi=((usi))" alt="qr"/>
+        </div>
+    </div>
 </div>
 
-
-
 <script type="text/javascript">
-
-    $(document).ready(function () {
-
-        /* Render the spectrum with the given options. */
-        $("#lorikeet").specview({
-            peaks: peaks,
-            showIonTable: false,
-            showViewingOptions: true,
-            showOptionsTable: false,
-            showSequenceInfo: false,
-            labelImmoniumIons: false,
-            labelPrecursorPeak: false,
-        });
-
-    });
-
-    const peaks = ((peaks));
-    const usi = '((usi))';
-
     function updateFigure() {
-        let svg_url = "/svg/?usi=" + usi;
-        let png_url = "/svg/?usi=" + usi;
-        let draw_parameters = "";
-
-        if($("#annotate_peaks").val() === "Yes"){
-            draw_parameters += "&annotate_peaks"
-        }
-        if($("#annotate_threshold").val().length > 0){
-            let annotate_threshold = parseFloat($("#annotate_threshold").val()) / 100;
-            draw_parameters += `&annotate_threshold=${annotate_threshold}`;
-        }
-        if($("#mz_min").val().length > 0){
-            let mz_min = $("#mz_min").val();
-            draw_parameters += `&rescale&mz_min=${mz_min}`;
-        }
-        if($("#mz_max").val().length > 0){
-            let mz_max = $("#mz_max").val();
-            draw_parameters += `&rescale&mz_max=${mz_max}`;
-        }
-        if($("#annotation_rotation").val().length > 0){
-            let annotation_rotation = $("#annotation_rotation").val();
-            draw_parameters += `&annotation_rotation=${annotation_rotation}`;
-        }
-        if($("#annotate_precision").val().length > 0) {
-            let annotate_precision = $("#annotate_precision").val();
-            draw_parameters += `&annotate_precision=${annotate_precision}`;
-        }
-
-        alert(draw_parameters);
-        $("#spectrumrender")[0].src = svg_url + draw_parameters;
-        $("#controlsvgdownload")[0].href = svg_url + draw_parameters;
-        $("#controlpngdownload")[0].href = png_url + draw_parameters;
+        let draw_parameters = `&width=${$("#width").val()}` +
+                              `&height=${$("#height").val()}` +
+                              `&mz_min=${$("#mz_min").val()}` +
+                              `&mz_max=${$("#mz_max").val()}` +
+                              `&max_intensity=${$("#max_intensity").val()}` +
+                              `&grid=${$("#grid").attr("checked")}` +
+                              `&annotate_peaks=${$("#annotate_peaks").attr("checked")}` +
+                              `&annotate_threshold=${$("#annotate_threshold").val()}` +
+                              `&annotate_precision=${$("#annotate_precision").val()}` +
+                              `&annotation_rotation=${$("#annotation_rotation").val()}`;
+        let svg_url = "/svg/?usi=((usi))";
+        $("#render_spectrum")[0].src = svg_url + draw_parameters;
+        $("#download_svg")[0].href = svg_url + draw_parameters;
+        $("#download_png")[0].href = "/png/?usi=((usi))" + draw_parameters;
     }
 </script>
 

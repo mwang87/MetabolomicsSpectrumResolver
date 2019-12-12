@@ -18,9 +18,14 @@ requests_cache.install_cache('demo_cache', expire_after=300)
 
 USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
 
-default_plotting_args = {'annotate_threshold': 0.05,
+default_plotting_args = {'width': 10,
+                         'height': 6,
+                         'max_intensity': 1.25,
+                         'grid': True,
+                         'annotate_peaks': True,
+                         'annotate_threshold': 0.05,
                          'annotate_precision': 4,
-                         'annotation_rotation': 70}
+                         'annotation_rotation': 90}
 
 
 @app.route('/', methods=['GET'])
@@ -93,19 +98,24 @@ def generate_mirror_svg():
 
 
 def _generate_figure(usi, extension, **kwargs):
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     sup.spectrum(
         _prepare_spectrum(usi, **kwargs),
-        annot_kws={'rotation': kwargs['annotation_rotation']}, ax=ax)
+        annotate_ions=kwargs['annotate_peaks'],
+        annot_kws={'rotation': kwargs['annotation_rotation']},
+        grid=kwargs['grid'], ax=ax)
 
-    mz_min, mz_max = ax.get_xlim()
-    ax.set_xlim(kwargs.get('mz_min', mz_min), kwargs.get('mz_max', mz_max))
-    # Allow more space if the peaks are annotated.
-    if kwargs['annotate_peaks']:
-        ax.set_ylim(0, 1.5)
+    ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
+    ax.set_ylim(0, kwargs['max_intensity'])
 
-    fig.suptitle(usi, fontsize=10)
+    if not kwargs['grid']:
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.yaxis.set_ticks_position('left')
+        ax.xaxis.set_ticks_position('bottom')
+
+    ax.set_title(usi)
 
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
@@ -139,10 +149,6 @@ def _prepare_spectrum(usi, **kwargs):
     spectrum = parsing.parse_usi(usi)
     spectrum.scale_intensity(max_intensity=1)
 
-    # TODO: This is not explicitly necessary.
-    if kwargs['rescale_mz']:
-        spectrum.set_mz_range(kwargs.get('mz_min'), kwargs.get('mz_max'))
-
     if kwargs['annotate_peaks']:
         for mz in _generate_labels(spectrum, kwargs['annotate_threshold']):
             spectrum.annotate_mz_fragment(
@@ -170,28 +176,48 @@ def _generate_labels(spec, intensity_threshold):
 
 
 def _get_plotting_args(request):
+    width = request.args.get('width')
+    width = default_plotting_args['width'] if width is None else float(width)
+    height = request.args.get('height')
+    height = (default_plotting_args['height']
+              if height is None else float(height))
     mz_min = request.args.get('mz_min')
     if mz_min is not None:
         mz_min = float(mz_min)
     mz_max = request.args.get('mz_max')
     if mz_max is not None:
         mz_max = float(mz_max)
-    rescale_mz = 'rescale' in request.args
-    annotate_peaks = 'annotate_peaks' in request.args
-    annotate_threshold = float(request.args.get(
-        'annotate_threshold', default_plotting_args['annotate_threshold']))
-    annotate_precision = int(request.args.get(
-        'annotate_precision', default_plotting_args['annotate_precision']))
-    annotation_rotation = int(request.args.get(
-        'annotation_rotation', default_plotting_args['annotation_rotation']))
-
-    return {'mz_min': mz_min,
-            'mz_max': mz_max,
-            'rescale_mz': rescale_mz,
-            'annotate_peaks': annotate_peaks,
-            'annotate_threshold': annotate_threshold,
-            'annotate_precision': annotate_precision,
-            'annotation_rotation': annotation_rotation}
+    max_intensity = request.args.get('max_intensity')
+    max_intensity = (default_plotting_args['max_intensity']
+                     if max_intensity is None else float(max_intensity) / 100)
+    grid = request.args.get('grid')
+    grid = default_plotting_args['grid'] if grid is None else grid == 'true'
+    annotate_peaks = request.args.get('annotate_peaks')
+    annotate_peaks = (default_plotting_args['annotate_peaks']
+                      if annotate_peaks is None else annotate_peaks == 'true')
+    annotate_threshold = request.args.get('annotate_threshold')
+    annotate_threshold = (default_plotting_args['annotate_threshold']
+                          if annotate_threshold is None else
+                          float(annotate_threshold) / 100)
+    annotate_precision = request.args.get('annotate_precision')
+    annotate_precision = (default_plotting_args['annotate_precision']
+                          if annotate_precision is None
+                          else int(annotate_precision))
+    annotation_rotation = request.args.get('annotation_rotation')
+    annotation_rotation = (default_plotting_args['annotation_rotation']
+                           if annotation_rotation is None
+                           else float(annotation_rotation))
+    return {
+        'width': width,
+        'height': height,
+        'mz_min': mz_min,
+        'mz_max': mz_max,
+        'max_intensity': max_intensity,
+        'grid': grid,
+        'annotate_peaks': annotate_peaks,
+        'annotate_threshold': annotate_threshold,
+        'annotate_precision': annotate_precision,
+        'annotation_rotation': annotation_rotation}
 
 
 def _fix_svg_whitespace(output_filename):
