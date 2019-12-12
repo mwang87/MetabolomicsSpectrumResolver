@@ -260,7 +260,7 @@ def generate_qr_image():
     # QR Code Rendering.
     identifier = flask.request.args.get('usi')
     qr_image = qrcode.make(f'{USI_SERVER}/spectrum/?usi={identifier}',
-                           box_size=4)
+                           box_size=2)
     qr_bytes = io.BytesIO()
     qr_image.save(qr_bytes, format='PNG')
     qr_bytes.seek(0)
