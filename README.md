@@ -16,7 +16,7 @@ Supported USI Types
 1. Metabolights Dataset Spectra
 1. Metabolomics Workbench Dataset Spectra
 
-![](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/Python%20package/badge.svg)
+![](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/unittest/badge.svg)
 
 
 ## Example USI URLs
