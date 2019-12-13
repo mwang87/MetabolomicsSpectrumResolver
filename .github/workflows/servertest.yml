@@ -49,5 +49,4 @@ jobs:
         export PATH="$HOME/miniconda/bin:$PATH"
         bash -c "source activate usi"
         conda install -n usi -c conda-forge nose2
-        pip install nose2
         nose2 -v
