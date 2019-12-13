@@ -47,6 +47,8 @@ jobs:
     - name: Test with pytest
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
+        source ~/.bashrc
+        echo ~/.bashrc
         bash -c "source activate usi"
         conda install -n usi -c conda-forge nose2
         nose2 -v
