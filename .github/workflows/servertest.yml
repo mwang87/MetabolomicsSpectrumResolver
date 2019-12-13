@@ -34,6 +34,7 @@ jobs:
         conda install -n usi -c conda-forge xmltodict
         conda install -n usi -c conda-forge qrcode
         conda install -n usi -c conda-forge requests-cache
+        conda install -n usi -c conda-forge nose2
         echo "source activate usi" > ~/.bashrc
     - name: Lint with flake8
       run: |
@@ -49,6 +50,4 @@ jobs:
         export PATH="$HOME/miniconda/bin:$PATH"
         source ~/.bashrc
         echo ~/.bashrc
-        bash -c "source activate usi"
-        conda install -n usi -c conda-forge nose2
-        nose2 -v
+        bash -c "source activate usi" && nose2 -v
