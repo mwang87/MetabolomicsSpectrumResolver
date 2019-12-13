@@ -195,31 +195,29 @@ def _get_plotting_args(request):
     height = (default_plotting_args['height']
               if height is None else float(height))
     mz_min = request.args.get('mz_min')
-    if mz_min is not None:
-        mz_min = float(mz_min)
+    mz_min = float(mz_min) if mz_min else None
     mz_max = request.args.get('mz_max')
-    if mz_max is not None:
-        mz_max = float(mz_max)
+    mz_max = float(mz_max) if mz_max else None
     max_intensity = request.args.get('max_intensity')
     max_intensity = (default_plotting_args['max_intensity']
-                     if max_intensity is None else float(max_intensity) / 100)
+                     if not max_intensity else float(max_intensity) / 100)
     grid = request.args.get('grid')
     grid = default_plotting_args['grid'] if grid is None else grid == 'true'
     annotate_peaks = request.args.get('annotate_peaks')
     annotate_peaks = (default_plotting_args['annotate_peaks']
-                      if annotate_peaks is None else annotate_peaks == 'true')
+                      if not annotate_peaks else annotate_peaks == 'true')
     annotate_threshold = request.args.get('annotate_threshold')
     annotate_threshold = (default_plotting_args['annotate_threshold']
-                          if annotate_threshold is None else
+                          if not annotate_threshold else
                           float(annotate_threshold) / 100)
     annotate_precision = request.args.get('annotate_precision')
     annotate_precision = (default_plotting_args['annotate_precision']
-                          if annotate_precision is None
-                          else int(annotate_precision))
+                          if not annotate_precision else
+                          int(annotate_precision))
     annotation_rotation = request.args.get('annotation_rotation')
     annotation_rotation = (default_plotting_args['annotation_rotation']
-                           if annotation_rotation is None
-                           else float(annotation_rotation))
+                           if not annotation_rotation else
+                           float(annotation_rotation))
     return {
         'width': width,
         'height': height,
