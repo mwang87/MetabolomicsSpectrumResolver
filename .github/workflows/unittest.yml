@@ -1,4 +1,4 @@
-name: Server Tests
+name: unittest
 
 on: [push]
 
