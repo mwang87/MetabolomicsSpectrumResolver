@@ -20,11 +20,26 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install requests
-        pip install 
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+        bash miniconda.sh -b -p $HOME/miniconda
+        export PATH="$HOME/miniconda/bin:$PATH"
+        conda config --set always_yes yes --set changeps1 no
+        conda update -q conda
+        conda create -n usi -c rdkit rdkit
+        bash -c "source activate usi"
+        conda install -n usi -c anaconda flask
+        conda install -n usi -c anaconda gunicorn
+        conda install -n usi -c anaconda requests
+        conda install -n usi -c bioconda spectrum_utils
+        conda install -n usi -c conda-forge xmltodict
+        conda install -n usi -c conda-forge qrcode
+        conda install -n usi -c conda-forge requests-cache
+        conda install -n usi -c conda-forge nose2
+        echo "source activate usi" > ~/.bashrc
     - name: Lint with flake8
       run: |
+        export PATH="$HOME/miniconda/bin:$PATH"
+        bash -c "source activate usi"
         pip install flake8
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
@@ -32,5 +47,6 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pip install nose2
+        export PATH="$HOME/miniconda/bin:$PATH"
+        source ~/.bashrc
         nose2 -v
