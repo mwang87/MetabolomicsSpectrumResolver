@@ -49,5 +49,4 @@ jobs:
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
         source ~/.bashrc
-        echo ~/.bashrc
-        bash -c "source activate usi" && nose2 -v
+        nose2 -v
