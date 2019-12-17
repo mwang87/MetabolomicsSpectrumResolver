@@ -99,9 +99,9 @@ def generate_mirror_svg():
 def _generate_figure(usi, extension, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
+    spectrum = _prepare_spectrum(usi, **kwargs)
     sup.spectrum(
-        _prepare_spectrum(usi, **kwargs),
-        annotate_ions=kwargs['annotate_peaks'],
+        spectrum, annotate_ions=kwargs['annotate_peaks'],
         annot_kws={'rotation': kwargs['annotation_rotation']},
         grid=kwargs['grid'], ax=ax)
 
@@ -114,14 +114,21 @@ def _generate_figure(usi, extension, **kwargs):
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-    title = ax.set_title(usi)
+    title = ax.text(0.5, 1.06, usi, horizontalalignment='center',
+                    verticalalignment='bottom', fontsize='x-large',
+                    fontweight='bold', transform=ax.transAxes)
     title.set_url(f'{USI_SERVER}spectrum/?usi={usi}')
-
-    plt.tight_layout()
+    subtitle = (f'Precursor m/z: '
+                f'{spectrum.precursor_mz:.{kwargs["annotate_precision"]}f} '
+                if spectrum.precursor_mz > 0 else '')
+    subtitle += f'Charge: {spectrum.precursor_charge}'
+    ax.text(0.5, 1.02, subtitle, horizontalalignment='center',
+            verticalalignment='bottom', fontsize='large',
+            transform=ax.transAxes)
 
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
-    plt.savefig(output_filename)
+    plt.savefig(output_filename, bbox_inches='tight')
     plt.close()
 
     return output_filename

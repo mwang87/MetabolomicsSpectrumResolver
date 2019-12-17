@@ -71,7 +71,7 @@ def _parse_gnps_library(usi):
     source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/'
                    f'gnpslibraryspectrum.jsp?SpectrumID={identifier}')
     return sus.MsmsSpectrum(
-        usi, spectrum_dict['annotations'][0]['Precursor_MZ'], 1, mz,
+        usi, float(spectrum_dict['annotations'][0]['Precursor_MZ']), 1, mz,
         intensity), source_link
 
 
@@ -85,7 +85,7 @@ def _parse_ms2lda(usi):
     spectrum_dict = json.loads(requests.get(request_url).text)
     mz, intensity = zip(*spectrum_dict['peaks'])
     source_link = None
-    return sus.MsmsSpectrum(usi, spectrum_dict['precursor_mz'], 1, mz,
+    return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 1, mz,
                             intensity), source_link
 
 
@@ -165,7 +165,7 @@ def _parse_massbank(usi):
     precursor_mz = 0
     for metadata in spectrum_dict['metaData']:
         if metadata['name'] == 'precursor m/z':
-            precursor_mz = metadata['value']
+            precursor_mz = float(metadata['value'])
             break
     source_link = (f'https://massbank.eu/MassBank/'
                    f'RecordDisplay.jsp?id={massbank_id}')
