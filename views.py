@@ -1,3 +1,4 @@
+import copy
 import csv
 import io
 import json
@@ -10,6 +11,7 @@ import numpy as np
 import qrcode
 import requests_cache
 from spectrum_utils import plot as sup
+from spectrum_utils import spectrum as sus
 
 import parsing
 from app import app
@@ -130,8 +132,22 @@ def _generate_figure(usi, extension, **kwargs):
 def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
-    sup.mirror(_prepare_spectrum(usi1, **kwargs),
-               _prepare_spectrum(usi2, **kwargs),
+    spectrum_top = _prepare_spectrum(usi1, **kwargs)
+    for i, (annotation, mz) in enumerate(zip(spectrum_top.annotation,
+                                             spectrum_top.mz)):
+        if annotation is None:
+            spectrum_top.annotation[i] = sus.FragmentAnnotation(0, mz, '')
+        spectrum_top.annotation[i].ion_type = 'top'
+    spectrum_bottom = _prepare_spectrum(usi2, **kwargs)
+    for i, (annotation, mz) in enumerate(zip(spectrum_bottom.annotation,
+                                             spectrum_bottom.mz)):
+        if annotation is None:
+            spectrum_bottom.annotation[i] = sus.FragmentAnnotation(0, mz, '')
+        spectrum_bottom.annotation[i].ion_type = 'bottom'
+
+    sup.colors['top'] = '#212121'
+    sup.colors['bottom'] = '#388E3C'
+    sup.mirror(spectrum_top, spectrum_bottom,
                {'annotate_ions': kwargs['annotate_peaks'],
                 'annot_kws': {'rotation': kwargs['annotation_rotation']},
                 'grid': kwargs['grid']}, ax=ax)
@@ -160,6 +176,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
 
 def _prepare_spectrum(usi, **kwargs):
     spectrum, _ = parsing.parse_usi(usi)
+    spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
 
     if kwargs['annotate_peaks']:
