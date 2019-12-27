@@ -101,9 +101,9 @@ def generate_mirror_svg():
 def _generate_figure(usi, extension, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
+    spectrum = _prepare_spectrum(usi, **kwargs)
     sup.spectrum(
-        _prepare_spectrum(usi, **kwargs),
-        annotate_ions=kwargs['annotate_peaks'],
+        spectrum, annotate_ions=kwargs['annotate_peaks'],
         annot_kws={'rotation': kwargs['annotation_rotation']},
         grid=kwargs['grid'], ax=ax)
 
@@ -116,14 +116,22 @@ def _generate_figure(usi, extension, **kwargs):
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-    title = ax.set_title(usi)
+    title = ax.text(0.5, 1.06, usi, horizontalalignment='center',
+                    verticalalignment='bottom', fontsize='x-large',
+                    fontweight='bold', transform=ax.transAxes)
     title.set_url(f'{USI_SERVER}spectrum/?usi={usi}')
-
-    plt.tight_layout()
+    subtitle = (f'Precursor m/z: '
+                f'{spectrum.precursor_mz:.{kwargs["annotate_precision"]}f} '
+                if spectrum.precursor_mz > 0 else '')
+    subtitle += f'Charge: {spectrum.precursor_charge}'
+    subtitle = ax.text(0.5, 1.02, subtitle, horizontalalignment='center',
+                       verticalalignment='bottom', fontsize='large',
+                       transform=ax.transAxes)
+    subtitle.set_url(f'{USI_SERVER}spectrum/?usi={usi}')
 
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
-    plt.savefig(output_filename)
+    plt.savefig(output_filename, bbox_inches='tight')
     plt.close()
 
     return output_filename
@@ -133,6 +141,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     spectrum_top = _prepare_spectrum(usi1, **kwargs)
+    
     for i, (annotation, mz) in enumerate(zip(spectrum_top.annotation,
                                              spectrum_top.mz)):
         if annotation is None:
@@ -147,6 +156,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
 
     sup.colors['top'] = '#212121'
     sup.colors['bottom'] = '#388E3C'
+    
     sup.mirror(spectrum_top, spectrum_bottom,
                {'annotate_ions': kwargs['annotate_peaks'],
                 'annot_kws': {'rotation': kwargs['annotation_rotation']},
@@ -161,14 +171,36 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-    title = ax.set_title(f'Top: {usi1}\nBottom: {usi2}')
+    title = ax.text(0.5, 1.15, f'Top: {usi1}', horizontalalignment='center',
+                    verticalalignment='bottom', fontsize='x-large',
+                    fontweight='bold', transform=ax.transAxes)
     title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
-
-    plt.tight_layout()
+    subtitle = (
+        f'Precursor m/z: '
+        f'{spectrum_top.precursor_mz:.{kwargs["annotate_precision"]}f} '
+        if spectrum_top.precursor_mz > 0 else '')
+    subtitle += f'Charge: {spectrum_top.precursor_charge}'
+    subtitle = ax.text(0.5, 1.11, subtitle, horizontalalignment='center',
+                       verticalalignment='bottom', fontsize='large',
+                       transform=ax.transAxes)
+    subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+    title = ax.text(0.5, 1.06, f'Bottom: {usi2}', horizontalalignment='center',
+                    verticalalignment='bottom', fontsize='x-large',
+                    fontweight='bold', transform=ax.transAxes)
+    title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+    subtitle = (
+        f'Precursor m/z: '
+        f'{spectrum_bottom.precursor_mz:.{kwargs["annotate_precision"]}f} '
+        if spectrum_bottom.precursor_mz > 0 else '')
+    subtitle += f'Charge: {spectrum_bottom.precursor_charge}'
+    subtitle = ax.text(0.5, 1.02, subtitle, horizontalalignment='center',
+                       verticalalignment='bottom', fontsize='large',
+                       transform=ax.transAxes)
+    subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
 
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
-    plt.savefig(output_filename)
+    plt.savefig(output_filename, bbox_inches='tight')
     plt.close()
 
     return output_filename
