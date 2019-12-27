@@ -211,8 +211,16 @@ def _prepare_spectrum(usi, **kwargs):
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
 
+    min_mz = kwargs.get('mz_min', 0)
+    max_mz = kwargs.get('mz_max', 2000)
+
     if kwargs['annotate_peaks']:
         for mz in _generate_labels(spectrum, kwargs['annotate_threshold']):
+            if mz < min_mz:
+                continue
+            if mz > max_mz:
+                continue
+            
             spectrum.annotate_mz_fragment(
                 mz, 0, 0.01, 'Da',
                 text=f'{mz:.{kwargs["annotate_precision"]}f}')
