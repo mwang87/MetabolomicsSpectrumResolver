@@ -154,6 +154,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
             spectrum_bottom.annotation[i] = sus.FragmentAnnotation(0, mz, '')
         spectrum_bottom.annotation[i].ion_type = 'bottom'
 
+    #Colors for Mirror Plot Peaks, subject to change
     sup.colors['top'] = '#212121'
     sup.colors['bottom'] = '#388E3C'
     
