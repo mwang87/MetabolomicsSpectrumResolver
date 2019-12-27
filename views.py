@@ -217,7 +217,7 @@ def _prepare_spectrum(usi, **kwargs):
     if min_mz is None:
         min_mz = 0
     if max_mz is None:
-        min_mz = 2000
+        max_mz = 2000
 
     if kwargs['annotate_peaks']:
         for mz in _generate_labels(spectrum, kwargs['annotate_threshold']):
