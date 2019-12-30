@@ -327,4 +327,4 @@ def generate_qr():
 
 @app.errorhandler(500)
 def internal_error(error):
-    return flask.render_template('500.html')
+    return flask.render_template('500.html', error=error), 500
