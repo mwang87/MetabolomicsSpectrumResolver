@@ -141,7 +141,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     spectrum_top = _prepare_spectrum(usi1, **kwargs)
-    
+
     for i, (annotation, mz) in enumerate(zip(spectrum_top.annotation,
                                              spectrum_top.mz)):
         if annotation is None:
@@ -156,7 +156,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
 
     sup.colors['top'] = '#212121'
     sup.colors['bottom'] = '#388E3C'
-    
+
     sup.mirror(spectrum_top, spectrum_bottom,
                {'annotate_ions': kwargs['annotate_peaks'],
                 'annot_kws': {'rotation': kwargs['annotation_rotation']},
@@ -210,22 +210,10 @@ def _prepare_spectrum(usi, **kwargs):
     spectrum, _ = parsing.parse_usi(usi)
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
-
-    min_mz = kwargs.get('mz_min', 0)
-    max_mz = kwargs.get('mz_max', 2000)
-
-    if min_mz is None:
-        min_mz = 0
-    if max_mz is None:
-        max_mz = 2000
+    spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
 
     if kwargs['annotate_peaks']:
         for mz in _generate_labels(spectrum, kwargs['annotate_threshold']):
-            if mz < min_mz:
-                continue
-            if mz > max_mz:
-                continue
-
             spectrum.annotate_mz_fragment(
                 mz, 0, 0.01, 'Da',
                 text=f'{mz:.{kwargs["annotate_precision"]}f}')
