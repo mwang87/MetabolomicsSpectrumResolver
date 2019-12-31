@@ -1,5 +1,5 @@
 import requests
-from test_usi import test_usi_list
+from usi_test_cases import test_usi_list
 PRODUCTION_URL = "metabolomics-usi.ucsd.edu"
 
 def test_heartbeat():

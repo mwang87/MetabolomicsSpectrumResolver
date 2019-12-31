@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, "..")
 import parsing  # noqa: E402
-from test_usi import test_usi_list
+from usi_test_cases import test_usi_list
 
 
 def test_uri_parse():
