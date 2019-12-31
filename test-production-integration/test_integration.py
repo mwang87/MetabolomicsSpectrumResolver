@@ -1,6 +1,4 @@
 import requests
-import sys
-sys.path.insert(0, "../test")
 from test_usi import test_usi_list
 PRODUCTION_URL = "metabolomics-usi.ucsd.edu"
 
