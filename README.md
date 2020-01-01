@@ -17,6 +17,7 @@ Supported USI Types
 1. Metabolomics Workbench Dataset Spectra
 
 ![](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/unittest/badge.svg)
+![](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/production-integration/badge.svg)
 
 
 ## Example USI URLs
