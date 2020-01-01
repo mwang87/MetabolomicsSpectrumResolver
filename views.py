@@ -43,7 +43,7 @@ def render_contributors():
 
 @app.route('/heartbeat', methods=['GET'])
 def render_heartbeat():
-    return json.dumps({'status': 'fail'})
+    return json.dumps({'status': 'success'})
 
 
 @app.route('/spectrum/', methods=['GET'])
