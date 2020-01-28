@@ -70,6 +70,37 @@ annotate_peaks: include 'annotate_peaks' if you want the plot to label peaks tha
 e.g. 
 [mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555&mz_min=400&mz_max=500&annotate_peaks)
 
+
+## Formatting Documentation
+
+### Massbank Library Spectrum
+
+```mzdata:MASSBANK:<Massbank Accession>```
+
+### GNPS Analysis Task Spectrum
+
+```mzspec:GNPSTASK-<GNPS Task ID>:<File name in task>:scan:<scan number>```
+
+### MS2LDA MOTIFDB
+
+TODO: Fill in
+
+### GNPS Library Spectrum
+
+```mzspec:GNPSLIBRARY:<GNPS Library Accession>```
+
+### Metabolights Data Repository Spectrum
+
+```mzspec:<Metabolights Accession>:<Filename>:scan:<Scan Number>```
+
+### Metabolomics Workbench Data Repository Spectrum
+
+```mzspec:<Metabolomics Workbench Accession>:<Filename>:scan:<Scan Number>```
+
+### MassIVE/GNPS Data Repository Spectrum
+
+[See Proteomics USI Standard](http://www.psidev.info/usi)
+
 ## Deprecated Material
 
 Test URLs for GNPS plotting:
