@@ -71,7 +71,7 @@ e.g.
 [mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555&mz_min=400&mz_max=500&annotate_peaks)
 
 
-## Formatting Documentation
+## USI Formatting Documentation
 
 ### Massbank Library Spectrum
 
