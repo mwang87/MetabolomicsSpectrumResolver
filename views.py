@@ -142,22 +142,31 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     spectrum_top = _prepare_spectrum(usi1, **kwargs)
+    spectrum_bottom = _prepare_spectrum(usi2, **kwargs)
+
+    fragment_mz_tolerance = 0.02    # TODO: Configurable?
 
     for i, (annotation, mz) in enumerate(zip(spectrum_top.annotation,
                                              spectrum_top.mz)):
         if annotation is None:
             spectrum_top.annotation[i] = sus.FragmentAnnotation(0, mz, '')
-        spectrum_top.annotation[i].ion_type = 'top'
-    spectrum_bottom = _prepare_spectrum(usi2, **kwargs)
+        if np.min(np.abs(spectrum_bottom.mz - mz)) < fragment_mz_tolerance:
+            spectrum_top.annotation[i].ion_type = 'top'
+        else:
+            spectrum_top.annotation[i].ion_type = 'unmatched'
     for i, (annotation, mz) in enumerate(zip(spectrum_bottom.annotation,
                                              spectrum_bottom.mz)):
         if annotation is None:
             spectrum_bottom.annotation[i] = sus.FragmentAnnotation(0, mz, '')
-        spectrum_bottom.annotation[i].ion_type = 'bottom'
+        if np.min(np.abs(spectrum_top.mz - mz)) < fragment_mz_tolerance:
+            spectrum_bottom.annotation[i].ion_type = 'bottom'
+        else:
+            spectrum_bottom.annotation[i].ion_type = 'unmatched'
 
-    #Colors for Mirror Plot Peaks, subject to change
+    # Colors for mirror plot peaks, subject to change.
     sup.colors['top'] = '#212121'
     sup.colors['bottom'] = '#388E3C'
+    sup.colors['unmatched'] = 'darkgray'
 
     sup.mirror(spectrum_top, spectrum_bottom,
                {'annotate_ions': kwargs['annotate_peaks'],
@@ -197,15 +206,14 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     subtitle += f'Charge: {spectrum_bottom.precursor_charge}'
     subtitle = ax.text(0.5, 1.06, subtitle, horizontalalignment='center',
                        verticalalignment='bottom', fontsize='large',
-                       fontweight='bold', transform=ax.transAxes)
+                       transform=ax.transAxes)
     subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
 
-    fragment_mz_tolerance = 0.02    # TODO: Configurable?
     similarity = cosine(spectrum_top, spectrum_bottom, fragment_mz_tolerance)
     subtitle_score = f'Cosine similarity = {similarity:.4f}'
     ax.text(0.5, 1.02, subtitle_score, horizontalalignment='center',
             verticalalignment='bottom', fontsize='large',
-            transform=ax.transAxes)
+            fontweight='bold', transform=ax.transAxes)
 
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
