@@ -7,6 +7,7 @@ import uuid
 
 import flask
 import matplotlib.pyplot as plt
+import numba as nb
 import numpy as np
 import qrcode
 import requests_cache
@@ -172,7 +173,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-    title = ax.text(0.5, 1.15, f'Top: {usi1}', horizontalalignment='center',
+    title = ax.text(0.5, 1.19, f'Top: {usi1}', horizontalalignment='center',
                     verticalalignment='bottom', fontsize='x-large',
                     fontweight='bold', transform=ax.transAxes)
     title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
@@ -181,11 +182,11 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
         f'{spectrum_top.precursor_mz:.{kwargs["annotate_precision"]}f} '
         if spectrum_top.precursor_mz > 0 else '')
     subtitle += f'Charge: {spectrum_top.precursor_charge}'
-    subtitle = ax.text(0.5, 1.11, subtitle, horizontalalignment='center',
+    subtitle = ax.text(0.5, 1.15, subtitle, horizontalalignment='center',
                        verticalalignment='bottom', fontsize='large',
                        transform=ax.transAxes)
     subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
-    title = ax.text(0.5, 1.06, f'Bottom: {usi2}', horizontalalignment='center',
+    title = ax.text(0.5, 1.1, f'Bottom: {usi2}', horizontalalignment='center',
                     verticalalignment='bottom', fontsize='x-large',
                     fontweight='bold', transform=ax.transAxes)
     title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
@@ -194,10 +195,17 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
         f'{spectrum_bottom.precursor_mz:.{kwargs["annotate_precision"]}f} '
         if spectrum_bottom.precursor_mz > 0 else '')
     subtitle += f'Charge: {spectrum_bottom.precursor_charge}'
-    subtitle = ax.text(0.5, 1.02, subtitle, horizontalalignment='center',
+    subtitle = ax.text(0.5, 1.06, subtitle, horizontalalignment='center',
                        verticalalignment='bottom', fontsize='large',
-                       transform=ax.transAxes)
+                       fontweight='bold', transform=ax.transAxes)
     subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+
+    fragment_mz_tolerance = 0.02    # TODO: Configurable?
+    similarity = cosine(spectrum_top, spectrum_bottom, fragment_mz_tolerance)
+    subtitle_score = f'Cosine similarity = {similarity:.4f}'
+    ax.text(0.5, 1.02, subtitle_score, horizontalalignment='center',
+            verticalalignment='bottom', fontsize='large',
+            transform=ax.transAxes)
 
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
@@ -205,6 +213,69 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     plt.close()
 
     return output_filename
+
+
+def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
+           fragment_mz_tolerance: float) -> float:
+    """
+    Compute the cosine similarity between the given spectra.
+
+    Parameters
+    ----------
+    spectrum1 : sus.MsmsSpectrum
+        The first spectrum.
+    spectrum2 : sus.MsmsSpectrum
+        The second spectrum.
+    fragment_mz_tolerance : float
+        The fragment m/z tolerance used to match peaks.
+
+    Returns
+    -------
+    float
+        The cosine similarity between the given spectra.
+    """
+    return _cosine(spectrum1.mz, np.copy(spectrum1.intensity),
+                   spectrum2.mz, np.copy(spectrum2.intensity),
+                   fragment_mz_tolerance)
+
+
+@nb.njit
+def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
+            intensity_other: np.ndarray, fragment_mz_tol: float) -> float:
+    """
+    Compute the cosine similarity between the given spectra.
+
+    Parameters
+    ----------
+    mz : np.ndarray
+        The first spectrum's m/z values.
+    intensity : np.ndarray
+        The first spectrum's intensity values.
+    mz_other : np.ndarray
+        The second spectrum's m/z values.
+    intensity_other : np.ndarray
+        The second spectrum's intensity values.
+    fragment_mz_tol : float
+        The fragment m/z tolerance used to match peaks in both spectra with
+        each other.
+
+    Returns
+    -------
+    float
+        The cosine similarity between both spectra.
+    """
+    intensity /= np.linalg.norm(intensity)
+    intensity_other /= np.linalg.norm(intensity_other)
+    fragment_i, fragment_other_i, score = 0, 0, 0.
+    for fragment_i in range(len(mz)):
+        while (fragment_other_i < len(mz_other) - 1 and
+               mz_other[fragment_other_i] < mz[fragment_i] - fragment_mz_tol):
+            fragment_other_i += 1
+        if (abs(mz[fragment_i] - mz_other[fragment_other_i]) <= fragment_mz_tol
+                and fragment_other_i < len(mz_other)):
+            score += intensity[fragment_i] * intensity_other[fragment_other_i]
+            fragment_other_i += 1
+    return score
 
 
 def _prepare_spectrum(usi, **kwargs):
