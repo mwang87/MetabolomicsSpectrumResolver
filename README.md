@@ -101,23 +101,32 @@ TODO: Fill in
 
 [See Proteomics USI Standard](http://www.psidev.info/usi)
 
-## Deprecated Material
+## Example Formatting Figures
 
-Test URLs for GNPS plotting:
+Vanilla Rendering
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943)
 
-task c95481f0c53d42e78a61bf899e9f9adb
-file spectra/specs_ms.mgf
-scan 1943
+Small Figure
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=4&height=4&mz_min=&mz_max=&max_intensity=&grid=true&annotate_peaks=true&annotate_threshold=0&annotate_precision=2&annotation_rotation=70)
 
-#Spectrum in Molecular Networking
-https://metabolomics-usi.ucsd.edu/spectrum/?task=c95481f0c53d42e78a61bf899e9f9adb&file=spectra/specs_ms.mgf&scan=1943
+Mass Range Filtering
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=550&mz_max=800&max_intensity=&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
 
-#QRCode
-https://metabolomics-usi.ucsd.edu/qrcode?task=c95481f0c53d42e78a61bf899e9f9adb&file=spectra/specs_ms.mgf&scan=1943
+Less Decimal Places
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=2&annotation_rotation=90)
 
-# Example for ms2lda
-https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MS2LDATASK-38:blah:document:43062
-Note the 38 is the experiment id, 43062 is the document id. blah can be anything!
+Rotate Labels
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=2&annotation_rotation=70)
 
-#Test for GNPS Library Spectrum
+Decreate Label Minimum Intensity
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=true&annotate_peaks=true&annotate_threshold=0&annotate_precision=2&annotation_rotation=70)
+
+No Grid
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=false&annotate_peaks=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
+
+Vanilla Mirror Match
+![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzdata:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002)
+
+Mirror Match with Intensity Scaling
+![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzdata:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002&width=10&height=6&mz_min=&mz_max=&max_intensity=150&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
 
