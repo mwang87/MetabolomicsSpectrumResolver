@@ -210,8 +210,8 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
 def _prepare_spectrum(usi, **kwargs):
     spectrum, _ = parsing.parse_usi(usi)
     spectrum = copy.deepcopy(spectrum)
-    spectrum.scale_intensity(max_intensity=1)
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
+    spectrum.scale_intensity(max_intensity=1)
 
     if kwargs['annotate_peaks']:
         for mz in _generate_labels(spectrum, kwargs['annotate_threshold']):
