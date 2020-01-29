@@ -40,7 +40,7 @@ Supported USI Types
 
 ### Massbank Library Spectra
 
-[mzdata:MASSBANK:BSU00002](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MASSBANK:BSU00002)
+[mzspec:MASSBANK:BSU00002](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MASSBANK:BSU00002)
 
 ### ProteoXchange Repository Data
 
@@ -75,7 +75,7 @@ e.g.
 
 ### Massbank Library Spectrum
 
-```mzdata:MASSBANK:<Massbank Accession>```
+```mzspec:MASSBANK:<Massbank Accession>```
 
 ### GNPS Analysis Task Spectrum
 
