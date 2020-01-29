@@ -11,5 +11,4 @@ def test_uri_parse():
 def test_render_mirror():
     import views
 
-
-    views._generate_mirror_figure('mzdata:MASSBANK:BSU00002', 'mzdata:MASSBANK:BSU00002', "png", **views.default_plotting_args)
+    views._generate_mirror_figure('mzdata:MASSBANK:BSU00002', 'mzdata:MASSBANK:BSU00002', "png", kwargs=views.default_plotting_args)
