@@ -35,6 +35,7 @@ jobs:
         conda install -n usi -c conda-forge qrcode
         conda install -n usi -c conda-forge requests-cache
         conda install -n usi -c conda-forge nose2
+        conda install -n usi -c anaconda scipy
         echo "source activate usi" > ~/.bashrc
     - name: Lint with flake8
       run: |
