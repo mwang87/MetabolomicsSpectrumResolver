@@ -13,6 +13,7 @@ RUN conda install -n usi -c bioconda spectrum_utils
 RUN conda install -n usi -c conda-forge xmltodict
 RUN conda install -n usi -c conda-forge qrcode
 RUN conda install -n usi -c conda-forge requests-cache
+RUN conda install -n usi -c anaconda scipy
 
 RUN apt-get install -y libxrender-dev
 
