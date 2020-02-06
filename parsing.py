@@ -130,7 +130,7 @@ def _parse_mtbls(usi):
             source_link = (f'https://www.ebi.ac.uk/'
                            f'metabolights/{dataset_identifier}')
             return _parse_msv_pxd(f'mzspec:{dataset["dataset"]}:{filename}:'
-                                  f'scan:{scan}'), source_link
+                                  f'scan:{scan}')[0], source_link
     raise ValueError('Unsupported/unknown USI')
 
 
