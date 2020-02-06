@@ -5,4 +5,5 @@ test_usi_list = ['mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs
 'mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555',
 'mzdata:MASSBANK:BSU00002',
 'mzspec:GNPSLIBRARY:CCMSLIB00005436077',
-'mzspec:MOTIFDB:motif:171163']
+'mzspec:MOTIFDB:motif:171163',
+'mzspec:MS2LDATASK-190:document:270684']
