@@ -289,6 +289,8 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
 def _prepare_spectrum(usi, **kwargs):
     spectrum, _ = parsing.parse_usi(usi)
     spectrum = copy.deepcopy(spectrum)
+    import sys
+    print(spectrum, file=sys.stderr)
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
 
