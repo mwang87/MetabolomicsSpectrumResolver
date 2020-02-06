@@ -20,3 +20,19 @@ def test_error_page():
 
     r = requests.get(url)
     assert(r.status_code == 500)
+
+def test_mirror_img():
+    url = f"{PRODUCTION_URL}/svg/mirror?usi1=mzdata:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002"
+    r = requests.get(url)
+    r.raise_for_status()
+
+def test_img():
+    from urllib.parse import quote
+    for usi in test_usi_list:
+        url = f"{PRODUCTION_URL}/svg/?usi={quote(usi)}"
+        r = requests.get(url)
+        r.raise_for_status()
+
+        url = f"{PRODUCTION_URL}/png/?usi={quote(usi)}"
+        r = requests.get(url)
+        r.raise_for_status()
