@@ -25,7 +25,7 @@ jobs:
         export PATH="$HOME/miniconda/bin:$PATH"
         conda config --set always_yes yes --set changeps1 no
         conda update -q conda
-        conda create -n usi -c rdkit rdkit
+        conda create -n usi -c rdkit rdkit=2019.09.3.0
         bash -c "source activate usi"
         conda install -n usi -c anaconda flask
         conda install -n usi -c anaconda gunicorn
