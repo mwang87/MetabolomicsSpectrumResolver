@@ -135,8 +135,18 @@ def _parse_mtbls(usi):
 
 
 def _parse_metabolomics_workbench(usi):
-    raise NotImplementedError
-
+    tokens = usi.split(':')
+    dataset_identifier = tokens[1]
+    filename = tokens[2]
+    scan = tokens[4]
+    for dataset in requests.get('https://massive.ucsd.edu/ProteoSAFe/'
+                                'datasets_json.jsp').json()['datasets']:
+        if dataset_identifier in dataset['title']:
+            source_link = (f'https://www.metabolomicsworkbench.org/'
+                           f'data/DRCCMetadata.php?Mode=Study&StudyID=/{dataset_identifier}')
+            return _parse_msv_pxd(f'mzspec:{dataset["dataset"]}:{filename}:'
+                                  f'scan:{scan}')[0], source_link
+    raise ValueError('Unsupported/unknown USI')
 
 # Parse MOTIFDB from ms2lda.org.
 def _parse_motifdb(usi):
