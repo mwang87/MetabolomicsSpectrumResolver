@@ -49,16 +49,19 @@ Supported USI Types
 ### MassIVE/GNPS Repository Data
 
 [mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
-[mzdata:MSV000078556:m0__RA10_01_2335:scan:604](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MSV000078556:m0__RA10_01_2335:scan:604)
+
+[mzdata:MSV000078547:120228_nbut_3610_it_it_take2:scan:389](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MSV000078547:120228_nbut_3610_it_it_take2:scan:389)
 
 ### Metabolights Repository Data
 
 [mzspec:MTBLS38:(-)-epigallocatechin:scan:2](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MTBLS38:(-)-epigallocatechin:scan:2)
+
 [mzspec:MSV000082791:(-)-epigallocatechin:scan:2](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000082791:(-)-epigallocatechin:scan:2)
 
 ### Metabolomics Workbench Repository Data
 
 [mzspec:ST000003:iPSC-T1R1:scan:3](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:ST000003:iPSC-T1R1:scan:3)
+
 [mzspec:MSV000082680:iPSC-T1R1:scan:3](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000082680:iPSC-T1R1:scan:3)
 
 ## Additional arguments for plotting views
