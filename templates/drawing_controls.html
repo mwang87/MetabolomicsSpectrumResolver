@@ -51,13 +51,27 @@
         <div class="form-group row">
             <div class="col-4 col-form-label font-weight-bold text-right">Peak labeling</div>
             <div class="col-8">
-                <div class="form-inline input-group">
-                    <input type="checkbox" class="form-check-input" id="annotate_peaks" checked="checked">
-                    <label class="form-check-label col-form-label" for="annotate_threshold">Minimum intensity:&nbsp;</label>
-                    <input type="number" id="annotate_threshold" class="form-control" min="0" max="100" value="5" step="1">
-                    <div class="input-group-append">
-                        <span class="input-group-text">&percnt;</span>
-                    </div>
+                <!--<button class="btn btn-light" type="button" data-toggle="collapse" data-target="#peaks">Show peaks</button>
+                <div class="collapse" id="peaks">-->
+                <div id="peaks">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th/>
+                                <th class="text-right">Mass (<i>m/z</i>)</th>
+                                <th class="text-right">Intensity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            (% for peak in peaks %)
+                                <tr>
+                                    <td class="text-right"><input type="checkbox" class="form-check-input" id="annotate_peak_((loop.index - 1))"></td>
+                                    <td class="text-right">(( '{:.4f}'.format(peak[0]) ))</td>
+                                    <td class="text-right">(( '{:.0%}'.format(peak[1]) ))</td>
+                                </tr>
+                            (% endfor %)
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -87,14 +101,20 @@
 
 <script type="text/javascript">
     function getDrawingControls() {
+        let annotate_peaks = [];
+        input_list = document.getElementsByTagName('input');
+        for (let i = 0; i < input_list.length; i++) {
+            if (input_list[i].id.startsWith('annotate_peak_') && input_list[i].checked) {
+                annotate_peaks.push(parseInt(input_list[i].id.substring(input_list[i].id.lastIndexOf('_') + 1)));
+            }
+        }
         return `&width=${$("#width").val()}` +
             `&height=${$("#height").val()}` +
             `&mz_min=${$("#mz_min").val()}` +
             `&mz_max=${$("#mz_max").val()}` +
             `&max_intensity=${$("#max_intensity").val()}` +
             `&grid=${$("#grid").attr("checked")}` +
-            `&annotate_peaks=${$("#annotate_peaks").attr("checked")}` +
-            `&annotate_threshold=${$("#annotate_threshold").val()}` +
+            `&annotate_peaks=${JSON.stringify(annotate_peaks)}` +
             `&annotate_precision=${$("#annotate_precision").val()}` +
             `&annotation_rotation=${$("#annotation_rotation").val()}`;
     }
