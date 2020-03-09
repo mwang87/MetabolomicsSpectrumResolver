@@ -51,28 +51,31 @@
         <div class="form-group row">
             <div class="col-4 col-form-label font-weight-bold text-right">Peak labeling</div>
             <div class="col-8">
-                <!--<button class="btn btn-light" type="button" data-toggle="collapse" data-target="#peaks">Show peaks</button>
-                <div class="collapse" id="peaks">-->
-                <div id="peaks">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th/>
-                                <th class="text-right">Mass (<i>m/z</i>)</th>
-                                <th class="text-right">Intensity</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            (% for peak in peaks %)
+                (% for spectrum in peaks %)
+                    <!--<button class="btn btn-light" type="button" data-toggle="collapse" data-target="#peaks">Show peaks</button>
+                    <div class="collapse" id="peaks">-->
+                    <div id="peaks">
+                        <table class="table">
+                            <thead>
                                 <tr>
-                                    <td class="text-right"><input type="checkbox" class="form-check-input" id="annotate_peak_((loop.index - 1))"></td>
-                                    <td class="text-right">(( '{:.4f}'.format(peak[0]) ))</td>
-                                    <td class="text-right">(( '{:.0%}'.format(peak[1]) ))</td>
+                                    <th/>
+                                    <th class="text-right">Mass (<i>m/z</i>)</th>
+                                    <th class="text-right">Intensity</th>
                                 </tr>
-                            (% endfor %)
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                (% set spectrum_loop = loop %)
+                                (% for peak in spectrum %)
+                                    <tr>
+                                        <td class="text-right"><input type="checkbox" class="form-check-input" id="annotate_peak_((spectrum_loop.index - 1))-((loop.index - 1))"></td>
+                                        <td class="text-right">(( '{:.4f}'.format(peak[0]) ))</td>
+                                        <td class="text-right">(( '{:.0%}'.format(peak[1]) ))</td>
+                                    </tr>
+                                (% endfor %)
+                            </tbody>
+                        </table>
+                    </div>
+                (% endfor %)
             </div>
         </div>
         <div class="form-group row">
@@ -105,7 +108,7 @@
         input_list = document.getElementsByTagName('input');
         for (let i = 0; i < input_list.length; i++) {
             if (input_list[i].id.startsWith('annotate_peak_') && input_list[i].checked) {
-                annotate_peaks.push(parseInt(input_list[i].id.substring(input_list[i].id.lastIndexOf('_') + 1)));
+                annotate_peaks.push(input_list[i].id.substring(input_list[i].id.lastIndexOf('_') + 1));
             }
         }
         return `&width=${$("#width").val()}` +

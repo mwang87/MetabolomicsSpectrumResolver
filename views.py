@@ -54,18 +54,25 @@ def render_spectrum():
     return flask.render_template(
         'spectrum.html', usi=flask.request.args.get('usi'),
         source_link=source_link,
-        peaks=[(float(mz), float(intensity) / max_intensity) for mz, intensity
-               in zip(spectrum.mz, spectrum.intensity)])
+        peaks=[[(float(mz), float(intensity) / max_intensity)
+                for mz, intensity in zip(spectrum.mz, spectrum.intensity)]])
 
 
 @app.route('/mirror/', methods=['GET'])
 def render_mirror_spectrum():
-    _, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
-    _, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
-    return flask.render_template('mirror.html',
-                                 usi1=flask.request.args.get('usi1'),
-                                 usi2=flask.request.args.get('usi2'),
-                                 source_link1=source1, source_link2=source2)
+    spectrum1, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
+    spectrum2, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
+    max_intensity1 = spectrum1.intensity.max()
+    max_intensity2 = spectrum2.intensity.max()
+    return flask.render_template(
+        'mirror.html',
+        usi1=flask.request.args.get('usi1'),
+        usi2=flask.request.args.get('usi2'),
+        source_link1=source1, source_link2=source2,
+        peaks=[[(float(mz), float(intensity) / max_intensity1)
+                for mz, intensity in zip(spectrum1.mz, spectrum1.intensity)],
+               [(float(mz), float(intensity) / max_intensity2)
+                for mz, intensity in zip(spectrum2.mz, spectrum2.intensity)]])
 
 
 @app.route('/png/')
@@ -105,6 +112,7 @@ def generate_mirror_svg():
 def _generate_figure(usi, extension, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
+    kwargs['annotate_peaks'] = kwargs['annotate_peaks'][0]
     spectrum = _prepare_spectrum(usi, **kwargs)
     sup.spectrum(
         spectrum, annotate_ions=kwargs['annotate_peaks'],
@@ -144,11 +152,20 @@ def _generate_figure(usi, extension, **kwargs):
 def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
+    annotate_peaks = kwargs['annotate_peaks']
+    kwargs['annotate_peaks'] = annotate_peaks[0]
     spectrum_top = _prepare_spectrum(usi1, **kwargs)
+    kwargs['annotate_peaks'] = annotate_peaks[1]
     spectrum_bottom = _prepare_spectrum(usi2, **kwargs)
 
     fragment_mz_tolerance = 0.02    # TODO: Configurable?
 
+    if spectrum_top.annotation is None:
+        spectrum_top.annotation = np.full_like(
+            spectrum_top.mz, None, object)
+    if spectrum_bottom.annotation is None:
+        spectrum_bottom.annotation = np.full_like(
+            spectrum_bottom.mz, None, object)
     for i, (annotation, mz) in enumerate(zip(spectrum_top.annotation,
                                              spectrum_top.mz)):
         if annotation is None:
@@ -323,7 +340,7 @@ def _prepare_spectrum(usi, **kwargs):
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
 
-    if kwargs['annotate_peaks'] is not None:
+    if kwargs['annotate_peaks']:
         for peak_i in kwargs['annotate_peaks']:
             spectrum.annotate_mz_fragment(
                 spectrum.mz[peak_i], 0, 0.01, 'Da',
@@ -350,45 +367,46 @@ def _generate_labels(spec, intensity_threshold):
 
 
 def _get_plotting_args(request):
+    plotting_args = {}
     width = request.args.get('width')
-    width = default_plotting_args['width'] if width is None else float(width)
+    plotting_args['width'] = (default_plotting_args['width']
+                              if width is None else float(width))
     height = request.args.get('height')
-    height = (default_plotting_args['height']
-              if height is None else float(height))
+    plotting_args['height'] = (default_plotting_args['height']
+                               if height is None else float(height))
     mz_min = request.args.get('mz_min')
-    mz_min = float(mz_min) if mz_min else None
+    plotting_args['mz_min'] = float(mz_min) if mz_min else None
     mz_max = request.args.get('mz_max')
-    mz_max = float(mz_max) if mz_max else None
+    plotting_args['mz_max'] = float(mz_max) if mz_max else None
     grid = request.args.get('grid')
-    grid = default_plotting_args['grid'] if grid is None else grid == 'true'
-    annotate_peaks = request.args.get('annotate_peaks')
-    annotate_peaks = ([int(i) for i in json.loads(annotate_peaks)]
-                      if annotate_peaks is not None else None)
+    plotting_args['grid'] = (default_plotting_args['grid']
+                             if grid is None else grid == 'true')
+    annotate_peaks_args = request.args.get('annotate_peaks')
+    if annotate_peaks_args is not None:
+        annotate_peaks = ([], [])
+        for peak in json.loads(annotate_peaks_args):
+            spec_i, peak_i = peak.split('-')
+            annotate_peaks[int(spec_i)].append(int(peak_i))
+    else:
+        annotate_peaks = False, False
+    plotting_args['annotate_peaks'] = annotate_peaks
     annotate_precision = request.args.get('annotate_precision')
-    annotate_precision = (default_plotting_args['annotate_precision']
-                          if not annotate_precision else
-                          int(annotate_precision))
+    plotting_args['annotate_precision'] = (
+        default_plotting_args['annotate_precision']
+        if not annotate_precision else int(annotate_precision))
     annotation_rotation = request.args.get('annotation_rotation')
-    annotation_rotation = (default_plotting_args['annotation_rotation']
-                           if not annotation_rotation else
-                           float(annotation_rotation))
+    plotting_args['annotation_rotation'] = (
+        default_plotting_args['annotation_rotation']
+        if not annotation_rotation else float(annotation_rotation))
     max_intensity = request.args.get('max_intensity')
     if max_intensity:
-        max_intensity = float(max_intensity) / 100
-    elif annotate_peaks is not None:
-        max_intensity = default_plotting_args['max_intensity_labeled']
+        plotting_args['max_intensity'] = float(max_intensity) / 100
     else:
-        max_intensity = default_plotting_args['max_intensity_unlabeled']
-    return {
-        'width': width,
-        'height': height,
-        'mz_min': mz_min,
-        'mz_max': mz_max,
-        'max_intensity': max_intensity,
-        'grid': grid,
-        'annotate_peaks': annotate_peaks,
-        'annotate_precision': annotate_precision,
-        'annotation_rotation': annotation_rotation}
+        plotting_args['max_intensity'] = (
+            default_plotting_args['max_intensity_labeled']
+            if any(annotate_peaks) else
+            default_plotting_args['max_intensity_unlabeled'])
+    return plotting_args
 
 
 @app.route('/json/')
