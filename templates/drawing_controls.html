@@ -52,29 +52,25 @@
             <div class="col-4 col-form-label font-weight-bold text-right">Peak labeling</div>
             <div class="col-8">
                 (% for spectrum in peaks %)
-                    <!--<button class="btn btn-light" type="button" data-toggle="collapse" data-target="#peaks">Show peaks</button>
-                    <div class="collapse" id="peaks">-->
-                    <div id="peaks">
-                        <table class="table">
-                            <thead>
+                    (% set spectrum_loop = loop %)
+                    <table class="table">
+                        <thead>
+                            <tr class="align-self-center">
+                                <th><button class="btn btn-link remove_button_css" data-toggle="collapse" data-target="#peaks_((spectrum_loop.index))"><i class="fas fa-caret-up"></i></button></th>
+                                <th class="text-right">Mass (<i>m/z</i>)</th>
+                                <th class="text-right">Intensity</th>
+                            </tr>
+                        </thead>
+                        <tbody class="collapse" id="peaks_((spectrum_loop.index))">
+                            (% for peak in spectrum %)
                                 <tr>
-                                    <th/>
-                                    <th class="text-right">Mass (<i>m/z</i>)</th>
-                                    <th class="text-right">Intensity</th>
+                                    <td class="text-center"><input type="checkbox" class="form-check-input" id="annotate_peak_((spectrum_loop.index - 1))-((loop.index - 1))"></td>
+                                    <td class="text-right">(( '{:.4f}'.format(peak[0]) ))</td>
+                                    <td class="text-right">(( '{:.0%}'.format(peak[1]) ))</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                (% set spectrum_loop = loop %)
-                                (% for peak in spectrum %)
-                                    <tr>
-                                        <td class="text-right"><input type="checkbox" class="form-check-input" id="annotate_peak_((spectrum_loop.index - 1))-((loop.index - 1))"></td>
-                                        <td class="text-right">(( '{:.4f}'.format(peak[0]) ))</td>
-                                        <td class="text-right">(( '{:.0%}'.format(peak[1]) ))</td>
-                                    </tr>
-                                (% endfor %)
-                            </tbody>
-                        </table>
-                    </div>
+                            (% endfor %)
+                        </tbody>
+                    </table>
                 (% endfor %)
             </div>
         </div>
