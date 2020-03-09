@@ -24,10 +24,10 @@ USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
 
 default_plotting_args = {'width': 10,
                          'height': 6,
-                         'max_intensity': 1.25,
+                         'max_intensity_unlabeled': 1.05,
+                         'max_intensity_labeled': 1.25,
                          'grid': True,
                          'annotate_peaks': True,
-                         'annotate_threshold': 0.05,
                          'annotate_precision': 4,
                          'annotation_rotation': 90}
 
@@ -49,10 +49,13 @@ def render_heartbeat():
 
 @app.route('/spectrum/', methods=['GET'])
 def render_spectrum():
-    _, source_link = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum.scale_intensity(max_intensity=1)
     return flask.render_template('spectrum.html',
                                  usi=flask.request.args.get('usi'),
-                                 source_link=source_link)
+                                 source_link=source_link,
+                                 peaks=[(float(mz), float(intensity)) for mz, intensity
+                                        in zip(spectrum.mz, spectrum.intensity)])
 
 
 @app.route('/mirror/', methods=['GET'])
@@ -320,11 +323,11 @@ def _prepare_spectrum(usi, **kwargs):
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
 
-    if kwargs['annotate_peaks']:
-        for mz in _generate_labels(spectrum, kwargs['annotate_threshold']):
+    if kwargs['annotate_peaks'] is not None:
+        for peak_i in kwargs['annotate_peaks']:
             spectrum.annotate_mz_fragment(
-                mz, 0, 0.01, 'Da',
-                text=f'{mz:.{kwargs["annotate_precision"]}f}')
+                spectrum.mz[peak_i], 0, 0.01, 'Da',
+                text=f'{spectrum.mz[peak_i]:.{kwargs["annotate_precision"]}f}')
 
     return spectrum
 
@@ -356,18 +359,11 @@ def _get_plotting_args(request):
     mz_min = float(mz_min) if mz_min else None
     mz_max = request.args.get('mz_max')
     mz_max = float(mz_max) if mz_max else None
-    max_intensity = request.args.get('max_intensity')
-    max_intensity = (default_plotting_args['max_intensity']
-                     if not max_intensity else float(max_intensity) / 100)
     grid = request.args.get('grid')
     grid = default_plotting_args['grid'] if grid is None else grid == 'true'
     annotate_peaks = request.args.get('annotate_peaks')
-    annotate_peaks = (default_plotting_args['annotate_peaks']
-                      if not annotate_peaks else annotate_peaks == 'true')
-    annotate_threshold = request.args.get('annotate_threshold')
-    annotate_threshold = (default_plotting_args['annotate_threshold']
-                          if not annotate_threshold else
-                          float(annotate_threshold) / 100)
+    annotate_peaks = ([int(i) for i in json.loads(annotate_peaks)]
+                      if annotate_peaks is not None else None)
     annotate_precision = request.args.get('annotate_precision')
     annotate_precision = (default_plotting_args['annotate_precision']
                           if not annotate_precision else
@@ -376,6 +372,13 @@ def _get_plotting_args(request):
     annotation_rotation = (default_plotting_args['annotation_rotation']
                            if not annotation_rotation else
                            float(annotation_rotation))
+    max_intensity = request.args.get('max_intensity')
+    if max_intensity:
+        max_intensity = float(max_intensity) / 100
+    elif annotate_peaks is not None:
+        max_intensity = default_plotting_args['max_intensity_labeled']
+    else:
+        max_intensity = default_plotting_args['max_intensity_unlabeled']
     return {
         'width': width,
         'height': height,
@@ -384,7 +387,6 @@ def _get_plotting_args(request):
         'max_intensity': max_intensity,
         'grid': grid,
         'annotate_peaks': annotate_peaks,
-        'annotate_threshold': annotate_threshold,
         'annotate_precision': annotate_precision,
         'annotation_rotation': annotation_rotation}
 
