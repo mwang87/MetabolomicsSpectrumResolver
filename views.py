@@ -50,12 +50,12 @@ def render_heartbeat():
 @app.route('/spectrum/', methods=['GET'])
 def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
-    spectrum.scale_intensity(max_intensity=1)
-    return flask.render_template('spectrum.html',
-                                 usi=flask.request.args.get('usi'),
-                                 source_link=source_link,
-                                 peaks=[(float(mz), float(intensity)) for mz, intensity
-                                        in zip(spectrum.mz, spectrum.intensity)])
+    max_intensity = spectrum.intensity.max()
+    return flask.render_template(
+        'spectrum.html', usi=flask.request.args.get('usi'),
+        source_link=source_link,
+        peaks=[(float(mz), float(intensity) / max_intensity) for mz, intensity
+               in zip(spectrum.mz, spectrum.intensity)])
 
 
 @app.route('/mirror/', methods=['GET'])
