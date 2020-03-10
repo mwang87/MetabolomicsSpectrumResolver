@@ -112,7 +112,7 @@
             `&mz_min=${$("#mz_min").val()}` +
             `&mz_max=${$("#mz_max").val()}` +
             `&max_intensity=${$("#max_intensity").val()}` +
-            `&grid=${$("#grid").attr("checked")}` +
+            `&grid=${$("#grid").prop("checked")}` +
             `&annotate_peaks=${JSON.stringify(annotate_peaks)}` +
             `&annotate_precision=${$("#annotate_precision").val()}` +
             `&annotation_rotation=${$("#annotation_rotation").val()}`;
