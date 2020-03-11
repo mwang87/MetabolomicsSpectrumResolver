@@ -27,7 +27,8 @@ default_plotting_args = {'width': 10,
                          'max_intensity_unlabeled': 1.05,
                          'max_intensity_labeled': 1.25,
                          'grid': True,
-                         'annotate_peaks': (False, False),
+                         'annotate_peaks': (True, True),
+                         'annotate_threshold': 0.1,
                          'annotate_precision': 4,
                          'annotation_rotation': 90}
 
@@ -50,12 +51,17 @@ def render_heartbeat():
 @app.route('/spectrum/', methods=['GET'])
 def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
-    max_intensity = spectrum.intensity.max()
+    spectrum = copy.deepcopy(spectrum)
+    spectrum.scale_intensity(max_intensity=1)
+    annotations = np.zeros_like(spectrum.mz, np.bool)
+    annotations[_generate_labels(
+        spectrum, default_plotting_args['annotate_threshold'])] = True
     return flask.render_template(
         'spectrum.html', usi=flask.request.args.get('usi'),
         source_link=source_link,
-        peaks=[[(float(mz), float(intensity) / max_intensity)
-                for mz, intensity in zip(spectrum.mz, spectrum.intensity)]])
+        peaks=[[(float(mz), float(intensity), annotate)
+                for mz, intensity, annotate in zip(
+                spectrum.mz, spectrum.intensity, annotations)]])
 
 
 @app.route('/mirror/', methods=['GET'])
@@ -341,6 +347,9 @@ def _prepare_spectrum(usi, **kwargs):
     spectrum.scale_intensity(max_intensity=1)
 
     if kwargs['annotate_peaks']:
+        if kwargs['annotate_peaks'] is True:
+            kwargs['annotate_peaks'] = _generate_labels(
+                spectrum, default_plotting_args['annotate_threshold'])
         for peak_i in kwargs['annotate_peaks']:
             spectrum.annotate_mz_fragment(
                 spectrum.mz[peak_i], 0, 0.01, 'Da',
@@ -353,17 +362,17 @@ def _generate_labels(spec, intensity_threshold):
     mz_exclusion_window = (spec.mz[-1] - spec.mz[0]) / 20  # Max 20 labels.
 
     # Annotate peaks in decreasing intensity order.
-    labeled_mz = []
-    order = np.argsort(spec.intensity)[::-1]
-    for mz, intensity in zip(spec.mz[order], spec.intensity[order]):
+    labeled_i, order = [], np.argsort(spec.intensity)[::-1]
+    for i, mz, intensity in zip(order, spec.mz[order], spec.intensity[order]):
         if intensity < intensity_threshold:
             break
         else:
-            if not any([abs(mz - already_labeled_mz) <= mz_exclusion_window
-                        for already_labeled_mz in labeled_mz]):
-                labeled_mz.append(mz)
+            if not any([abs(mz - spec.mz[already_labeled_i])
+                        <= mz_exclusion_window
+                        for already_labeled_i in labeled_i]):
+                labeled_i.append(i)
 
-    return labeled_mz
+    return labeled_i
 
 
 def _get_plotting_args(request):
@@ -388,7 +397,7 @@ def _get_plotting_args(request):
             spec_i, peak_i = peak.split('-')
             annotate_peaks[int(spec_i)].append(int(peak_i))
     else:
-        annotate_peaks = False, False
+        annotate_peaks = default_plotting_args['annotate_peaks']
     plotting_args['annotate_peaks'] = annotate_peaks
     annotate_precision = request.args.get('annotate_precision')
     plotting_args['annotate_precision'] = (
