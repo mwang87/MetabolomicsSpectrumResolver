@@ -67,18 +67,28 @@ def render_spectrum():
 @app.route('/mirror/', methods=['GET'])
 def render_mirror_spectrum():
     spectrum1, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
+    spectrum1 = copy.deepcopy(spectrum1)
+    spectrum1.scale_intensity(max_intensity=1)
+    annotations1 = np.zeros_like(spectrum1.mz, np.bool)
+    annotations1[_generate_labels(
+        spectrum1, default_plotting_args['annotate_threshold'])] = True
     spectrum2, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
-    max_intensity1 = spectrum1.intensity.max()
-    max_intensity2 = spectrum2.intensity.max()
+    spectrum2 = copy.deepcopy(spectrum2)
+    spectrum2.scale_intensity(max_intensity=1)
+    annotations2 = np.zeros_like(spectrum2.mz, np.bool)
+    annotations2[_generate_labels(
+        spectrum2, default_plotting_args['annotate_threshold'])] = True
     return flask.render_template(
         'mirror.html',
         usi1=flask.request.args.get('usi1'),
         usi2=flask.request.args.get('usi2'),
         source_link1=source1, source_link2=source2,
-        peaks=[[(float(mz), float(intensity) / max_intensity1)
-                for mz, intensity in zip(spectrum1.mz, spectrum1.intensity)],
-               [(float(mz), float(intensity) / max_intensity2)
-                for mz, intensity in zip(spectrum2.mz, spectrum2.intensity)]])
+        peaks=[[(float(mz), float(intensity), annotate)
+                for mz, intensity, annotate in zip(
+                spectrum1.mz, spectrum1.intensity, annotations1)],
+               [(float(mz), float(intensity), annotate)
+                for mz, intensity, annotate in zip(
+                   spectrum2.mz, spectrum2.intensity, annotations2)]])
 
 
 @app.route('/png/')
