@@ -361,9 +361,10 @@ def _prepare_spectrum(usi, **kwargs):
             kwargs['annotate_peaks'] = _generate_labels(
                 spectrum, default_plotting_args['annotate_threshold'])
         for peak_i in kwargs['annotate_peaks']:
-            spectrum.annotate_mz_fragment(
-                spectrum.mz[peak_i], 0, 0.01, 'Da',
-                text=f'{spectrum.mz[peak_i]:.{kwargs["annotate_precision"]}f}')
+            if spectrum.intensity[peak_i] <= kwargs['max_intensity']:
+                t = f'{spectrum.mz[peak_i]:.{kwargs["annotate_precision"]}f}'
+                spectrum.annotate_mz_fragment(
+                    spectrum.mz[peak_i], 0, 0.01, 'Da', text=t)
 
     return spectrum
 
