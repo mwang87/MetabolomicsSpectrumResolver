@@ -27,7 +27,7 @@ default_plotting_args = {'width': 10,
                          'max_intensity_unlabeled': 1.05,
                          'max_intensity_labeled': 1.25,
                          'grid': True,
-                         'annotate_peaks': (True, True),
+                         'annotate_peaks': (True, True), #First tells about top, second is bottom
                          'annotate_threshold': 0.1,
                          'annotate_precision': 4,
                          'annotation_rotation': 90}
