@@ -36,6 +36,7 @@ jobs:
         conda install -n usi -c conda-forge requests-cache
         conda install -n usi -c conda-forge nose2
         conda install -n usi -c anaconda scipy
+        source activate usi && pip install 'git+git://github.com/berlinguyinca/spectra-hash.git@#egg=splash&subdirectory=python'
         echo "source activate usi" > ~/.bashrc
     - name: Lint with flake8
       run: |
