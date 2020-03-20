@@ -373,26 +373,27 @@ def peak_json():
                      'precursor_mz': spectrum.precursor_mz}
     return flask.jsonify(spectrum_dict)
 
+
 @app.route('/api/proxi/v0.1/spectra')
 def peak_proxi_json():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
-    
-    spectrum_dict = {'intensities': [
-        str(intensity) for intensity in spectrum.intensity
-        ],
-                     'mzs': [str(mz) for mz in spectrum.mz],
-                     'attributes': [
-                         {
-                             'accession' : "MS:1000744",
-                             'name' : 'selected ion m/z',
-                             'value' : str(spectrum.precursor_mz)
-                         },
-                         {
-                             'accession' : "MS:1000041",
-                             'name' : 'precursor charge	',
-                             'value' : str(spectrum.precursor_charge)
-                         }
-                     ]}
+
+    spectrum_dict = {
+        'intensities': [str(intensity) for intensity in spectrum.intensity],
+        'mzs': [str(mz) for mz in spectrum.mz],
+        'attributes': [
+            {
+                'accession': 'MS:1000744',
+                'name': 'selected ion m/z',
+                'value': str(spectrum.precursor_mz)
+            },
+            {
+                'accession': 'MS:1000041',
+                'name': 'precursor charge',
+                'value': str(spectrum.precursor_charge)
+            }
+        ]
+    }
 
     return flask.jsonify([spectrum_dict])
 
