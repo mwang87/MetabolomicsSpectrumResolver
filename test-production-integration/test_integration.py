@@ -36,3 +36,8 @@ def test_img():
         url = f"{PRODUCTION_URL}/png/?usi={quote(usi)}"
         r = requests.get(url)
         r.raise_for_status()
+
+def test_filtration():
+    url = f"{PRODUCTION_URL}/svg/?usi=mzspec:MS2LDATASK-190:document:270684&width=10&height=6&mz_min=0&mz_max=80&max_intensity=&grid=true&annotate_peaks=[%220-4%22,%220-11%22,%220-19%22,%220-20%22]&annotate_precision=4&annotation_rotation=90"
+    r = requests.get(url)
+    r.raise_for_status()

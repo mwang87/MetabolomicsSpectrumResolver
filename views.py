@@ -24,10 +24,11 @@ USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
 
 default_plotting_args = {'width': 10,
                          'height': 6,
-                         'max_intensity': 1.25,
+                         'max_intensity_unlabeled': 1.05,
+                         'max_intensity_labeled': 1.25,
                          'grid': True,
-                         'annotate_peaks': True,
-                         'annotate_threshold': 0.05,
+                         'annotate_peaks': (True, True), #First tells about top, second is bottom
+                         'annotate_threshold': 0.1,
                          'annotate_precision': 4,
                          'annotation_rotation': 90}
 
@@ -49,20 +50,45 @@ def render_heartbeat():
 
 @app.route('/spectrum/', methods=['GET'])
 def render_spectrum():
-    _, source_link = parsing.parse_usi(flask.request.args.get('usi'))
-    return flask.render_template('spectrum.html',
-                                 usi=flask.request.args.get('usi'),
-                                 source_link=source_link)
+    spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum = copy.deepcopy(spectrum)
+    spectrum.scale_intensity(max_intensity=1)
+    annotations = np.zeros_like(spectrum.mz, np.bool)
+    annotations[_generate_labels(
+        spectrum, default_plotting_args['annotate_threshold'])] = True
+    return flask.render_template(
+        'spectrum.html', usi=flask.request.args.get('usi'),
+        source_link=source_link,
+        peaks=[[(float(mz), float(intensity), annotate)
+                for mz, intensity, annotate in zip(
+                spectrum.mz, spectrum.intensity, annotations)]])
 
 
 @app.route('/mirror/', methods=['GET'])
 def render_mirror_spectrum():
-    _, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
-    _, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
-    return flask.render_template('mirror.html',
-                                 usi1=flask.request.args.get('usi1'),
-                                 usi2=flask.request.args.get('usi2'),
-                                 source_link1=source1, source_link2=source2)
+    spectrum1, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
+    spectrum1 = copy.deepcopy(spectrum1)
+    spectrum1.scale_intensity(max_intensity=1)
+    annotations1 = np.zeros_like(spectrum1.mz, np.bool)
+    annotations1[_generate_labels(
+        spectrum1, default_plotting_args['annotate_threshold'])] = True
+    spectrum2, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
+    spectrum2 = copy.deepcopy(spectrum2)
+    spectrum2.scale_intensity(max_intensity=1)
+    annotations2 = np.zeros_like(spectrum2.mz, np.bool)
+    annotations2[_generate_labels(
+        spectrum2, default_plotting_args['annotate_threshold'])] = True
+    return flask.render_template(
+        'mirror.html',
+        usi1=flask.request.args.get('usi1'),
+        usi2=flask.request.args.get('usi2'),
+        source_link1=source1, source_link2=source2,
+        peaks=[[(float(mz), float(intensity), annotate)
+                for mz, intensity, annotate in zip(
+                spectrum1.mz, spectrum1.intensity, annotations1)],
+               [(float(mz), float(intensity), annotate)
+                for mz, intensity, annotate in zip(
+                   spectrum2.mz, spectrum2.intensity, annotations2)]])
 
 
 @app.route('/png/')
@@ -102,6 +128,7 @@ def generate_mirror_svg():
 def _generate_figure(usi, extension, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
+    kwargs['annotate_peaks'] = kwargs['annotate_peaks'][0]
     spectrum = _prepare_spectrum(usi, **kwargs)
     sup.spectrum(
         spectrum, annotate_ions=kwargs['annotate_peaks'],
@@ -141,11 +168,20 @@ def _generate_figure(usi, extension, **kwargs):
 def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
+    annotate_peaks = kwargs['annotate_peaks']
+    kwargs['annotate_peaks'] = annotate_peaks[0]
     spectrum_top = _prepare_spectrum(usi1, **kwargs)
+    kwargs['annotate_peaks'] = annotate_peaks[1]
     spectrum_bottom = _prepare_spectrum(usi2, **kwargs)
 
     fragment_mz_tolerance = 0.02    # TODO: Configurable?
 
+    if spectrum_top.annotation is None:
+        spectrum_top.annotation = np.full_like(
+            spectrum_top.mz, None, object)
+    if spectrum_bottom.annotation is None:
+        spectrum_bottom.annotation = np.full_like(
+            spectrum_bottom.mz, None, object)
     for i, (annotation, mz) in enumerate(zip(spectrum_top.annotation,
                                              spectrum_top.mz)):
         if annotation is None:
@@ -274,31 +310,63 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
     """
     intensity /= np.linalg.norm(intensity)
     intensity_other /= np.linalg.norm(intensity_other)
-    fragment_i, fragment_other_i, score = 0, 0, 0.
-    for fragment_i in range(len(mz)):
-        while (fragment_other_i < len(mz_other) - 1 and
-               mz_other[fragment_other_i] < mz[fragment_i] - fragment_mz_tol):
-            fragment_other_i += 1
-        if (abs(mz[fragment_i] - mz_other[fragment_other_i]) <= fragment_mz_tol
-                and fragment_other_i < len(mz_other)):
-            score += intensity[fragment_i] * intensity_other[fragment_other_i]
-            fragment_other_i += 1
+    # Find the matching peaks between both spectra.
+    peak_match_scores, peak_match_idx = [], []
+    peak_other_i = 0
+    for peak_i, (peak_mz, peak_intensity) in enumerate(zip(mz, intensity)):
+        # Advance while there is an excessive mass difference.
+        while (peak_other_i < len(mz_other) - 1 and
+               peak_mz - fragment_mz_tol > mz_other[peak_other_i]):
+            peak_other_i += 1
+        # Match the peaks within the fragment mass window if possible.
+        peak_other_window_i = peak_other_i
+        while (peak_other_window_i < len(mz_other) and
+               abs(peak_mz - (mz_other[peak_other_window_i]))
+               <= fragment_mz_tol):
+            peak_match_scores.append(
+                peak_intensity * intensity_other[peak_other_window_i])
+            peak_match_idx.append((peak_i, peak_other_window_i))
+            peak_other_window_i += 1
+
+    score = 0
+    if len(peak_match_scores) > 0:
+        # Use the most prominent peak matches to compute the score (sort in
+        # descending order).
+        peak_match_scores_arr = np.asarray(peak_match_scores)
+        peak_match_order = np.argsort(peak_match_scores_arr)[::-1]
+        peak_match_scores_arr = peak_match_scores_arr[peak_match_order]
+        peak_match_idx_arr = np.asarray(peak_match_idx)[peak_match_order]
+        peaks_used, peaks_used_other = set(), set()
+        for peak_match_score, peak_i, peak_other_i in zip(
+                peak_match_scores_arr, peak_match_idx_arr[:, 0],
+                peak_match_idx_arr[:, 1]):
+            if (peak_i not in peaks_used and
+                    peak_other_i not in peaks_used_other):
+                score += peak_match_score
+                # Make sure these peaks are not used anymore.
+                peaks_used.add(peak_i)
+                peaks_used_other.add(peak_other_i)
+
     return score
 
 
 def _prepare_spectrum(usi, **kwargs):
     spectrum, _ = parsing.parse_usi(usi)
     spectrum = copy.deepcopy(spectrum)
-    import sys
-    print(spectrum, file=sys.stderr)
+    spectrum.scale_intensity(max_intensity=1)
+    
+    if kwargs['annotate_peaks']:
+        if kwargs['annotate_peaks'] is True:
+            kwargs['annotate_peaks'] = _generate_labels(
+                spectrum, default_plotting_args['annotate_threshold'])
+        for peak_i in kwargs['annotate_peaks']:
+            if spectrum.intensity[peak_i] <= kwargs['max_intensity']:
+                t = f'{spectrum.mz[peak_i]:.{kwargs["annotate_precision"]}f}'
+                spectrum.annotate_mz_fragment(
+                    spectrum.mz[peak_i], 0, 0.01, 'Da', text=t)
+
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
-
-    if kwargs['annotate_peaks']:
-        for mz in _generate_labels(spectrum, kwargs['annotate_threshold']):
-            spectrum.annotate_mz_fragment(
-                mz, 0, 0.01, 'Da',
-                text=f'{mz:.{kwargs["annotate_precision"]}f}')
 
     return spectrum
 
@@ -307,60 +375,60 @@ def _generate_labels(spec, intensity_threshold):
     mz_exclusion_window = (spec.mz[-1] - spec.mz[0]) / 20  # Max 20 labels.
 
     # Annotate peaks in decreasing intensity order.
-    labeled_mz = []
-    order = np.argsort(spec.intensity)[::-1]
-    for mz, intensity in zip(spec.mz[order], spec.intensity[order]):
+    labeled_i, order = [], np.argsort(spec.intensity)[::-1]
+    for i, mz, intensity in zip(order, spec.mz[order], spec.intensity[order]):
         if intensity < intensity_threshold:
             break
         else:
-            if not any([abs(mz - already_labeled_mz) <= mz_exclusion_window
-                        for already_labeled_mz in labeled_mz]):
-                labeled_mz.append(mz)
+            if not any([abs(mz - spec.mz[already_labeled_i])
+                        <= mz_exclusion_window
+                        for already_labeled_i in labeled_i]):
+                labeled_i.append(i)
 
-    return labeled_mz
+    return labeled_i
 
 
 def _get_plotting_args(request):
+    plotting_args = {}
     width = request.args.get('width')
-    width = default_plotting_args['width'] if width is None else float(width)
+    plotting_args['width'] = (default_plotting_args['width']
+                              if width is None else float(width))
     height = request.args.get('height')
-    height = (default_plotting_args['height']
-              if height is None else float(height))
+    plotting_args['height'] = (default_plotting_args['height']
+                               if height is None else float(height))
     mz_min = request.args.get('mz_min')
-    mz_min = float(mz_min) if mz_min else None
+    plotting_args['mz_min'] = float(mz_min) if mz_min else None
     mz_max = request.args.get('mz_max')
-    mz_max = float(mz_max) if mz_max else None
-    max_intensity = request.args.get('max_intensity')
-    max_intensity = (default_plotting_args['max_intensity']
-                     if not max_intensity else float(max_intensity) / 100)
+    plotting_args['mz_max'] = float(mz_max) if mz_max else None
     grid = request.args.get('grid')
-    grid = default_plotting_args['grid'] if grid is None else grid == 'true'
-    annotate_peaks = request.args.get('annotate_peaks')
-    annotate_peaks = (default_plotting_args['annotate_peaks']
-                      if not annotate_peaks else annotate_peaks == 'true')
-    annotate_threshold = request.args.get('annotate_threshold')
-    annotate_threshold = (default_plotting_args['annotate_threshold']
-                          if not annotate_threshold else
-                          float(annotate_threshold) / 100)
+    plotting_args['grid'] = (default_plotting_args['grid']
+                             if grid is None else grid == 'true')
+    annotate_peaks_args = request.args.get('annotate_peaks')
+    if annotate_peaks_args is not None:
+        annotate_peaks = ([], [])
+        for peak in json.loads(annotate_peaks_args):
+            spec_i, peak_i = peak.split('-')
+            annotate_peaks[int(spec_i)].append(int(peak_i))
+    else:
+        annotate_peaks = default_plotting_args['annotate_peaks']
+    plotting_args['annotate_peaks'] = annotate_peaks
     annotate_precision = request.args.get('annotate_precision')
-    annotate_precision = (default_plotting_args['annotate_precision']
-                          if not annotate_precision else
-                          int(annotate_precision))
+    plotting_args['annotate_precision'] = (
+        default_plotting_args['annotate_precision']
+        if not annotate_precision else int(annotate_precision))
     annotation_rotation = request.args.get('annotation_rotation')
-    annotation_rotation = (default_plotting_args['annotation_rotation']
-                           if not annotation_rotation else
-                           float(annotation_rotation))
-    return {
-        'width': width,
-        'height': height,
-        'mz_min': mz_min,
-        'mz_max': mz_max,
-        'max_intensity': max_intensity,
-        'grid': grid,
-        'annotate_peaks': annotate_peaks,
-        'annotate_threshold': annotate_threshold,
-        'annotate_precision': annotate_precision,
-        'annotation_rotation': annotation_rotation}
+    plotting_args['annotation_rotation'] = (
+        default_plotting_args['annotation_rotation']
+        if not annotation_rotation else float(annotation_rotation))
+    max_intensity = request.args.get('max_intensity')
+    if max_intensity:
+        plotting_args['max_intensity'] = float(max_intensity) / 100
+    else:
+        plotting_args['max_intensity'] = (
+            default_plotting_args['max_intensity_labeled']
+            if any(annotate_peaks) else
+            default_plotting_args['max_intensity_unlabeled'])
+    return plotting_args
 
 
 @app.route('/json/')

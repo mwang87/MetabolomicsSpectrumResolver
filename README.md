@@ -133,3 +133,6 @@ Vanilla Mirror Match
 Mirror Match with Intensity Scaling
 ![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzdata:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002&width=10&height=6&mz_min=&mz_max=&max_intensity=150&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
 
+## Plotting Parameters
+
+annotate_peaks - this url parameter defines which peaks in which spectrum (top or bottom) will be annotated. The parameters is a list of peaks to be annotated. It is a list of strings, where each string indicates whether to annotate a peak. Each string, is encoded by ```spectrum-index```. ```spectrum``` is either 0 (top) or 1 (bottom) and ```index``` is the index of the peak (0 indexed). 
