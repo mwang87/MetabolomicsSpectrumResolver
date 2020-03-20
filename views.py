@@ -353,9 +353,8 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
 def _prepare_spectrum(usi, **kwargs):
     spectrum, _ = parsing.parse_usi(usi)
     spectrum = copy.deepcopy(spectrum)
-    spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
-
+    
     if kwargs['annotate_peaks']:
         if kwargs['annotate_peaks'] is True:
             kwargs['annotate_peaks'] = _generate_labels(
@@ -365,6 +364,9 @@ def _prepare_spectrum(usi, **kwargs):
                 t = f'{spectrum.mz[peak_i]:.{kwargs["annotate_precision"]}f}'
                 spectrum.annotate_mz_fragment(
                     spectrum.mz[peak_i], 0, 0.01, 'Da', text=t)
+
+    spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
+    spectrum.scale_intensity(max_intensity=1)
 
     return spectrum
 
