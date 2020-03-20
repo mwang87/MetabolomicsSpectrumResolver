@@ -36,3 +36,14 @@ def test_img():
         url = f"{PRODUCTION_URL}/png/?usi={quote(usi)}"
         r = requests.get(url)
         r.raise_for_status()
+
+def test_json():
+    from urllib.parse import quote
+    for usi in test_usi_list:
+        url = f"{PRODUCTION_URL}/json/?usi={quote(usi)}"
+        r = requests.get(url)
+        r.raise_for_status()
+
+        url = f"{PRODUCTION_URL}/api/proxi/v0.1/spectra?usi={quote(usi)}"
+        r = requests.get(url)
+        r.raise_for_status()
