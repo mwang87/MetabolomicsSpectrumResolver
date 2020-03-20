@@ -14,6 +14,8 @@ import requests_cache
 from spectrum_utils import plot as sup
 from spectrum_utils import spectrum as sus
 
+import splash
+
 import parsing
 from app import app
 
@@ -289,8 +291,6 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
 def _prepare_spectrum(usi, **kwargs):
     spectrum, _ = parsing.parse_usi(usi)
     spectrum = copy.deepcopy(spectrum)
-    import sys
-    print(spectrum, file=sys.stderr)
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
 
@@ -366,11 +366,17 @@ def _get_plotting_args(request):
 @app.route('/json/')
 def peak_json():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    
+    #calculating splash
+    splash_spectrum = splash.Spectrum(list(zip(spectrum._mz, spectrum._intensity)), splash.SpectrumType.MS)
+    splash_key = splash.Splash().splash(splash_spectrum)
+
     # Return for JSON includes, peaks, n_peaks, and precursor_mz.
     spectrum_dict = {'peaks': [(float(mz), float(intensity)) for mz, intensity
                                in zip(spectrum.mz, spectrum.intensity)],
                      'n_peaks': len(spectrum.mz),
-                     'precursor_mz': spectrum.precursor_mz}
+                     'precursor_mz': spectrum.precursor_mz,
+                     'splash': splash_key}
     return flask.jsonify(spectrum_dict)
 
 
