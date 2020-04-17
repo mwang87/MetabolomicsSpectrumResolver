@@ -27,7 +27,9 @@ default_plotting_args = {'width': 10,
                          'max_intensity_unlabeled': 1.05,
                          'max_intensity_labeled': 1.25,
                          'grid': True,
-                         'annotate_peaks': (True, True), #First tells about top, second is bottom
+                         # List of peaks to annotate in the top/bottom
+                         # spectrum.
+                         'annotate_peaks': [[], []],
                          'annotate_threshold': 0.1,
                          'annotate_precision': 4,
                          'annotation_rotation': 90}
@@ -354,16 +356,14 @@ def _prepare_spectrum(usi, **kwargs):
     spectrum, _ = parsing.parse_usi(usi)
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
-    
+
     if kwargs['annotate_peaks']:
         if kwargs['annotate_peaks'] is True:
             kwargs['annotate_peaks'] = _generate_labels(
                 spectrum, default_plotting_args['annotate_threshold'])
-        for peak_i in kwargs['annotate_peaks']:
-            if spectrum.intensity[peak_i] <= kwargs['max_intensity']:
-                t = f'{spectrum.mz[peak_i]:.{kwargs["annotate_precision"]}f}'
-                spectrum.annotate_mz_fragment(
-                    spectrum.mz[peak_i], 0, 0.01, 'Da', text=t)
+        for mz in kwargs['annotate_peaks']:
+            t = f'{mz:.{kwargs["annotate_precision"]}f}'
+            spectrum.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=t)
 
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
@@ -404,13 +404,10 @@ def _get_plotting_args(request):
     plotting_args['grid'] = (default_plotting_args['grid']
                              if grid is None else grid == 'true')
     annotate_peaks_args = request.args.get('annotate_peaks')
-    if annotate_peaks_args is not None:
-        annotate_peaks = ([], [])
-        for peak in json.loads(annotate_peaks_args):
-            spec_i, peak_i = peak.split('-')
-            annotate_peaks[int(spec_i)].append(int(peak_i))
-    else:
-        annotate_peaks = default_plotting_args['annotate_peaks']
+    annotate_peaks = ([[mz for mz in peaks]
+                       for peaks in json.loads(annotate_peaks_args)]
+                      if annotate_peaks_args is not None else
+                      default_plotting_args['annotate_peaks'])
     plotting_args['annotate_peaks'] = annotate_peaks
     annotate_precision = request.args.get('annotate_precision')
     plotting_args['annotate_precision'] = (
