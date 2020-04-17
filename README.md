@@ -50,7 +50,7 @@ Supported USI Types
 
 [mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
 
-[mzdata:MSV000078547:120228_nbut_3610_it_it_take2:scan:389](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MSV000078547:120228_nbut_3610_it_it_take2:scan:389)
+[mzspec:MSV000078547:120228_nbut_3610_it_it_take2:scan:389](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MSV000078547:120228_nbut_3610_it_it_take2:scan:389)
 
 ### Metabolights Repository Data
 
@@ -128,10 +128,10 @@ No Grid
 ![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=false&annotate_peaks=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
 
 Vanilla Mirror Match
-![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzdata:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002)
+![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzspec:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002)
 
 Mirror Match with Intensity Scaling
-![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzdata:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002&width=10&height=6&mz_min=&mz_max=&max_intensity=150&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
+![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzdata:MASSBANK:BSU00002&usi2=mzspec:MASSBANK:BSU00002&width=10&height=6&mz_min=&mz_max=&max_intensity=150&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
 
 ## Plotting Parameters
 
