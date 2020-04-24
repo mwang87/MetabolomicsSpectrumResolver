@@ -109,28 +109,28 @@ Vanilla Rendering
 ![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943)
 
 Small Figure
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=4&height=4&mz_min=&mz_max=&max_intensity=&grid=true&annotate_peaks=true&annotate_threshold=0&annotate_precision=2&annotation_rotation=70)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=4&height=4&mz_min=&mz_max=&max_intensity=&grid=true&annotate_threshold=0&annotate_precision=2&annotation_rotation=70)
 
 Mass Range Filtering
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=550&mz_max=800&max_intensity=&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=550&mz_max=800&max_intensity=&grid=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
 
 Less Decimal Places
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=2&annotation_rotation=90)
+![](https://metabolomics-usi.ucsd.edu/png/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=true&annotate_precision=1&annotation_rotation=90)
 
 Rotate Labels
 ![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=2&annotation_rotation=70)
 
 Decreate Label Minimum Intensity
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=true&annotate_peaks=true&annotate_threshold=0&annotate_precision=2&annotation_rotation=70)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=true&annotate_threshold=0&annotate_precision=2&annotation_rotation=70)
 
 No Grid
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=false&annotate_peaks=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943&width=10&height=6&mz_min=&mz_max=&max_intensity=&grid=false&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
 
 Vanilla Mirror Match
 ![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzspec:MASSBANK:BSU00002&usi2=mzdata:MASSBANK:BSU00002)
 
 Mirror Match with Intensity Scaling
-![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzdata:MASSBANK:BSU00002&usi2=mzspec:MASSBANK:BSU00002&width=10&height=6&mz_min=&mz_max=&max_intensity=150&grid=true&annotate_peaks=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
+![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzdata:MASSBANK:BSU00002&usi2=mzspec:MASSBANK:BSU00002&width=10&height=6&mz_min=&mz_max=&max_intensity=150&grid=true&annotate_threshold=5&annotate_precision=4&annotation_rotation=90)
 
 ## Plotting Parameters
 
