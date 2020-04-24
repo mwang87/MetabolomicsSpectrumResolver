@@ -135,3 +135,16 @@ Mirror Match with Intensity Scaling
 ## Plotting Parameters
 
 annotate_peaks - this url parameter defines which peaks in which spectrum (top or bottom) will be annotated. The parameters is a list of peaks to be annotated. It is a list of strings, where each string indicates whether to annotate a peak. Each string, is encoded by ```spectrum-index```. ```spectrum``` is either 0 (top) or 1 (bottom) and ```index``` is the index of the peak (0 indexed). 
+
+## URL Endpoints
+
+1. /png/
+1. /svg/
+1. /json/
+1. /api/proxi/v0.1/spectra
+1. /csv/
+1. /qrcode/
+1. /spectrum/
+1. /mirror/
+1. /svg/mirror
+1. /png/mirror
