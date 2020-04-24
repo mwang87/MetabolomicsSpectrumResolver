@@ -2,10 +2,9 @@
 
 This tool is meant to be able to show summarize USI's from various sources. It will achieve the following goals
 
-
 1. Enable creation of embeddable images in publications that will link out to viewable/interactable spectrum plots
-2. 3rd party embedding for visualization of spectra that exist in reposities (e.g. MassIVE, PRIDE, PeptideAtlas)
-3. 3rd party embedding of qrcode
+1. 3rd party embedding for visualization of spectra that exist in reposities (e.g. MassIVE, PRIDE, PeptideAtlas)
+1. 3rd party embedding of qrcode
 
 Supported USI Types
 
@@ -86,7 +85,7 @@ e.g.
 
 ### MS2LDA MOTIFDB
 
-TODO: Fill in
+```mzspec:MOTIFDB:motif:<Motif DB accession>```
 
 ### GNPS Library Spectrum
 
