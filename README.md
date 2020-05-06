@@ -39,7 +39,7 @@ Supported USI Types
 
 ### Massbank Library Spectra
 
-[mzspec:MASSBANK:BSU00002](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MASSBANK:BSU00002)
+[mzspec:MASSBANK:SM858102](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MASSBANK:SM858102)
 
 ### ProteoXchange Repository Data
 
