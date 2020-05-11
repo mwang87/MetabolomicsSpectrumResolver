@@ -44,6 +44,9 @@ def render_homepage():
 def render_contributors():
     return flask.render_template('contributors.html')
 
+@app.route('/dataprivacy', methods=['GET'])
+def render_dataprivacy():
+    return flask.render_template('dataprivacy.html')
 
 @app.route('/heartbeat', methods=['GET'])
 def render_heartbeat():
