@@ -129,7 +129,7 @@ def _generate_figure(usi, extension, **kwargs):
     spectrum = _prepare_spectrum(usi, **kwargs)
     sup.spectrum(
         spectrum, annotate_ions=kwargs['annotate_peaks'],
-        annot_kws={'rotation': kwargs['annotation_rotation']},
+        annot_kws={'rotation': kwargs['annotation_rotation'], 'clip_on': True},
         grid=kwargs['grid'], ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
@@ -203,7 +203,8 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
 
     sup.mirror(spectrum_top, spectrum_bottom,
                {'annotate_ions': kwargs['annotate_peaks'],
-                'annot_kws': {'rotation': kwargs['annotation_rotation']},
+                'annot_kws': {'rotation': kwargs['annotation_rotation'],
+                              'clip_on': True},
                 'grid': kwargs['grid']}, ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
