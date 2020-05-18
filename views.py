@@ -29,7 +29,7 @@ default_plotting_args = {'width': 10,
                          'grid': True,
                          # List of peaks to annotate in the top/bottom
                          # spectrum.
-                         'annotate_peaks': [[], []],
+                         'annotate_peaks': [True, True],
                          'annotate_threshold': 0.1,
                          'annotate_precision': 4,
                          'annotation_rotation': 90}
@@ -359,8 +359,8 @@ def _prepare_spectrum(usi, **kwargs):
 
     if kwargs['annotate_peaks']:
         if kwargs['annotate_peaks'] is True:
-            kwargs['annotate_peaks'] = _generate_labels(
-                spectrum, default_plotting_args['annotate_threshold'])
+            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
+                spectrum, default_plotting_args['annotate_threshold'])]
         for mz in kwargs['annotate_peaks']:
             t = f'{mz:.{kwargs["annotate_precision"]}f}'
             spectrum.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=t)
