@@ -31,6 +31,7 @@ usi_pattern = re.compile(
     # optional spectrum interpretation
     '(:.+)?$'
 )
+gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$')
 
 
 @functools.lru_cache(100)
@@ -56,46 +57,6 @@ def parse_usi(usi):
         return _parse_massbank(usi)
     else:
         raise ValueError(f'Unknown USI: {usi}')
-
-
-# Parse GNPS clustered spectra in Molecular Networking.
-def _parse_gnps_task(usi):
-    tokens = usi.split(':')
-    task = tokens[1].split('-')[1]
-    filename = tokens[2]
-    scan = tokens[4]
-    request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?'
-                   f'task={task}&invoke=annotatedSpectrumImageText&block=0&'
-                   f'file=FILE->{filename}&scan={scan}&peptide=*..*&'
-                   f'force=false&_=1561457932129')
-    mz, intensity = _parse_gnps_peak_text(requests.get(request_url).text)
-    source_link = f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task={task}'
-    return sus.MsmsSpectrum(usi, 0, 1, mz, intensity), source_link
-
-
-def _parse_gnps_peak_text(text):
-    mz, intensity = [], []
-    for peak in text.strip().split('\n')[8:]:   # First 8 lines are header.
-        mz_int = peak.split(maxsplit=2)
-        mz.append(float(mz_int[0]))
-        intensity.append(float(mz_int[1]))
-    return mz, intensity
-
-
-# Parse GNPS library.
-def _parse_gnps_library(usi):
-    tokens = usi.split(':')
-    identifier = tokens[2]
-    request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/SpectrumCommentServlet?'
-                   f'SpectrumID={identifier}')
-    spectrum_dict = requests.get(request_url).json()
-    mz, intensity = zip(*json.loads(
-        spectrum_dict['spectruminfo']['peaks_json']))
-    source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/'
-                   f'gnpslibraryspectrum.jsp?SpectrumID={identifier}')
-    return sus.MsmsSpectrum(
-        usi, float(spectrum_dict['annotations'][0]['Precursor_MZ']), 1, mz,
-        intensity), source_link
 
 
 # Parse MS2LDA from ms2lda.org.
@@ -146,6 +107,67 @@ def _parse_massive(usi):
                 requests.get(request_url).text)
             return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
     raise ValueError('Unsupported/unknown MassIVE USI')
+
+
+# Parse GNPS tasks or library spectra.
+def _parse_gnps(usi):
+    match = usi_pattern.match(usi)
+    ms_run = match.group(2)
+    if ms_run.startswith('TASK'):
+        return _parse_gnps_task(usi)
+    else:
+        return _parse_gnps_library(usi)
+
+
+# Parse GNPS clustered spectra in Molecular Networking.
+def _parse_gnps_task(usi):
+    match = usi_pattern.match(usi)
+    gnps_task_match = gnps_task_pattern.match(match.group(2))
+    task = gnps_task_match.group(1)
+    filename = gnps_task_match.group(2)
+    index_flag = match.group(3)
+    if index_flag != 'scan':
+        raise ValueError('Currently supported GNPS TASK index flags: scan')
+    index = match.group(4)
+    request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?'
+                   f'task={task}&invoke=annotatedSpectrumImageText&'
+                   f'block=0&file=FILE->{filename}&scan={index}&peptide=*..*&'
+                   f'force=false&_=1561457932129')
+    mz, intensity = _parse_gnps_peak_text(requests.get(request_url).text)
+    source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?'
+                   f'task={task}')
+    return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
+
+
+def _parse_gnps_peak_text(text):
+    mz, intensity = [], []
+    for peak in text.strip().split('\n')[8:]:   # First 8 lines are header.
+        mz_int = peak.split(maxsplit=2)
+        mz.append(float(mz_int[0]))
+        intensity.append(float(mz_int[1]))
+    return mz, intensity
+
+
+# Parse GNPS library.
+def _parse_gnps_library(usi):
+    match = usi_pattern.match(usi)
+    index_flag = match.group(3)
+    if index_flag != 'accession':
+        raise ValueError('Currently supported GNPS library index flags: '
+                         'accession')
+    index = match.group(4)
+    request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/SpectrumCommentServlet?'
+                   f'SpectrumID={index}')
+    spectrum_dict = requests.get(request_url).json()
+    mz, intensity = zip(*json.loads(
+        spectrum_dict['spectruminfo']['peaks_json']))
+    source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/'
+                   f'gnpslibraryspectrum.jsp?SpectrumID={index}')
+    return (
+        sus.MsmsSpectrum(
+            usi, float(spectrum_dict['annotations'][0]['Precursor_MZ']),
+            int(spectrum_dict['annotations'][0]['Charge']), mz, intensity),
+        source_link)
 
 
 def _parse_mtbls(usi):
