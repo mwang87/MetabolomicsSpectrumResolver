@@ -212,13 +212,20 @@ def _parse_ms2lda(usi):
     if index_flag != 'accession':
         raise ValueError('Currently supported MS2LDA index flags: accession')
     index = match.group(4)
-    request_url = (f'{MS2LDA_SERVER}get_doc/?experiment_id={experiment_id}'
-                   f'&document_id={index}')
-    spectrum_dict = json.loads(requests.get(request_url).text)
-    mz, intensity = zip(*spectrum_dict['peaks'])
-    source_link = None
-    return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 0, mz,
-                            intensity), source_link
+    try:
+        lookup_request = requests.get(
+            f'{MS2LDA_SERVER}get_doc/?experiment_id={experiment_id}'
+            f'&document_id={index}')
+        lookup_request.raise_for_status()
+        spectrum_dict = json.loads(lookup_request.text)
+        if 'error' in spectrum_dict:
+            raise ValueError(f'MS2LDA error: {spectrum_dict["error"]}')
+        mz, intensity = zip(*spectrum_dict['peaks'])
+        source_link = None
+        return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 0,
+                                mz, intensity), source_link
+    except requests.exceptions.HTTPError:
+        raise ValueError('Unknown MS2LDA USI')
 
 
 # Parse MOTIFDB from ms2lda.org.
