@@ -34,7 +34,7 @@
                 </div>
                 <div class="col-sm-4">
                     <div class="text-center" >
-                        <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" onclick="myFunction()" >Resolve Identifier</button>
+                        <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" onclick="resolveIdentifier()" >Resolve Identifier</button>
                     </div>
                 </div>
             </div><datagrid></datagrid>
@@ -62,7 +62,7 @@
                 </div>
                 <div class="col-sm-4">
                     <div class="text-center" >
-                        <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" onclick="resolveMirror()" >Resolve Mirror Identifiers</button>
+                        <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" onclick="resolveMirrorIdentifiers()" >Resolve Mirror Identifiers</button>
                     </div>
                 </div>
             </div>
@@ -82,13 +82,13 @@
                     Example Identifiers
                 </h2>
             </div>
-            
+
             <hr>
             <div class="row" justify-content-center>
                 <div class="col-sm-4"></div>
                 <div class="col-sm-4">
                     <div class="text-center" >
-                        <a href="/spectrum/?usi=mzspec:MS2LDATASK-190:document:270684">
+                        <a href="/spectrum/?usi=mzspec:MS2LDA:TASK-190:accession:270684">
                             <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >MS2LDA Document Motif</button>
                         </a>
                     </div>
@@ -96,7 +96,7 @@
                     <br>
 
                     <div class="text-center" >
-                        <a href="/spectrum/?usi=mzspec:MOTIFDB:motif:171163">
+                        <a href="/spectrum/?usi=mzspec:MOTIFDB::accession:171163">
                             <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >MS2LDA MotifDB</button>
                         </a>
                     </div>
@@ -104,7 +104,7 @@
                     <br>
 
                     <div class="text-center" >
-                        <a href="/spectrum/?usi=mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943">
+                        <a href="/spectrum/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943">
                             <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >GNPS Molecular Networking Spectrum</button>
                         </a>
                     </div>
@@ -112,7 +112,7 @@
                     <br>
 
                     <div class="text-center" >
-                        <a href="/spectrum/?usi=mzspec:GNPSLIBRARY:CCMSLIB00005436077">
+                        <a href="/spectrum/?usi=mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077">
                             <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >GNPS Library Spectrum</button>
                         </a>
                     </div>
@@ -120,7 +120,7 @@
                     <br>
 
                     <div class="text-center" >
-                        <a href="/spectrum/?usi=mzspec:MASSBANK:SM858102">
+                        <a href="/spectrum/?usi=mzspec:MASSBANK::accession:SM858102">
                             <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >MassBank Library Spectrum</button>
                         </a>
                     </div>
@@ -152,14 +152,14 @@
                     <br>
 
                     <div class="text-center" >
-                        <a href="/mirror/?usi1=mzspec:MASSBANK:BSU00002&usi2=mzspec:MASSBANK:BSU00002">
+                        <a href="/mirror/?usi1=mzspec:MSV000082796:KP_108_Positive:scan:1974&usi2=mzspec:MSV000082796:KP_108_Positive:scan:1977">
                             <button id="analyzebutton" class="btn btn-primary btn-sm btn-block" >Mirror Spectrum</button>
                         </a>
                     </div>
 
                 </div>
                 <div class="col-sm-4"></div>
-            </div> 
+            </div>
         </div>
         <div class="col-sm-1"></div>
     </div>
@@ -168,21 +168,21 @@
 
 
 <script>
-    function myFunction() {
-        remote_url = "/spectrum?usi=" + $("#identifier").val()
+    function resolveIdentifier() {
+        remote_url = "/spectrum?usi=" + $("#identifier").val();
         window.location.assign(remote_url);
     }
 
-    function resolveMirror() {
+    function resolveMirrorIdentifiers() {
         usi1 = $("#identifier1").val();
         usi2 = $("#identifier2").val();
-        remote_url = `/mirror?usi1=${usi1}&usi2=${usi2}`
+        remote_url = `/mirror?usi1=${usi1}&usi2=${usi2}`;
         window.location.assign(remote_url);
     }
 
-    var input = document.getElementById("identifier");
-    var input1 = document.getElementById("identifier1")
-    var input2 = document.getElementById("identifier2")
+    let input = document.getElementById("identifier");
+    let input1 = document.getElementById("identifier1");
+    let input2 = document.getElementById("identifier2");
     input.addEventListener("keyup", function(event) {
         if (event.keyCode === 13) {
             event.preventDefault();
