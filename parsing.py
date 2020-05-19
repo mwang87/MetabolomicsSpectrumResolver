@@ -198,6 +198,18 @@ def _parse_ms2lda(usi):
     return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 0, mz,
                             intensity), source_link
 
+# Parse MOTIFDB from ms2lda.org.
+def _parse_motifdb(usi):
+    match = usi_pattern.match(usi)
+    index_flag = match.group(3)
+    if index_flag != 'accession':
+        raise ValueError('Currently supported MOTIFDB index flags: accession')
+    index = match.group(4)
+    request_url = f'{MOTIFDB_SERVER}get_motif/{index}'
+    mz, intensity = zip(*json.loads(requests.get(request_url).text))
+    source_link = f'http://ms2lda.org/motifdb/motif/{index}/'
+    return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
+
 
 def _parse_mtbls(usi):
     tokens = usi.split(':')
@@ -228,12 +240,3 @@ def _parse_metabolomics_workbench(usi):
                                   f'scan:{scan}')[0], source_link
     raise ValueError('Unsupported/unknown USI')
 
-# Parse MOTIFDB from ms2lda.org.
-def _parse_motifdb(usi):
-    # E.g. mzspec:MOTIFDB:motif:motif_id.
-    tokens = usi.split(':')
-    motif_id = tokens[3]
-    request_url = f'{MOTIFDB_SERVER}get_motif/{motif_id}'
-    mz, intensity = zip(*json.loads(requests.get(request_url).text))
-    source_link = f'http://ms2lda.org/motifdb/motif/{motif_id}/'
-    return sus.MsmsSpectrum(usi, 0, 1, mz, intensity), source_link
