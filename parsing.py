@@ -38,6 +38,8 @@ ms2lda_task_pattern = re.compile('^TASK-(\d+)$')
 @functools.lru_cache(100)
 def parse_usi(usi):
     match = usi_pattern.match(usi)
+    if match is None:
+        raise ValueError('Incorrectly formatted USI')
     collection = match.group(1)
     # Send all proteomics USIs to MassIVE.
     if (collection.startswith('MSV') or
