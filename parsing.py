@@ -121,14 +121,19 @@ def _parse_gnps_task(usi):
     if index_flag != 'scan':
         raise ValueError('Currently supported GNPS TASK index flags: scan')
     index = match.group(4)
-    request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?'
-                   f'task={task}&invoke=annotatedSpectrumImageText&'
-                   f'block=0&file=FILE->{filename}&scan={index}&peptide=*..*&'
-                   f'force=false&_=1561457932129')
-    mz, intensity = _parse_gnps_peak_text(requests.get(request_url).text)
-    source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?'
-                   f'task={task}')
-    return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
+    try:
+        request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?'
+                       f'task={task}&invoke=annotatedSpectrumImageText&'
+                       f'block=0&file=FILE->{filename}&scan={index}&'
+                       f'peptide=*..*&force=false&_=1561457932129')
+        lookup_request = requests.get(request_url)
+        lookup_request.raise_for_status()
+        mz, intensity = _parse_gnps_peak_text(lookup_request.text)
+        source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?'
+                       f'task={task}')
+        return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
+    except requests.exceptions.HTTPError:
+        raise ValueError('Unknown GNPS task USI')
 
 
 def _parse_gnps_peak_text(text):
@@ -137,6 +142,8 @@ def _parse_gnps_peak_text(text):
         mz_int = peak.split(maxsplit=2)
         mz.append(float(mz_int[0]))
         intensity.append(float(mz_int[1]))
+    if len(mz) == 0 or len(intensity) == 0:
+        raise ValueError('Unknown MassIVE/GNPS spectrum')
     return mz, intensity
 
 
