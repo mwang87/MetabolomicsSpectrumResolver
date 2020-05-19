@@ -32,6 +32,7 @@ usi_pattern = re.compile(
     '(:.+)?$'
 )
 gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$')
+ms2lda_task_pattern = re.compile('^TASK-(\d+)$')
 
 
 @functools.lru_cache(100)
@@ -57,20 +58,6 @@ def parse_usi(usi):
         return _parse_massbank(usi)
     else:
         raise ValueError(f'Unknown USI: {usi}')
-
-
-# Parse MS2LDA from ms2lda.org.
-def _parse_ms2lda(usi):
-    tokens = usi.split(':')
-    experiment_id = tokens[1].split('-')[1]
-    document_id = tokens[3]
-    request_url = (f'{MS2LDA_SERVER}get_doc/?experiment_id={experiment_id}'
-                   f'&document_id={document_id}')
-    spectrum_dict = json.loads(requests.get(request_url).text)
-    mz, intensity = zip(*spectrum_dict['peaks'])
-    source_link = None
-    return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 1, mz,
-                            intensity), source_link
 
 
 # Parse MSV or PXD library.
@@ -192,6 +179,24 @@ def _parse_massbank(usi):
     source_link = (f'https://massbank.eu/MassBank/'
                    f'RecordDisplay.jsp?id={index}')
     return sus.MsmsSpectrum(usi, precursor_mz, 0, mz, intensity), source_link
+
+
+# Parse MS2LDA from ms2lda.org.
+def _parse_ms2lda(usi):
+    match = usi_pattern.match(usi)
+    ms2lda_task_match = ms2lda_task_pattern.match(match.group(2))
+    experiment_id = ms2lda_task_match.group(1)
+    index_flag = match.group(3)
+    if index_flag != 'accession':
+        raise ValueError('Currently supported MS2LDA index flags: accession')
+    index = match.group(4)
+    request_url = (f'{MS2LDA_SERVER}get_doc/?experiment_id={experiment_id}'
+                   f'&document_id={index}')
+    spectrum_dict = json.loads(requests.get(request_url).text)
+    mz, intensity = zip(*spectrum_dict['peaks'])
+    source_link = None
+    return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 0, mz,
+                            intensity), source_link
 
 
 def _parse_mtbls(usi):
