@@ -179,23 +179,28 @@ def _parse_massbank(usi):
     match = usi_pattern.match(usi)
     index_flag = match.group(3)
     if index_flag != 'accession':
-        raise ValueError('Currently supported MASSBANK index flags: accession')
+        raise ValueError('Currently supported MassBank index flags: accession')
     index = match.group(4)
-    response = requests.get(f'{MASSBANK_SERVER}{index}')
-    spectrum_dict = response.json()
-    mz, intensity = [], []
-    for peak in spectrum_dict['spectrum'].split():
-        peak_mz, peak_intensity = peak.split(':')
-        mz.append(float(peak_mz))
-        intensity.append(float(peak_intensity))
-    precursor_mz = 0
-    for metadata in spectrum_dict['metaData']:
-        if metadata['name'] == 'precursor m/z':
-            precursor_mz = float(metadata['value'])
-            break
-    source_link = (f'https://massbank.eu/MassBank/'
-                   f'RecordDisplay.jsp?id={index}')
-    return sus.MsmsSpectrum(usi, precursor_mz, 0, mz, intensity), source_link
+    try:
+        lookup_request = requests.get(f'{MASSBANK_SERVER}{index}')
+        lookup_request.raise_for_status()
+        spectrum_dict = lookup_request.json()
+        mz, intensity = [], []
+        for peak in spectrum_dict['spectrum'].split():
+            peak_mz, peak_intensity = peak.split(':')
+            mz.append(float(peak_mz))
+            intensity.append(float(peak_intensity))
+        precursor_mz = 0
+        for metadata in spectrum_dict['metaData']:
+            if metadata['name'] == 'precursor m/z':
+                precursor_mz = float(metadata['value'])
+                break
+        source_link = (f'https://massbank.eu/MassBank/'
+                       f'RecordDisplay.jsp?id={index}')
+        return (sus.MsmsSpectrum(usi, precursor_mz, 0, mz, intensity),
+                source_link)
+    except requests.exceptions.HTTPError:
+        raise ValueError('Unknown MassBank USI')
 
 
 # Parse MS2LDA from ms2lda.org.
