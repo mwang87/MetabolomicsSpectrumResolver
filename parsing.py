@@ -78,22 +78,27 @@ def _parse_massive(usi):
     if index_flag != 'scan':
         raise ValueError('Currently supported MassIVE index flags: scan')
     index = match.group(4)
-    lookup_url = (f'https://massive.ucsd.edu/ProteoSAFe/QuerySpectrum?'
-                  f'id={usi}')
-    for spectrum_file in requests.get(lookup_url).json()['row_data']:
-        if any(spectrum_file['file_descriptor'].lower().endswith(
-                extension.lower()) for extension in ['mzML', 'mzXML', 'MGF']):
-            request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/'
-                           f'DownloadResultFile?'
-                           f'task=4f2ac74ea114401787a7e96e143bb4a1&'
-                           f'invoke=annotatedSpectrumImageText&block=0&'
-                           f'file=FILE->{spectrum_file["file_descriptor"]}&'
-                           f'scan={index}&peptide=*..*&force=false&'
-                           f'uploadfile=True')
-            mz, intensity = _parse_gnps_peak_text(
-                requests.get(request_url).text)
-            return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
-    raise ValueError('Unsupported/unknown MassIVE USI')
+    try:
+        lookup_url = (f'https://massive.ucsd.edu/ProteoSAFe/QuerySpectrum?'
+                      f'id={usi}')
+        lookup_request = requests.get(lookup_url)
+        lookup_request.raise_for_status()
+        for spectrum_file in lookup_request.json()['row_data']:
+            if any(spectrum_file['file_descriptor'].lower().endswith(ext)
+                   for ext in ['mzml', 'mzxml', 'mgf']):
+                request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/'
+                               f'DownloadResultFile?'
+                               f'task=4f2ac74ea114401787a7e96e143bb4a1&'
+                               f'invoke=annotatedSpectrumImageText&block=0&'
+                               f'file=FILE->{spectrum_file["file_descriptor"]}'
+                               f'&scan={index}&peptide=*..*&force=false&'
+                               f'uploadfile=True')
+                mz, intensity = _parse_gnps_peak_text(
+                    requests.get(request_url).text)
+                return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
+        raise ValueError('Unsupported/unknown MassIVE USI')
+    except requests.exceptions.HTTPError:
+        raise ValueError('Unsupported/unknown MassIVE USI')
 
 
 # Parse GNPS tasks or library spectra.
