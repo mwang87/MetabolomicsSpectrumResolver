@@ -170,6 +170,30 @@ def _parse_gnps_library(usi):
         source_link)
 
 
+# Parse MassBank entry.
+def _parse_massbank(usi):
+    match = usi_pattern.match(usi)
+    index_flag = match.group(3)
+    if index_flag != 'accession':
+        raise ValueError('Currently supported MASSBANK index flags: accession')
+    index = match.group(4)
+    response = requests.get(f'{MASSBANK_SERVER}{index}')
+    spectrum_dict = response.json()
+    mz, intensity = [], []
+    for peak in spectrum_dict['spectrum'].split():
+        peak_mz, peak_intensity = peak.split(':')
+        mz.append(float(peak_mz))
+        intensity.append(float(peak_intensity))
+    precursor_mz = 0
+    for metadata in spectrum_dict['metaData']:
+        if metadata['name'] == 'precursor m/z':
+            precursor_mz = float(metadata['value'])
+            break
+    source_link = (f'https://massbank.eu/MassBank/'
+                   f'RecordDisplay.jsp?id={index}')
+    return sus.MsmsSpectrum(usi, precursor_mz, 0, mz, intensity), source_link
+
+
 def _parse_mtbls(usi):
     tokens = usi.split(':')
     dataset_identifier = tokens[1]
@@ -208,26 +232,3 @@ def _parse_motifdb(usi):
     mz, intensity = zip(*json.loads(requests.get(request_url).text))
     source_link = f'http://ms2lda.org/motifdb/motif/{motif_id}/'
     return sus.MsmsSpectrum(usi, 0, 1, mz, intensity), source_link
-
-
-# Parse MassBank entry.
-def _parse_massbank(usi):
-    # E.g. mzspec:MASSBANK:motif:motif_id.
-    tokens = usi.split(':')
-    massbank_id = tokens[2]
-    request_url = f'{MASSBANK_SERVER}{massbank_id}'
-    response = requests.get(request_url)
-    spectrum_dict = response.json()
-    mz, intensity = [], []
-    for peak in spectrum_dict['spectrum'].split():
-        peak_mz, peak_intensity = peak.split(':')
-        mz.append(float(peak_mz))
-        intensity.append(float(peak_intensity))
-    precursor_mz = 0
-    for metadata in spectrum_dict['metaData']:
-        if metadata['name'] == 'precursor m/z':
-            precursor_mz = float(metadata['value'])
-            break
-    source_link = (f'https://massbank.eu/MassBank/'
-                   f'RecordDisplay.jsp?id={massbank_id}')
-    return sus.MsmsSpectrum(usi, precursor_mz, 1, mz, intensity), source_link
