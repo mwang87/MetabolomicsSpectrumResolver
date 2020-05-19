@@ -1,5 +1,6 @@
 import functools
 import json
+import re
 
 import requests
 import spectrum_utils.spectrum as sus
@@ -8,6 +9,28 @@ import spectrum_utils.spectrum as sus
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
 MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
+
+# USI specification: http://www.psidev.info/usi
+usi_pattern = re.compile(
+    # mzspec preamble
+    '^mzspec'
+    # collection identifier
+    # Proteomics collection identifiers: PXDnnnnnn, MSVnnnnnnnnn, RPXDnnnnnn,
+    #                                    PXLnnnnnn
+    # Unofficial: MASSIVEKB
+    # https://github.com/HUPO-PSI/usi/blob/master/CollectionIdentifiers.md
+    ':(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6}|MASSIVEKB|'
+    # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB
+    'GNPS|MASSBANK|MS2LDA|MOTIFDB)'
+    # msRun identifier
+    ':(.*)'
+    # index flag
+    ':(scan|index|nativeId|trace|accession)'
+    # index number
+    ':(.+)'
+    # optional spectrum interpretation
+    '(:.+)?$'
+)
 
 
 @functools.lru_cache(100)
@@ -90,13 +113,25 @@ def _parse_ms2lda(usi):
 
 
 # Parse MSV or PXD library.
-def _parse_msv_pxd(usi):
-    tokens = usi.split(':')
-    dataset_identifier = tokens[1]
-    filename = tokens[2]
-    scan = tokens[4]
+def _parse_massive(usi):
+    match = usi_pattern.match(usi)
+    collection = match.group(1)
+    if collection.startswith('MSV'):
+        source_link = (f'https://massive.ucsd.edu/ProteoSAFe/QueryMSV?'
+                       f'id={collection}')
+    elif collection.startswith('PXD'):
+        source_link = (f'http://proteomecentral.proteomexchange.org/cgi/'
+                       f'GetDataset?ID={collection}')
+    else:
+        # TODO: Support PXL, RPXD, MASSIVEKB collection identifiers.
+        raise ValueError('Currently supported MassIVE collection identifiers: '
+                         'PXD, MSV')
+    index_flag = match.group(3)
+    if index_flag != 'scan':
+        raise ValueError('Currently supported MassIVE index flags: scan')
+    index = match.group(4)
     lookup_url = (f'https://massive.ucsd.edu/ProteoSAFe/QuerySpectrum?'
-                  f'id=mzspec:{dataset_identifier}:{filename}:scan:{scan}')
+                  f'id={usi}')
     for spectrum_file in requests.get(lookup_url).json()['row_data']:
         if any(spectrum_file['file_descriptor'].lower().endswith(
                 extension.lower()) for extension in ['mzML', 'mzXML', 'MGF']):
@@ -105,18 +140,12 @@ def _parse_msv_pxd(usi):
                            f'task=4f2ac74ea114401787a7e96e143bb4a1&'
                            f'invoke=annotatedSpectrumImageText&block=0&'
                            f'file=FILE->{spectrum_file["file_descriptor"]}&'
-                           f'scan={scan}&peptide=*..*&force=false&'
+                           f'scan={index}&peptide=*..*&force=false&'
                            f'uploadfile=True')
             mz, intensity = _parse_gnps_peak_text(
                 requests.get(request_url).text)
-            if 'PXD' in dataset_identifier:
-                source_link = (f'http://proteomecentral.proteomexchange.org/'
-                               f'cgi/GetDataset?ID={dataset_identifier}')
-            else:
-                source_link = (f'https://massive.ucsd.edu/ProteoSAFe/'
-                               f'QueryMSV?id={dataset_identifier}')
-            return sus.MsmsSpectrum(usi, 0, 1, mz, intensity), source_link
-    raise ValueError('Unsupported/unknown USI')
+            return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
+    raise ValueError('Unsupported/unknown MassIVE USI')
 
 
 def _parse_mtbls(usi):
