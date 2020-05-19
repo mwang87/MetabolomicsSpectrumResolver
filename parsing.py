@@ -155,18 +155,23 @@ def _parse_gnps_library(usi):
         raise ValueError('Currently supported GNPS library index flags: '
                          'accession')
     index = match.group(4)
-    request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/SpectrumCommentServlet?'
-                   f'SpectrumID={index}')
-    spectrum_dict = requests.get(request_url).json()
-    mz, intensity = zip(*json.loads(
-        spectrum_dict['spectruminfo']['peaks_json']))
-    source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/'
-                   f'gnpslibraryspectrum.jsp?SpectrumID={index}')
-    return (
-        sus.MsmsSpectrum(
-            usi, float(spectrum_dict['annotations'][0]['Precursor_MZ']),
-            int(spectrum_dict['annotations'][0]['Charge']), mz, intensity),
-        source_link)
+    try:
+        request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/'
+                       f'SpectrumCommentServlet?SpectrumID={index}')
+        lookup_request = requests.get(request_url)
+        lookup_request.raise_for_status()
+        spectrum_dict = lookup_request.json()
+        mz, intensity = zip(*json.loads(
+            spectrum_dict['spectruminfo']['peaks_json']))
+        source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/'
+                       f'gnpslibraryspectrum.jsp?SpectrumID={index}')
+        return (
+            sus.MsmsSpectrum(
+                usi, float(spectrum_dict['annotations'][0]['Precursor_MZ']),
+                int(spectrum_dict['annotations'][0]['Charge']), mz, intensity),
+            source_link)
+    except requests.exceptions.HTTPError:
+        raise ValueError('Unknown GNPS library USI')
 
 
 # Parse MassBank entry.
