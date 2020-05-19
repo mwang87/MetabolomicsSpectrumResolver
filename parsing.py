@@ -235,7 +235,11 @@ def _parse_motifdb(usi):
     if index_flag != 'accession':
         raise ValueError('Currently supported MOTIFDB index flags: accession')
     index = match.group(4)
-    request_url = f'{MOTIFDB_SERVER}get_motif/{index}'
-    mz, intensity = zip(*json.loads(requests.get(request_url).text))
-    source_link = f'http://ms2lda.org/motifdb/motif/{index}/'
-    return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
+    try:
+        lookup_request = requests.get(f'{MOTIFDB_SERVER}get_motif/{index}')
+        lookup_request.raise_for_status()
+        mz, intensity = zip(*json.loads(lookup_request.text))
+        source_link = f'http://ms2lda.org/motifdb/motif/{index}/'
+        return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
+    except requests.exceptions.HTTPError:
+        raise ValueError('Unknown MOTIFDB USI')
