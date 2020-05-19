@@ -28,7 +28,7 @@ def test_render_single_plot():
     plotting_params['mz_max'] = 250
     plotting_params['max_intensity'] = plotting_params['max_intensity_labeled']
     views._generate_figure(
-        'mzspec:MASSBANK::accession', 'png', **plotting_params)
+        'mzspec:MASSBANK::accession:BSU00002', 'png', **plotting_params)
 
 
 def test_render_single_plot_annotated():
