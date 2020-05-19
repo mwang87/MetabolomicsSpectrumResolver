@@ -37,27 +37,25 @@ ms2lda_task_pattern = re.compile('^TASK-(\d+)$')
 
 @functools.lru_cache(100)
 def parse_usi(usi):
-    usi_identifier = usi.lower().split(':')[1]
-    if usi_identifier.startswith('gnpstask'):
-        return _parse_gnps_task(usi)
-    elif usi_identifier.startswith('gnpslibrary'):
-        return _parse_gnps_library(usi)
-    elif usi_identifier.startswith('ms2ldatask'):
-        return _parse_ms2lda(usi)
-    elif usi_identifier.startswith('pxd'):
-        return _parse_msv_pxd(usi)
-    elif usi_identifier.startswith('msv'):
-        return _parse_msv_pxd(usi)
-    elif usi_identifier.startswith('mtbls'):
-        return _parse_mtbls(usi)
-    elif usi_identifier.startswith('st'):
-        return _parse_metabolomics_workbench(usi)
-    elif usi_identifier.startswith('motifdb'):
-        return _parse_motifdb(usi)
-    elif usi_identifier.startswith('massbank'):
+    match = usi_pattern.match(usi)
+    collection = match.group(1)
+    # Send all proteomics USIs to MassIVE.
+    if (collection.startswith('MSV') or
+            collection.startswith('PXD') or
+            collection.startswith('PXL') or
+            collection.startswith('RPXD') or
+            collection == 'MASSIVEKB'):
+        return _parse_massive(usi)
+    elif collection == 'GNPS':
+        return _parse_gnps(usi)
+    elif collection == 'MASSBANK':
         return _parse_massbank(usi)
+    elif collection == 'MS2LDA':
+        return _parse_ms2lda(usi)
+    elif collection == 'MOTIFDB':
+        return _parse_motifdb(usi)
     else:
-        raise ValueError(f'Unknown USI: {usi}')
+        raise ValueError(f'Unknown USI collection: {collection}')
 
 
 # Parse MSV or PXD library.
@@ -197,6 +195,7 @@ def _parse_ms2lda(usi):
     source_link = None
     return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 0, mz,
                             intensity), source_link
+
 
 # Parse MOTIFDB from ms2lda.org.
 def _parse_motifdb(usi):
