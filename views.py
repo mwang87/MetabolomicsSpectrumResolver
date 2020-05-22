@@ -158,7 +158,7 @@ def _generate_figure(usi, extension, **kwargs):
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
     plt.savefig(output_filename, bbox_inches='tight')
-    plt.close()
+    plt.close("all")
 
     return output_filename
 
@@ -253,7 +253,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
     plt.savefig(output_filename, bbox_inches='tight')
-    plt.close()
+    plt.close("all")
 
     return output_filename
 
