@@ -29,7 +29,7 @@ default_plotting_args = {'width': 10,
                          'grid': True,
                          # List of peaks to annotate in the top/bottom
                          # spectrum.
-                         'annotate_peaks': [[], []],
+                         'annotate_peaks': [True, True],
                          'annotate_threshold': 0.1,
                          'annotate_precision': 4,
                          'annotation_rotation': 90}
@@ -55,15 +55,13 @@ def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
-    annotations = np.zeros_like(spectrum.mz, np.bool)
-    annotations[_generate_labels(
-        spectrum, default_plotting_args['annotate_threshold'])] = True
     return flask.render_template(
         'spectrum.html', usi=flask.request.args.get('usi'),
         source_link=source_link,
-        peaks=[[(float(mz), float(intensity), annotate)
-                for mz, intensity, annotate in zip(
-                spectrum.mz, spectrum.intensity, annotations)]])
+        peaks=[[(float(mz), float(intensity))
+                for mz, intensity in zip(spectrum.mz, spectrum.intensity)]],
+        annotations=[_generate_labels(
+            spectrum, default_plotting_args['annotate_threshold'])])
 
 
 @app.route('/mirror/', methods=['GET'])
@@ -71,26 +69,23 @@ def render_mirror_spectrum():
     spectrum1, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
     spectrum1 = copy.deepcopy(spectrum1)
     spectrum1.scale_intensity(max_intensity=1)
-    annotations1 = np.zeros_like(spectrum1.mz, np.bool)
-    annotations1[_generate_labels(
-        spectrum1, default_plotting_args['annotate_threshold'])] = True
     spectrum2, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
     spectrum2 = copy.deepcopy(spectrum2)
     spectrum2.scale_intensity(max_intensity=1)
-    annotations2 = np.zeros_like(spectrum2.mz, np.bool)
-    annotations2[_generate_labels(
-        spectrum2, default_plotting_args['annotate_threshold'])] = True
     return flask.render_template(
         'mirror.html',
         usi1=flask.request.args.get('usi1'),
         usi2=flask.request.args.get('usi2'),
         source_link1=source1, source_link2=source2,
-        peaks=[[(float(mz), float(intensity), annotate)
-                for mz, intensity, annotate in zip(
-                spectrum1.mz, spectrum1.intensity, annotations1)],
-               [(float(mz), float(intensity), annotate)
-                for mz, intensity, annotate in zip(
-                   spectrum2.mz, spectrum2.intensity, annotations2)]])
+        peaks=[[(float(mz), float(intensity))
+                for mz, intensity in zip(spectrum1.mz, spectrum1.intensity)],
+               [(float(mz), float(intensity))
+                for mz, intensity in zip(spectrum2.mz, spectrum2.intensity)]],
+        annotations=[
+            _generate_labels(
+                spectrum1, default_plotting_args['annotate_threshold']),
+            _generate_labels(
+                spectrum2, default_plotting_args['annotate_threshold'])])
 
 
 @app.route('/png/')
@@ -134,7 +129,7 @@ def _generate_figure(usi, extension, **kwargs):
     spectrum = _prepare_spectrum(usi, **kwargs)
     sup.spectrum(
         spectrum, annotate_ions=kwargs['annotate_peaks'],
-        annot_kws={'rotation': kwargs['annotation_rotation']},
+        annot_kws={'rotation': kwargs['annotation_rotation'], 'clip_on': True},
         grid=kwargs['grid'], ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
@@ -208,7 +203,8 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
 
     sup.mirror(spectrum_top, spectrum_bottom,
                {'annotate_ions': kwargs['annotate_peaks'],
-                'annot_kws': {'rotation': kwargs['annotation_rotation']},
+                'annot_kws': {'rotation': kwargs['annotation_rotation'],
+                              'clip_on': True},
                 'grid': kwargs['grid']}, ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
@@ -359,8 +355,8 @@ def _prepare_spectrum(usi, **kwargs):
 
     if kwargs['annotate_peaks']:
         if kwargs['annotate_peaks'] is True:
-            kwargs['annotate_peaks'] = _generate_labels(
-                spectrum, default_plotting_args['annotate_threshold'])
+            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
+                spectrum, default_plotting_args['annotate_threshold'])]
         for mz in kwargs['annotate_peaks']:
             t = f'{mz:.{kwargs["annotate_precision"]}f}'
             spectrum.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=t)
