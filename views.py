@@ -26,6 +26,7 @@ default_plotting_args = {'width': 10,
                          'height': 6,
                          'max_intensity_unlabeled': 1.05,
                          'max_intensity_labeled': 1.25,
+                         'max_intensity_mirror_labeled': 1.50,
                          'grid': True,
                          # List of peaks to annotate in the top/bottom
                          # spectrum.
@@ -100,7 +101,7 @@ def generate_png():
 def generate_mirror_png():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
-    plot_pars = _get_plotting_args(flask.request)
+    plot_pars = _get_plotting_args(flask.request, mirror=True)
     output_filename = _generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
     return flask.send_file(output_filename, mimetype='image/png')
 
@@ -117,7 +118,7 @@ def generate_svg():
 def generate_mirror_svg():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
-    plot_pars = _get_plotting_args(flask.request)
+    plot_pars = _get_plotting_args(flask.request, mirror=True)
     output_filename = _generate_mirror_figure(usi1, usi2, 'svg', **plot_pars)
     return flask.send_file(output_filename, mimetype='image/svg+xml')
 
@@ -384,7 +385,7 @@ def _generate_labels(spec, intensity_threshold):
     return labeled_i
 
 
-def _get_plotting_args(request):
+def _get_plotting_args(request, mirror=False):
     plotting_args = {}
     width = request.args.get('width')
     plotting_args['width'] = (default_plotting_args['width']
@@ -414,13 +415,24 @@ def _get_plotting_args(request):
         default_plotting_args['annotation_rotation']
         if not annotation_rotation else float(annotation_rotation))
     max_intensity = request.args.get('max_intensity')
+    # Explicitly specified maximum intensity.
     if max_intensity:
         plotting_args['max_intensity'] = float(max_intensity) / 100
+    # Default labeled maximum intensity.
+    elif any(annotate_peaks):
+        # Default mirror plot labeled maximum intensity.
+        if mirror:
+            plotting_args['max_intensity'] = \
+                default_plotting_args['max_intensity_mirror_labeled']
+        # Default standard plot labeled maximum intensity.
+        else:
+            plotting_args['max_intensity'] = \
+                default_plotting_args['max_intensity_labeled']
+    # Default unlabeled maximum intensity.
     else:
-        plotting_args['max_intensity'] = (
-            default_plotting_args['max_intensity_labeled']
-            if any(annotate_peaks) else
-            default_plotting_args['max_intensity_unlabeled'])
+        plotting_args['max_intensity'] = \
+            default_plotting_args['max_intensity_unlabeled']
+
     return plotting_args
 
 
