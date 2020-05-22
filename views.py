@@ -414,25 +414,22 @@ def _get_plotting_args(request, mirror=False):
     plotting_args['annotation_rotation'] = (
         default_plotting_args['annotation_rotation']
         if not annotation_rotation else float(annotation_rotation))
-
-    # Pulling out the maximum intensity
     max_intensity = request.args.get('max_intensity')
-
+    # Explicitly specified maximum intensity.
     if max_intensity:
         plotting_args['max_intensity'] = float(max_intensity) / 100
-    else:
-        # Checking if mirror
-        plotting_args['max_intensity'] = (
+    # Default mirror plot labeled maximum intensity.
+    elif mirror:
+        plotting_args['max_intensity'] = \
             default_plotting_args['max_intensity_mirror_labeled']
-            if mirror else
-            default_plotting_args['max_intensity_labeled'])
-
-        # Checking if unlabeled
-        plotting_args['max_intensity'] = (
-            plotting_args['max_intensity']
-            if any(annotate_peaks) else
-            default_plotting_args['max_intensity_unlabeled'])
-
+    # Default standard plot labeled maximum intensity.
+    elif any(annotate_peaks):
+        plotting_args['max_intensity'] = \
+            default_plotting_args['max_intensity_labeled']
+    # Default unlabeled maximum intensity.
+    else:
+        plotting_args['max_intensity'] = \
+            default_plotting_args['max_intensity_unlabeled']
 
     return plotting_args
 
