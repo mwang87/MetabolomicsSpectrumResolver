@@ -418,14 +418,16 @@ def _get_plotting_args(request, mirror=False):
     # Explicitly specified maximum intensity.
     if max_intensity:
         plotting_args['max_intensity'] = float(max_intensity) / 100
-    # Default mirror plot labeled maximum intensity.
-    elif mirror:
-        plotting_args['max_intensity'] = \
-            default_plotting_args['max_intensity_mirror_labeled']
-    # Default standard plot labeled maximum intensity.
+    # Default labeled maximum intensity.
     elif any(annotate_peaks):
-        plotting_args['max_intensity'] = \
-            default_plotting_args['max_intensity_labeled']
+        # Default mirror plot labeled maximum intensity.
+        if mirror:
+            plotting_args['max_intensity'] = \
+                default_plotting_args['max_intensity_mirror_labeled']
+        # Default standard plot labeled maximum intensity.
+        else:
+            plotting_args['max_intensity'] = \
+                default_plotting_args['max_intensity_labeled']
     # Default unlabeled maximum intensity.
     else:
         plotting_args['max_intensity'] = \
