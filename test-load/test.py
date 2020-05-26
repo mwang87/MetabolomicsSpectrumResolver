@@ -1,22 +1,23 @@
-import requests
-import grequests
+import itertools
 import os
+
+import grequests
 from tqdm import tqdm
+from urllib.parse import quote
+
 from usi_test_cases import test_usi_list
-PRODUCTION_URL = os.environ.get("SERVER_URL", "https://metabolomics-usi.ucsd.edu")
+
+
+PRODUCTION_URL = os.environ.get(
+    'SERVER_URL', 'https://metabolomics-usi.ucsd.edu')
+
 
 def test_img():
-    from urllib.parse import quote
-
     all_urls = []
     for usi in test_usi_list:
-        url = f"{PRODUCTION_URL}/svg/?usi={quote(usi)}"
-        all_urls.append(url)
-        url = f"{PRODUCTION_URL}/png/?usi={quote(usi)}"
-        all_urls.append(url)
+        all_urls.append(f'{PRODUCTION_URL}/svg/?usi={quote(usi)}')
+        all_urls.append(f'{PRODUCTION_URL}/png/?usi={quote(usi)}')
 
-    all_urls = all_urls * 10
-
-    for i in tqdm(range(1000)):
-        rs = (grequests.get(u) for u in all_urls)
-        grequests.map(rs)
+    for _ in tqdm(range(1000)):
+        grequests.map(grequests.get(u) for u in itertools.chain.from_iterable(
+            itertools.repeat(all_urls, 10)))
