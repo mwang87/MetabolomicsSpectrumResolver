@@ -19,9 +19,24 @@ usi_pattern = re.compile(
     #                                    PXLnnnnnn
     # Unofficial: MASSIVEKB
     # https://github.com/HUPO-PSI/usi/blob/master/CollectionIdentifiers.md
-    ':(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6}|MASSIVEKB|'
+    ':(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6})'
+    # msRun identifier
+    ':(.*)'
+    # index flag
+    ':(scan|index|nativeId|trace)'
+    # index number
+    ':(.+)'
+    # optional spectrum interpretation
+    '(:.+)?$'
+)
+# OR: Metabolomics draft USIs.
+usi_pattern_draft = re.compile(
+    # mzdraft preamble
+    '^mzdraft'
+    # collection identifier
+    # Unofficial proteomics spectral library identifier: MASSIVEKB
     # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB
-    'GNPS|MASSBANK|MS2LDA|MOTIFDB)'
+    ':(MASSIVEKB|GNPS|MASSBANK|MS2LDA|MOTIFDB)'
     # msRun identifier
     ':(.*)'
     # index flag
@@ -35,11 +50,19 @@ gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$')
 ms2lda_task_pattern = re.compile('^TASK-(\d+)$')
 
 
-@functools.lru_cache(100)
-def parse_usi(usi):
+def _match_usi(usi):
+    # First try matching as an official USI, then as a metabolomics draft USI.
     match = usi_pattern.match(usi)
     if match is None:
+        match = usi_pattern_draft.match(usi)
+    if match is None:
         raise ValueError('Incorrectly formatted USI')
+    return match
+
+
+@functools.lru_cache(100)
+def parse_usi(usi):
+    match = _match_usi(usi)
     collection = match.group(1)
     # Send all proteomics USIs to MassIVE.
     if (collection.startswith('MSV') or
@@ -62,7 +85,7 @@ def parse_usi(usi):
 
 # Parse MSV or PXD library.
 def _parse_massive(usi):
-    match = usi_pattern.match(usi)
+    match = _match_usi(usi)
     collection = match.group(1)
     if collection.startswith('MSV'):
         source_link = (f'https://massive.ucsd.edu/ProteoSAFe/QueryMSV?'
@@ -103,7 +126,7 @@ def _parse_massive(usi):
 
 # Parse GNPS tasks or library spectra.
 def _parse_gnps(usi):
-    match = usi_pattern.match(usi)
+    match = _match_usi(usi)
     ms_run = match.group(2)
     if ms_run.startswith('TASK'):
         return _parse_gnps_task(usi)
@@ -113,7 +136,7 @@ def _parse_gnps(usi):
 
 # Parse GNPS clustered spectra in Molecular Networking.
 def _parse_gnps_task(usi):
-    match = usi_pattern.match(usi)
+    match = _match_usi(usi)
     gnps_task_match = gnps_task_pattern.match(match.group(2))
     task = gnps_task_match.group(1)
     filename = gnps_task_match.group(2)
@@ -149,7 +172,7 @@ def _parse_gnps_peak_text(text):
 
 # Parse GNPS library.
 def _parse_gnps_library(usi):
-    match = usi_pattern.match(usi)
+    match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag != 'accession':
         raise ValueError('Currently supported GNPS library index flags: '
@@ -176,7 +199,7 @@ def _parse_gnps_library(usi):
 
 # Parse MassBank entry.
 def _parse_massbank(usi):
-    match = usi_pattern.match(usi)
+    match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag != 'accession':
         raise ValueError('Currently supported MassBank index flags: accession')
@@ -205,7 +228,7 @@ def _parse_massbank(usi):
 
 # Parse MS2LDA from ms2lda.org.
 def _parse_ms2lda(usi):
-    match = usi_pattern.match(usi)
+    match = _match_usi(usi)
     ms2lda_task_match = ms2lda_task_pattern.match(match.group(2))
     experiment_id = ms2lda_task_match.group(1)
     index_flag = match.group(3)
@@ -230,7 +253,7 @@ def _parse_ms2lda(usi):
 
 # Parse MOTIFDB from ms2lda.org.
 def _parse_motifdb(usi):
-    match = usi_pattern.match(usi)
+    match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag != 'accession':
         raise ValueError('Currently supported MOTIFDB index flags: accession')
