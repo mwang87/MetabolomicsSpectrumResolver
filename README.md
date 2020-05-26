@@ -47,21 +47,21 @@ Supported USI Types:
 
 ### ProteomeXchange Repository Data
 
-[mzdraft:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
+[mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
 
 ### MassIVE/GNPS Repository Data
 
-[mzdraft:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
+[mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
 
-[mzdraft:MSV000078547:120228_nbut_3610_it_it_take2:scan:389](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MSV000078547:120228_nbut_3610_it_it_take2:scan:389)
+[mzspec:MSV000078547:120228_nbut_3610_it_it_take2:scan:389](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000078547:120228_nbut_3610_it_it_take2:scan:389)
 
 ### MetaboLights Repository Data
 
-[mzdraft:MSV000082791:(-)-epigallocatechin:scan:2](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:MSV000082791:(-)-epigallocatechin:scan:2)
+[mzspec:MSV000082791:(-)-epigallocatechin:scan:2](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000082791:(-)-epigallocatechin:scan:2)
 
 ### Metabolomics Workbench Repository Data
 
-[mzdraft:MSV000082680:iPSC-T1R1:scan:3](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:MSV000082680:iPSC-T1R1:scan:3)
+[mzspec:MSV000082680:iPSC-T1R1:scan:3](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000082680:iPSC-T1R1:scan:3)
 
 
 ## USI Extended for Metabolomics - Formatting Documentation
@@ -84,11 +84,11 @@ Supported USI Types:
 
 ### Metabolights Data Repository Spectrum
 
-```mzdraft:<MetaboLights MSV identifier>:<Filename>:scan:<Scan Number>```
+```mzspec:<MetaboLights MSV identifier>:<Filename>:scan:<Scan Number>```
 
 ### Metabolomics Workbench Data Repository Spectrum
 
-```mzdraft:<Metabolomics Workbench MSV identifier>:<Filename>:scan:<Scan Number>```
+```mzspec:<Metabolomics Workbench MSV identifier>:<Filename>:scan:<Scan Number>```
 
 ### MassIVE/GNPS Data Repository Spectrum
 
