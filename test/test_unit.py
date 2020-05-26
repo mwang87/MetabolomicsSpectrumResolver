@@ -17,8 +17,8 @@ def test_render_mirror():
     plotting_params['mz_max'] = 250
     plotting_params['max_intensity'] = plotting_params['max_intensity_labeled']
     views._generate_mirror_figure(
-        'mzspec:MASSBANK::accession:BSU00002',
-        'mzspec:MASSBANK::accession:BSU00002',
+        'mzdraft:MASSBANK::accession:BSU00002',
+        'mzdraft:MASSBANK::accession:BSU00002',
         'png', **plotting_params)
 
 
@@ -28,7 +28,7 @@ def test_render_single_plot():
     plotting_params['mz_max'] = 250
     plotting_params['max_intensity'] = plotting_params['max_intensity_labeled']
     views._generate_figure(
-        'mzspec:MASSBANK::accession:BSU00002', 'png', **plotting_params)
+        'mzdraft:MASSBANK::accession:BSU00002', 'png', **plotting_params)
 
 
 def test_render_single_plot_annotated():
@@ -39,4 +39,4 @@ def test_render_single_plot_annotated():
         [75.0225, 93.0575, 128.0275, 139.0075], [])
     plotting_params['max_intensity'] = plotting_params['max_intensity_labeled']
     views._generate_figure(
-        'mzspec:MS2LDA:TASK-190:accession:270684', 'png', **plotting_params)
+        'mzdraft:MS2LDA:TASK-190:accession:270684', 'png', **plotting_params)
