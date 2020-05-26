@@ -48,7 +48,7 @@ def _parse_gnps_task(usi):
     spectrum_dict = requests.get(request_url).json()
     mz, intensity =  zip(*spectrum_dict['peaks'])
     source_link = f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task={task}'
-    return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor']['mz']), 
+    return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor']['mz']),
         int(spectrum_dict['precursor']['charge']), mz, intensity), source_link
 
 # Parse GNPS library.
@@ -89,35 +89,39 @@ def _parse_msv_pxd(usi):
     scan = tokens[4]
     lookup_url = (f'https://massive.ucsd.edu/ProteoSAFe/QuerySpectrum?'
                   f'id=mzspec:{dataset_identifier}:{filename}:scan:{scan}')
-    usi_valid = False
+    usi_resolvable = False
     for spectrum_file in requests.get(lookup_url).json()['row_data']:
         try:
-            if any(spectrum_file['file_descriptor'].lower().endswith(
-                    extension.lower()) for extension in ['mzML', 'mzXML', 'MGF']):
-                usi_resolveable = True
+            usi_resolvable = any(
+                spectrum_file['file_descriptor'].lower().endswith(extension)
+                for extension in ['mzml', 'mzxml', 'mgf'])
+            if usi_resolvable:
                 request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/'
-                            f'DownloadResultFile?'
-                            f'task=4f2ac74ea114401787a7e96e143bb4a1&'
-                            f'invoke=annotatedSpectrumImageText&block=0&'
-                            f'file=FILE->{spectrum_file["file_descriptor"]}&'
-                            f'scan={scan}&peptide=*..*&force=false&format=JSON&'
-                            f'uploadfile=True')
+                               f'DownloadResultFile?'
+                               f'task=4f2ac74ea114401787a7e96e143bb4a1&'
+                               f'invoke=annotatedSpectrumImageText&block=0&'
+                               f'file=FILE->{spectrum_file["file_descriptor"]}'
+                               f'&scan={scan}&peptide=*..*&force=false&'
+                               f'format=JSON&uploadfile=True')
                 spectrum_dict = requests.get(request_url).json()
-                mz, intensity =  zip(*spectrum_dict['peaks'])
+                mz, intensity = zip(*spectrum_dict['peaks'])
                 charge = int(spectrum_dict['precursor']['charge'])
                 precursor_mz = float(spectrum_dict['precursor']['mz'])
 
-                if 'PXD' in dataset_identifier:
-                    source_link = (f'http://proteomecentral.proteomexchange.org/'
-                                f'cgi/GetDataset?ID={dataset_identifier}')
+                if dataset_identifier.startswith('PXD'):
+                    source_link = (
+                        f'http://proteomecentral.proteomexchange.org/'
+                        f'cgi/GetDataset?ID={dataset_identifier}')
                 else:
                     source_link = (f'https://massive.ucsd.edu/ProteoSAFe/'
-                                f'QueryMSV?id={dataset_identifier}')
-                return sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity), source_link
+                                   f'QueryMSV?id={dataset_identifier}')
+
+                return sus.MsmsSpectrum(usi, precursor_mz, charge, mz,
+                                        intensity), source_link
         except:
             pass
-    if usi_resolveable:
-        raise ValueError('Cannot Resolve USI')
+    if usi_resolvable:
+        raise ValueError('Cannot resolve USI')
     raise ValueError('Unsupported/unknown USI')
 
 
