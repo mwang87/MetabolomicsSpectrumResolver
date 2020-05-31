@@ -17,5 +17,7 @@ RUN conda install -n usi -c anaconda scipy
 
 RUN apt-get install -y libxrender-dev
 
+RUN conda update -n usi -c anaconda openssl
+
 COPY . /app
 WORKDIR /app
