@@ -48,8 +48,17 @@ def _parse_gnps_task(usi):
     spectrum_dict = requests.get(request_url).json()
     mz, intensity =  zip(*spectrum_dict['peaks'])
     source_link = f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task={task}'
-    return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor']['mz']),
-        int(spectrum_dict['precursor']['charge']), mz, intensity), source_link
+    precursor_mz = 0
+    charge = 1
+
+    try:
+        precursor_mz = spectrum_dict['precursor']['mz']
+        charge = spectrum_dict['precursor']['charge']
+    except:
+        pass
+
+    return sus.MsmsSpectrum(usi, float(precursor_mz),
+        int(charge), mz, intensity), source_link
 
 # Parse GNPS library.
 def _parse_gnps_library(usi):
@@ -105,8 +114,15 @@ def _parse_msv_pxd(usi):
                                f'format=JSON&uploadfile=True')
                 spectrum_dict = requests.get(request_url).json()
                 mz, intensity = zip(*spectrum_dict['peaks'])
-                charge = int(spectrum_dict['precursor']['charge'])
-                precursor_mz = float(spectrum_dict['precursor']['mz'])
+
+                precursor_mz = 0
+                charge = 1
+
+                try:
+                    charge = int(spectrum_dict['precursor']['charge'])
+                    precursor_mz = float(spectrum_dict['precursor']['mz'])
+                except:
+                    pass
 
                 if dataset_identifier.startswith('PXD'):
                     source_link = (
