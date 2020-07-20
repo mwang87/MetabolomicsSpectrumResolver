@@ -63,7 +63,7 @@ def test_qr_pages():
 
 
 def test_error_page():
-    error_usi = "mzspec:GNPSLIBRARY:CCMSLIB0000"
+    error_usi = "mzdraft:GNPSLIBRARY:CCMSLIB0000"
     url = f"{PRODUCTION_URL}/spectrum/?usi={error_usi}"
 
     r = requests.get(url)
@@ -71,20 +71,20 @@ def test_error_page():
 
 
 def test_mirror_img():
-    url = (f"{PRODUCTION_URL}/mirror/?usi1=mzspec:MASSBANK::accession:BSU00002"
-           f"&usi2=mzspec:MASSBANK::accession:BSU00002")
+    url = (f"{PRODUCTION_URL}/mirror/?usi1=mzdraft:MASSBANK::accession:BSU00002"
+           f"&usi2=mzdraft:MASSBANK::accession:BSU00002")
     r = requests.get(url)
     r.raise_for_status()
 
     url = (f"{PRODUCTION_URL}/svg/mirror?"
-           f"usi1=mzspec:MASSBANK::accession:BSU00002&"
-           f"usi2=mzspec:MASSBANK::accession:BSU00002")
+           f"usi1=mzdraft:MASSBANK::accession:BSU00002&"
+           f"usi2=mzdraft:MASSBANK::accession:BSU00002")
     r = requests.get(url)
     r.raise_for_status()
 
     url = (f"{PRODUCTION_URL}/png/mirror?"
-           f"usi1=mzspec:MASSBANK::accession:BSU00002&"
-           f"usi2=mzspec:MASSBANK::accession:BSU00002")
+           f"usi1=mzdraft:MASSBANK::accession:BSU00002&"
+           f"usi2=mzdraft:MASSBANK::accession:BSU00002")
     r = requests.get(url)
     r.raise_for_status()
 
