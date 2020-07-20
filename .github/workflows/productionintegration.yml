@@ -5,7 +5,7 @@ on:
    - cron:  '*/60 * * * *'
 
 jobs:
-  build:
+  integration-test:
 
     runs-on: ubuntu-latest
 
