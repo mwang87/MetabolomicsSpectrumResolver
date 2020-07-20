@@ -4,7 +4,7 @@ import re
 
 import requests
 import spectrum_utils.spectrum as sus
-
+import parsing_legacy
 
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
@@ -37,27 +37,35 @@ ms2lda_task_pattern = re.compile('^TASK-(\d+)$')
 
 @functools.lru_cache(100)
 def parse_usi(usi):
-    match = usi_pattern.match(usi)
-    if match is None:
-        raise ValueError('Incorrectly formatted USI')
-    collection = match.group(1)
-    # Send all proteomics USIs to MassIVE.
-    if (collection.startswith('MSV') or
-            collection.startswith('PXD') or
-            collection.startswith('PXL') or
-            collection.startswith('RPXD') or
-            collection == 'MASSIVEKB'):
-        return _parse_massive(usi)
-    elif collection == 'GNPS':
-        return _parse_gnps(usi)
-    elif collection == 'MASSBANK':
-        return _parse_massbank(usi)
-    elif collection == 'MS2LDA':
-        return _parse_ms2lda(usi)
-    elif collection == 'MOTIFDB':
-        return _parse_motifdb(usi)
-    else:
-        raise ValueError(f'Unknown USI collection: {collection}')
+    # Parsing Proper USI
+    try:
+        match = usi_pattern.match(usi)
+        if match is None:
+            raise ValueError('Incorrectly formatted USI')
+        collection = match.group(1)
+        # Send all proteomics USIs to MassIVE.
+        if (collection.startswith('MSV') or
+                collection.startswith('PXD') or
+                collection.startswith('PXL') or
+                collection.startswith('RPXD') or
+                collection == 'MASSIVEKB'):
+            return _parse_massive(usi)
+        elif collection == 'GNPS':
+            return _parse_gnps(usi)
+        elif collection == 'MASSBANK':
+            return _parse_massbank(usi)
+        elif collection == 'MS2LDA':
+            return _parse_ms2lda(usi)
+        elif collection == 'MOTIFDB':
+            return _parse_motifdb(usi)
+        else:
+            raise ValueError(f'Unknown USI collection: {collection}')
+    except Exception as e:
+        # Lets try to parse the legacy
+        try:
+            return parsing_legacy.parse_usi_legacy(usi)
+        except:
+            raise e
 
 
 # Parse MSV or PXD library.
