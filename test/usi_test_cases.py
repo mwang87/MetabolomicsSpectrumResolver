@@ -22,4 +22,3 @@ test_usi_list += [
     'mzspec:MOTIFDB:motif:171163',
     'mzspec:MS2LDATASK-190:document:270684'
 ]
-

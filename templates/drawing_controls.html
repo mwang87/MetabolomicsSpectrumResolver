@@ -18,6 +18,11 @@ $(document).ready(function() {
         },
         order: [[ 1, 'asc' ]]
     });
+
+    let annotations = ((annotations));
+    for (let table_i = 0; table_i < document.getElementsByClassName("table").length; table_i++) {
+        $("#peaks_" + table_i).DataTable().rows(annotations[table_i]).select();
+    }
 } );
 </script>
 

@@ -1,5 +1,6 @@
 import copy
 import csv
+import gc
 import io
 import json
 import os
@@ -26,10 +27,11 @@ default_plotting_args = {'width': 10,
                          'height': 6,
                          'max_intensity_unlabeled': 1.05,
                          'max_intensity_labeled': 1.25,
+                         'max_intensity_mirror_labeled': 1.50,
                          'grid': True,
                          # List of peaks to annotate in the top/bottom
                          # spectrum.
-                         'annotate_peaks': [[], []],
+                         'annotate_peaks': [True, True],
                          'annotate_threshold': 0.1,
                          'annotate_precision': 4,
                          'annotation_rotation': 90}
@@ -55,15 +57,13 @@ def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
-    annotations = np.zeros_like(spectrum.mz, np.bool)
-    annotations[_generate_labels(
-        spectrum, default_plotting_args['annotate_threshold'])] = True
     return flask.render_template(
         'spectrum.html', usi=flask.request.args.get('usi'),
         source_link=source_link,
-        peaks=[[(float(mz), float(intensity), annotate)
-                for mz, intensity, annotate in zip(
-                spectrum.mz, spectrum.intensity, annotations)]])
+        peaks=[[(float(mz), float(intensity))
+                for mz, intensity in zip(spectrum.mz, spectrum.intensity)]],
+        annotations=[_generate_labels(
+            spectrum, default_plotting_args['annotate_threshold'])])
 
 
 @app.route('/mirror/', methods=['GET'])
@@ -71,26 +71,23 @@ def render_mirror_spectrum():
     spectrum1, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
     spectrum1 = copy.deepcopy(spectrum1)
     spectrum1.scale_intensity(max_intensity=1)
-    annotations1 = np.zeros_like(spectrum1.mz, np.bool)
-    annotations1[_generate_labels(
-        spectrum1, default_plotting_args['annotate_threshold'])] = True
     spectrum2, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
     spectrum2 = copy.deepcopy(spectrum2)
     spectrum2.scale_intensity(max_intensity=1)
-    annotations2 = np.zeros_like(spectrum2.mz, np.bool)
-    annotations2[_generate_labels(
-        spectrum2, default_plotting_args['annotate_threshold'])] = True
     return flask.render_template(
         'mirror.html',
         usi1=flask.request.args.get('usi1'),
         usi2=flask.request.args.get('usi2'),
         source_link1=source1, source_link2=source2,
-        peaks=[[(float(mz), float(intensity), annotate)
-                for mz, intensity, annotate in zip(
-                spectrum1.mz, spectrum1.intensity, annotations1)],
-               [(float(mz), float(intensity), annotate)
-                for mz, intensity, annotate in zip(
-                   spectrum2.mz, spectrum2.intensity, annotations2)]])
+        peaks=[[(float(mz), float(intensity))
+                for mz, intensity in zip(spectrum1.mz, spectrum1.intensity)],
+               [(float(mz), float(intensity))
+                for mz, intensity in zip(spectrum2.mz, spectrum2.intensity)]],
+        annotations=[
+            _generate_labels(
+                spectrum1, default_plotting_args['annotate_threshold']),
+            _generate_labels(
+                spectrum2, default_plotting_args['annotate_threshold'])])
 
 
 @app.route('/png/')
@@ -105,7 +102,7 @@ def generate_png():
 def generate_mirror_png():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
-    plot_pars = _get_plotting_args(flask.request)
+    plot_pars = _get_plotting_args(flask.request, mirror=True)
     output_filename = _generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
     return flask.send_file(output_filename, mimetype='image/png')
 
@@ -122,7 +119,7 @@ def generate_svg():
 def generate_mirror_svg():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
-    plot_pars = _get_plotting_args(flask.request)
+    plot_pars = _get_plotting_args(flask.request, mirror=True)
     output_filename = _generate_mirror_figure(usi1, usi2, 'svg', **plot_pars)
     return flask.send_file(output_filename, mimetype='image/svg+xml')
 
@@ -134,7 +131,7 @@ def _generate_figure(usi, extension, **kwargs):
     spectrum = _prepare_spectrum(usi, **kwargs)
     sup.spectrum(
         spectrum, annotate_ions=kwargs['annotate_peaks'],
-        annot_kws={'rotation': kwargs['annotation_rotation']},
+        annot_kws={'rotation': kwargs['annotation_rotation'], 'clip_on': True},
         grid=kwargs['grid'], ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
@@ -162,7 +159,9 @@ def _generate_figure(usi, extension, **kwargs):
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
     plt.savefig(output_filename, bbox_inches='tight')
-    plt.close()
+    fig.clear()
+    plt.close(fig)
+    gc.collect()
 
     return output_filename
 
@@ -208,7 +207,8 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
 
     sup.mirror(spectrum_top, spectrum_bottom,
                {'annotate_ions': kwargs['annotate_peaks'],
-                'annot_kws': {'rotation': kwargs['annotation_rotation']},
+                'annot_kws': {'rotation': kwargs['annotation_rotation'],
+                              'clip_on': True},
                 'grid': kwargs['grid']}, ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
@@ -256,7 +256,9 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     output_filename = os.path.join(
         app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
     plt.savefig(output_filename, bbox_inches='tight')
-    plt.close()
+    fig.clear()
+    plt.close(fig)
+    gc.collect()
 
     return output_filename
 
@@ -359,8 +361,8 @@ def _prepare_spectrum(usi, **kwargs):
 
     if kwargs['annotate_peaks']:
         if kwargs['annotate_peaks'] is True:
-            kwargs['annotate_peaks'] = _generate_labels(
-                spectrum, default_plotting_args['annotate_threshold'])
+            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
+                spectrum, default_plotting_args['annotate_threshold'])]
         for mz in kwargs['annotate_peaks']:
             t = f'{mz:.{kwargs["annotate_precision"]}f}'
             spectrum.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=t)
@@ -388,7 +390,7 @@ def _generate_labels(spec, intensity_threshold):
     return labeled_i
 
 
-def _get_plotting_args(request):
+def _get_plotting_args(request, mirror=False):
     plotting_args = {}
     width = request.args.get('width')
     plotting_args['width'] = (default_plotting_args['width']
@@ -418,13 +420,24 @@ def _get_plotting_args(request):
         default_plotting_args['annotation_rotation']
         if not annotation_rotation else float(annotation_rotation))
     max_intensity = request.args.get('max_intensity')
+    # Explicitly specified maximum intensity.
     if max_intensity:
         plotting_args['max_intensity'] = float(max_intensity) / 100
+    # Default labeled maximum intensity.
+    elif any(annotate_peaks):
+        # Default mirror plot labeled maximum intensity.
+        if mirror:
+            plotting_args['max_intensity'] = \
+                default_plotting_args['max_intensity_mirror_labeled']
+        # Default standard plot labeled maximum intensity.
+        else:
+            plotting_args['max_intensity'] = \
+                default_plotting_args['max_intensity_labeled']
+    # Default unlabeled maximum intensity.
     else:
-        plotting_args['max_intensity'] = (
-            default_plotting_args['max_intensity_labeled']
-            if any(annotate_peaks) else
-            default_plotting_args['max_intensity_unlabeled'])
+        plotting_args['max_intensity'] = \
+            default_plotting_args['max_intensity_unlabeled']
+
     return plotting_args
 
 
