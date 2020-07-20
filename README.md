@@ -20,75 +20,75 @@ Supported USI Types:
 ![](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/production-integration/badge.svg)
 
 > :warning: These identifiers are based on draft USI and draft Metabolomics USI identifiers. 
-        Thus, they are subject to change, and so for the moment, they will be include in the first block as mzdraft instead of mzspec. 
+        Thus, they are subject to change, and so for the moment, they will be include in the first block as mzspec instead of mzspec. 
         Thank you for your patience and working with us!
 
 ## Example USI URLs
 
 ### MS2LDA
 
-[mzdraft:MS2LDA:TASK-190:accession:43062](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:MS2LDA:TASK-190:accession:43062)
+[mzspec:MS2LDA:TASK-190:accession:43062](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MS2LDA:TASK-190:accession:43062)
 
 ### MOTIFDB
 
-[mzdraft:MOTIFDB::accession:171163](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:MOTIFDB::accession:171163)
+[mzspec:MOTIFDB::accession:171163](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MOTIFDB::accession:171163)
 
 ### GNPS Molecular Networking Spectra
 
-[mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943)
+[mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943)
 
 ### GNPS Library Spectra
 
-[mzdraft:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077)
+[mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077)
 
 ### MassBank Library Spectra
 
-[mzdraft:MASSBANK::accession:SM858102](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:MASSBANK::accession:SM858102)
+[mzspec:MASSBANK::accession:SM858102](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MASSBANK::accession:SM858102)
 
 ### ProteomeXchange Repository Data
 
-[mzdraft:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
+[mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
 
 ### MassIVE/GNPS Repository Data
 
-[mzdraft:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
+[mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555)
 
-[mzdraft:MSV000078547:120228_nbut_3610_it_it_take2:scan:389](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MSV000078547:120228_nbut_3610_it_it_take2:scan:389)
+[mzspec:MSV000078547:120228_nbut_3610_it_it_take2:scan:389](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdata:MSV000078547:120228_nbut_3610_it_it_take2:scan:389)
 
 ### MetaboLights Repository Data
 
-[mzdraft:MSV000082791:(-)-epigallocatechin:scan:2](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:MSV000082791:(-)-epigallocatechin:scan:2)
+[mzspec:MSV000082791:(-)-epigallocatechin:scan:2](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000082791:(-)-epigallocatechin:scan:2)
 
 ### Metabolomics Workbench Repository Data
 
-[mzdraft:MSV000082680:iPSC-T1R1:scan:3](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzdraft:MSV000082680:iPSC-T1R1:scan:3)
+[mzspec:MSV000082680:iPSC-T1R1:scan:3](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MSV000082680:iPSC-T1R1:scan:3)
 
 
 ## USI Extended for Metabolomics - Formatting Documentation
 
 ### Massbank Library Spectrum
 
-```mzdraft:MASSBANK::accession:<MassBank Accession>```
+```mzspec:MASSBANK::accession:<MassBank Accession>```
 
 ### GNPS Analysis Task Spectrum
 
-```mzdraft:GNPS:TASK-<GNPS Task ID>-<File name in task>:scan:<scan number>```
+```mzspec:GNPS:TASK-<GNPS Task ID>-<File name in task>:scan:<scan number>```
 
 ### MS2LDA MOTIFDB
 
-```mzdraft:MOTIFDB::accession:<Motif DB accession>```
+```mzspec:MOTIFDB::accession:<Motif DB accession>```
 
 ### GNPS Library Spectrum
 
-```mzdraft:GNPS:<GNPS library name (ignored)>:accession:<GNPS Library Accession>```
+```mzspec:GNPS:<GNPS library name (ignored)>:accession:<GNPS Library Accession>```
 
 ### Metabolights Data Repository Spectrum
 
-```mzdraft:<MetaboLights MSV identifier>:<Filename>:scan:<Scan Number>```
+```mzspec:<MetaboLights MSV identifier>:<Filename>:scan:<Scan Number>```
 
 ### Metabolomics Workbench Data Repository Spectrum
 
-```mzdraft:<Metabolomics Workbench MSV identifier>:<Filename>:scan:<Scan Number>```
+```mzspec:<Metabolomics Workbench MSV identifier>:<Filename>:scan:<Scan Number>```
 
 ### MassIVE/GNPS Data Repository Spectrum
 
@@ -98,40 +98,40 @@ Supported USI Types:
 ## Example Formatting Figures
 
 Vanilla Rendering
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943)
 
 Small Figure
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&width=4&height=4)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&width=4&height=4)
 
 Mass Range Filtering
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&mz_min=550&mz_max=800)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&mz_min=550&mz_max=800)
 
 Zoom Intensity
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&max_intensity=50)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&max_intensity=50)
 
 No Grid
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&grid=false)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&grid=false)
 
 No Peak Annotations
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&annotate_peaks=[[]])
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&annotate_peaks=[[]])
 
 Custom Peak Annotations
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&annotate_peaks=[[463.297,708.463,816.474,1042.5699]])
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&annotate_peaks=[[463.297,708.463,816.474,1042.5699]])
 
 Less Decimal Places
-![](https://metabolomics-usi.ucsd.edu/png/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&annotate_precision=1)
+![](https://metabolomics-usi.ucsd.edu/png/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&annotate_precision=1)
 
 Rotate Labels
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&annotation_rotation=45)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&annotation_rotation=45)
 
 Decrease Label Minimum Intensity
-![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzdraft:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&annotate_threshold=0)
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&annotate_threshold=0)
 
 Vanilla Mirror Match
-![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzdraft:MASSBANK::accession:BSU00002&usi2=mzdraft:MASSBANK::accession:BSU00002)
+![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzspec:MASSBANK::accession:BSU00002&usi2=mzspec:MASSBANK::accession:BSU00002)
 
 Mirror Match with Intensity Scaling
-![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzdraft:MASSBANK::accession:BSU00002&usi2=mzdraft:MASSBANK::accession:BSU00002&max_intensity=150)
+![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzspec:MASSBANK::accession:BSU00002&usi2=mzspec:MASSBANK::accession:BSU00002&max_intensity=150)
 
 ## Plotting Parameters
 
