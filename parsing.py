@@ -29,10 +29,10 @@ usi_pattern = re.compile(
     # optional spectrum interpretation
     '(:.+)?$'
 )
-# OR: Metabolomics draft USIs.
+# OR: Metabolomics USIs.
 usi_pattern_draft = re.compile(
     # mzdraft preamble
-    '^mzdraft'
+    '^mzspec'
     # collection identifier
     # Unofficial proteomics spectral library identifier: MASSIVEKB
     # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB
@@ -48,7 +48,6 @@ usi_pattern_draft = re.compile(
 )
 gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$')
 ms2lda_task_pattern = re.compile('^TASK-(\d+)$')
-
 
 def _match_usi(usi):
     # First try matching as an official USI, then as a metabolomics draft USI.
@@ -87,6 +86,7 @@ def parse_usi(usi):
         try:
             return parsing_legacy.parse_usi_legacy(usi)
         except:
+            print("XXX")
             raise e
 
 
