@@ -150,7 +150,7 @@ def _parse_gnps_task(usi):
     index_flag = match.group(3)
     if index_flag != 'scan':
         raise ValueError('Currently supported GNPS TASK index flags: scan')
-    index = match.group(4)
+    scan = match.group(4)
     
     # Performing Query
     try:
