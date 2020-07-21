@@ -4,6 +4,7 @@ import re
 
 import requests
 import spectrum_utils.spectrum as sus
+
 import parsing_legacy
 
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
@@ -48,6 +49,7 @@ usi_pattern_draft = re.compile(
 )
 gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$')
 ms2lda_task_pattern = re.compile('^TASK-(\d+)$')
+
 
 def _match_usi(usi):
     # First try matching as an official USI, then as a metabolomics draft USI.
@@ -106,12 +108,11 @@ def _parse_gnps_task(usi):
     if index_flag != 'scan':
         raise ValueError('Currently supported GNPS TASK index flags: scan')
     scan = match.group(4)
-    
-    # Performing Query
+
     try:
         request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/DownloadResultFile?'
-                       f'task={task}&invoke=annotatedSpectrumImageText&block=0&'
-                       f'file=FILE->{filename}&scan={scan}&peptide=*..*&'
+                       f'task={task}&invoke=annotatedSpectrumImageText&block=0'
+                       f'&file=FILE->{filename}&scan={scan}&peptide=*..*&'
                        f'force=false&_=1561457932129&format=JSON')
         spectrum_dict = requests.get(request_url).json()
         mz, intensity = zip(*spectrum_dict['peaks'])
@@ -126,7 +127,8 @@ def _parse_gnps_task(usi):
                 source_link)
     except requests.exceptions.HTTPError:
         raise ValueError('Unknown GNPS task USI')
-    
+
+
 # Parse GNPS library.
 def _parse_gnps_library(usi):
     match = _match_usi(usi)
@@ -207,6 +209,7 @@ def _parse_ms2lda(usi):
     except requests.exceptions.HTTPError:
         raise ValueError('Unknown MS2LDA USI')
 
+
 # Parse MSV or PXD library.
 def _parse_msv_pxd(usi):
     tokens = usi.split(':')
@@ -274,11 +277,13 @@ def _parse_metabolomics_workbench(usi):
                                 'datasets_json.jsp').json()['datasets']:
         if dataset_identifier in dataset['title']:
             source_link = (f'https://www.metabolomicsworkbench.org/'
-                           f'data/DRCCMetadata.php?Mode=Study&StudyID=/{dataset_identifier}')
+                           f'data/DRCCMetadata.php?Mode=Study&StudyID=/'
+                           f'{dataset_identifier}')
             return _parse_msv_pxd(f'mzspec:{dataset["dataset"]}:{filename}:'
                                   f'scan:{scan}')[0], source_link
     raise ValueError('Unsupported/unknown USI')
-                             
+
+
 # Parse MOTIFDB from ms2lda.org.
 def _parse_motifdb(usi):
     match = _match_usi(usi)
