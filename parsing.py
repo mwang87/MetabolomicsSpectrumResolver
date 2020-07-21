@@ -28,7 +28,8 @@ usi_pattern = re.compile(
     # index number
     ':(.+)'
     # optional spectrum interpretation
-    '(:.+)?$'
+    '(:.+)?$',
+    flags=re.IGNORECASE
 )
 # OR: Metabolomics USIs.
 usi_pattern_draft = re.compile(
@@ -45,10 +46,12 @@ usi_pattern_draft = re.compile(
     # index number
     ':(.+)'
     # optional spectrum interpretation
-    '(:.+)?$'
+    '(:.+)?$',
+    flags=re.IGNORECASE
 )
-gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$')
-ms2lda_task_pattern = re.compile('^TASK-(\d+)$')
+gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$',
+                               flags=re.IGNORECASE)
+ms2lda_task_pattern = re.compile('^TASK-(\d+)$', flags=re.IGNORECASE)
 
 
 def _match_usi(usi):
@@ -191,6 +194,8 @@ def _parse_massbank(usi):
 def _parse_ms2lda(usi):
     match = _match_usi(usi)
     ms2lda_task_match = ms2lda_task_pattern.match(match.group(2))
+    if ms2lda_task_match is None:
+        raise ValueError('Incorrectly formatted MS2LDA task')
     experiment_id = ms2lda_task_match.group(1)
     index_flag = match.group(3).lower()
     if index_flag != 'accession':
