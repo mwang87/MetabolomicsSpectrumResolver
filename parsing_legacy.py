@@ -1,13 +1,14 @@
 import functools
 import json
-import re
 
 import requests
 import spectrum_utils.spectrum as sus
 
+
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
 MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
+
 
 @functools.lru_cache(100)
 def parse_usi_legacy(usi):
@@ -45,7 +46,7 @@ def _parse_gnps_task(usi):
                    f'file=FILE->{filename}&scan={scan}&peptide=*..*&'
                    f'force=false&_=1561457932129&format=JSON')
     spectrum_dict = requests.get(request_url).json()
-    mz, intensity =  zip(*spectrum_dict['peaks'])
+    mz, intensity = zip(*spectrum_dict['peaks'])
     source_link = f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task={task}'
     if 'precursor' in spectrum_dict:
         precursor_mz = float(spectrum_dict['precursor'].get('mz', 0))
@@ -53,7 +54,7 @@ def _parse_gnps_task(usi):
     else:
         precursor_mz, charge = 0, 1
     return (sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity),
-                            intensity), source_link
+            source_link)
 
 
 # Parse GNPS library.
@@ -161,10 +162,12 @@ def _parse_metabolomics_workbench(usi):
                                 'datasets_json.jsp').json()['datasets']:
         if dataset_identifier in dataset['title']:
             source_link = (f'https://www.metabolomicsworkbench.org/'
-                           f'data/DRCCMetadata.php?Mode=Study&StudyID=/{dataset_identifier}')
+                           f'data/DRCCMetadata.php?Mode=Study&StudyID=/'
+                           f'{dataset_identifier}')
             return _parse_msv_pxd(f'mzspec:{dataset["dataset"]}:{filename}:'
                                   f'scan:{scan}')[0], source_link
     raise ValueError('Unsupported/unknown USI')
+
 
 # Parse MOTIFDB from ms2lda.org.
 def _parse_motifdb(usi):

@@ -8,8 +8,8 @@ from usi_test_cases import test_usi_list
 
 def test_uri_parse():
     for usi in test_usi_list:
-        print("TESTING USI", usi)
-        spectrum_object, source_link = parsing.parse_usi(usi)
+        print(f'TESTING USI {usi}')
+        parsing.parse_usi(usi)
 
 
 def test_render_mirror():
