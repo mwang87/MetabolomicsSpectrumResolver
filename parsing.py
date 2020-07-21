@@ -34,7 +34,7 @@ usi_pattern = re.compile(
 # OR: Metabolomics USIs.
 usi_pattern_draft = re.compile(
     # mzdraft preamble
-    '^mzspec'
+    '^(?:mzspec|mzdraft)'
     # collection identifier
     # Unofficial proteomics spectral library identifier: MASSIVEKB
     # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB
