@@ -8,6 +8,7 @@ from usi_test_cases import test_usi_list
 
 def test_uri_parse():
     for usi in test_usi_list:
+        print(f'TESTING USI {usi}')
         parsing.parse_usi(usi)
 
 
@@ -17,8 +18,9 @@ def test_render_mirror():
     plotting_params['mz_max'] = 250
     plotting_params['max_intensity'] = plotting_params['max_intensity_labeled']
     views._generate_mirror_figure(
-        'mzdata:MASSBANK:BSU00002', 'mzdata:MASSBANK:BSU00002', 'png',
-        **plotting_params)
+        'mzspec:MASSBANK::accession:BSU00002',
+        'mzspec:MASSBANK::accession:BSU00002',
+        'png', **plotting_params)
 
 
 def test_render_single_plot():
@@ -27,8 +29,7 @@ def test_render_single_plot():
     plotting_params['mz_max'] = 250
     plotting_params['max_intensity'] = plotting_params['max_intensity_labeled']
     views._generate_figure(
-        'mzdata:MASSBANK:BSU00002', 'png',
-        **plotting_params)
+        'mzspec:MASSBANK::accession:BSU00002', 'png', **plotting_params)
 
 
 def test_render_single_plot_annotated():
@@ -39,5 +40,4 @@ def test_render_single_plot_annotated():
         [75.0225, 93.0575, 128.0275, 139.0075], [])
     plotting_params['max_intensity'] = plotting_params['max_intensity_labeled']
     views._generate_figure(
-        'mzspec:MS2LDATASK-190:document:270684', 'png',
-        **plotting_params)
+        'mzspec:MS2LDA:TASK-190:accession:270684', 'png', **plotting_params)
