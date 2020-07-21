@@ -20,7 +20,7 @@ Supported USI Types:
 ![](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/production-integration/badge.svg)
 
 > :warning: These identifiers are based on draft USI and draft Metabolomics USI identifiers. 
-        Thus, they are subject to change, and so for the moment, they will be include in the first block as mzspec instead of mzspec. 
+        Thus, they are subject to change, and so for the moment, they will be specified as `mzdraft` instead of `mzspec` in the first block. 
         Thank you for your patience and working with us!
 
 ## Example USI URLs
