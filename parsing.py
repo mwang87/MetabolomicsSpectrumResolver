@@ -114,18 +114,16 @@ def _parse_gnps_task(usi):
                        f'file=FILE->{filename}&scan={scan}&peptide=*..*&'
                        f'force=false&_=1561457932129&format=JSON')
         spectrum_dict = requests.get(request_url).json()
-        mz, intensity =  zip(*spectrum_dict['peaks'])
-        source_link = f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task={task}'
-        precursor_mz = 0
-        charge = 1
-        
-        try:
-            precursor_mz = spectrum_dict['precursor']['mz']
-            charge = spectrum_dict['precursor']['charge']
-        except:
-            pass
-        
-        return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link
+        mz, intensity = zip(*spectrum_dict['peaks'])
+        source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?'
+                       f'task={task}')
+        if 'precursor' in spectrum_dict:
+            precursor_mz = float(spectrum_dict['precursor'].get('mz', 0))
+            charge = int(spectrum_dict['precursor'].get('charge', 1))
+        else:
+            precursor_mz, charge = 0, 1
+        return (sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity),
+                source_link)
     except requests.exceptions.HTTPError:
         raise ValueError('Unknown GNPS task USI')
     
