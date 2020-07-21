@@ -81,13 +81,9 @@ def parse_usi(usi):
             return _parse_motifdb(usi)
         else:
             raise ValueError(f'Unknown USI collection: {collection}')
-    except Exception as e:
-        # Lets try to parse the legacy
-        try:
-            return parsing_legacy.parse_usi_legacy(usi)
-        except:
-            print("XXX")
-            raise e
+    except ValueError:
+        # Lets try to parse the legacy.
+        return parsing_legacy.parse_usi_legacy(usi)
 
 
 # Parse GNPS tasks or library spectra.
