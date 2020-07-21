@@ -57,7 +57,7 @@ def _match_usi(usi):
     if match is None:
         match = usi_pattern_draft.match(usi)
     if match is None:
-        raise ValueError('Incorrectly formatted USI')
+        raise ValueError(f'Incorrectly formatted USI: {usi}')
     return match
 
 
@@ -65,8 +65,11 @@ def _match_usi(usi):
 def parse_usi(usi):
     try:
         match = _match_usi(usi)
-    except ValueError:
-        return parsing_legacy.parse_usi_legacy(usi)
+    except ValueError as e:
+        try:
+            return parsing_legacy.parse_usi_legacy(usi)
+        except ValueError:
+            raise e
     collection = match.group(1).lower()
     # Send all proteomics USIs to MassIVE.
     if (collection.startswith('msv') or
