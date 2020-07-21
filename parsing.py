@@ -152,6 +152,8 @@ def _parse_gnps_library(usi):
         lookup_request = requests.get(request_url)
         lookup_request.raise_for_status()
         spectrum_dict = lookup_request.json()
+        if spectrum_dict['spectruminfo']['peaks_json'] == 'null':
+            raise ValueError('Unknown GNPS library USI')
         mz, intensity = zip(*json.loads(
             spectrum_dict['spectruminfo']['peaks_json']))
         source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/'
