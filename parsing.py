@@ -65,24 +65,24 @@ def _match_usi(usi):
 def parse_usi(usi):
     try:
         match = _match_usi(usi)
-        collection = match.group(1)
+        collection = match.group(1).lower()
         # Send all proteomics USIs to MassIVE.
-        if (collection.startswith('MSV') or
-                collection.startswith('PXD') or
-                collection.startswith('PXL') or
-                collection.startswith('RPXD') or
-                collection == 'MASSIVEKB'):
+        if (collection.startswith('msv') or
+                collection.startswith('pxd') or
+                collection.startswith('pxl') or
+                collection.startswith('rpxd') or
+                collection == 'massivekb'):
             return _parse_msv_pxd(usi)
-        elif collection == 'GNPS':
+        elif collection == 'gnps':
             return _parse_gnps(usi)
-        elif collection == 'MASSBANK':
+        elif collection == 'massbank':
             return _parse_massbank(usi)
-        elif collection == 'MS2LDA':
+        elif collection == 'ms2lda':
             return _parse_ms2lda(usi)
-        elif collection == 'MOTIFDB':
+        elif collection == 'motifdb':
             return _parse_motifdb(usi)
         else:
-            raise ValueError(f'Unknown USI collection: {collection}')
+            raise ValueError(f'Unknown USI collection: {match.group(1)}')
     except ValueError:
         # Lets try to parse the legacy.
         return parsing_legacy.parse_usi_legacy(usi)
