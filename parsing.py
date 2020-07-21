@@ -107,6 +107,8 @@ def _parse_gnps(usi):
 def _parse_gnps_task(usi):
     match = _match_usi(usi)
     gnps_task_match = gnps_task_pattern.match(match.group(2))
+    if gnps_task_match is None:
+        raise ValueError('Incorrectly formatted GNPS task')
     task = gnps_task_match.group(1)
     filename = gnps_task_match.group(2)
     index_flag = match.group(3).lower()
@@ -119,18 +121,20 @@ def _parse_gnps_task(usi):
                        f'task={task}&invoke=annotatedSpectrumImageText&block=0'
                        f'&file=FILE->{filename}&scan={scan}&peptide=*..*&'
                        f'force=false&_=1561457932129&format=JSON')
-        spectrum_dict = requests.get(request_url).json()
+        lookup_request = requests.get(request_url)
+        lookup_request.raise_for_status()
+        spectrum_dict = lookup_request.json()
         mz, intensity = zip(*spectrum_dict['peaks'])
         source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/status.jsp?'
                        f'task={task}')
         if 'precursor' in spectrum_dict:
             precursor_mz = float(spectrum_dict['precursor'].get('mz', 0))
-            charge = int(spectrum_dict['precursor'].get('charge', 1))
+            charge = int(spectrum_dict['precursor'].get('charge', 0))
         else:
             precursor_mz, charge = 0, 1
         return (sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity),
                 source_link)
-    except requests.exceptions.HTTPError:
+    except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
         raise ValueError('Unknown GNPS task USI')
 
 
@@ -242,7 +246,7 @@ def _parse_msv_pxd(usi):
             mz, intensity = zip(*spectrum_dict['peaks'])
             if 'precursor' in spectrum_dict:
                 precursor_mz = float(spectrum_dict['precursor'].get('mz', 0))
-                charge = int(spectrum_dict['precursor'].get('charge', 1))
+                charge = int(spectrum_dict['precursor'].get('charge', 0))
             else:
                 precursor_mz, charge = 0, 1
             if dataset_identifier.startswith('PXD'):
