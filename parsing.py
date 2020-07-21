@@ -96,8 +96,8 @@ def parse_usi(usi):
 # Parse GNPS tasks or library spectra.
 def _parse_gnps(usi):
     match = _match_usi(usi)
-    ms_run = match.group(2).lower()
-    if ms_run.startswith('task'):
+    ms_run = match.group(2)
+    if ms_run.lower().startswith('task'):
         return _parse_gnps_task(usi)
     else:
         return _parse_gnps_library(usi)
@@ -111,8 +111,8 @@ def _parse_gnps_task(usi):
         raise ValueError('Incorrectly formatted GNPS task')
     task = gnps_task_match.group(1)
     filename = gnps_task_match.group(2)
-    index_flag = match.group(3).lower()
-    if index_flag != 'scan':
+    index_flag = match.group(3)
+    if index_flag.lower() != 'scan':
         raise ValueError('Currently supported GNPS TASK index flags: scan')
     scan = match.group(4)
 
@@ -131,7 +131,7 @@ def _parse_gnps_task(usi):
             precursor_mz = float(spectrum_dict['precursor'].get('mz', 0))
             charge = int(spectrum_dict['precursor'].get('charge', 0))
         else:
-            precursor_mz, charge = 0, 1
+            precursor_mz, charge = 0, 0
         return (sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity),
                 source_link)
     except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
@@ -141,8 +141,8 @@ def _parse_gnps_task(usi):
 # Parse GNPS library.
 def _parse_gnps_library(usi):
     match = _match_usi(usi)
-    index_flag = match.group(3).lower()
-    if index_flag != 'accession':
+    index_flag = match.group(3)
+    if index_flag.lower() != 'accession':
         raise ValueError('Currently supported GNPS library index flags: '
                          'accession')
     index = match.group(4)
@@ -170,8 +170,8 @@ def _parse_gnps_library(usi):
 # Parse MassBank entry.
 def _parse_massbank(usi):
     match = _match_usi(usi)
-    index_flag = match.group(3).lower()
-    if index_flag != 'accession':
+    index_flag = match.group(3)
+    if index_flag.lower() != 'accession':
         raise ValueError('Currently supported MassBank index flags: accession')
     index = match.group(4)
     try:
@@ -203,8 +203,8 @@ def _parse_ms2lda(usi):
     if ms2lda_task_match is None:
         raise ValueError('Incorrectly formatted MS2LDA task')
     experiment_id = ms2lda_task_match.group(1)
-    index_flag = match.group(3).lower()
-    if index_flag != 'accession':
+    index_flag = match.group(3)
+    if index_flag.lower() != 'accession':
         raise ValueError('Currently supported MS2LDA index flags: accession')
     index = match.group(4)
     try:
@@ -225,52 +225,61 @@ def _parse_ms2lda(usi):
 
 # Parse MSV or PXD library.
 def _parse_msv_pxd(usi):
-    tokens = usi.split(':')
-    dataset_identifier = tokens[1]
-    filename = tokens[2]
-    scan = tokens[4]
-    lookup_url = (f'https://massive.ucsd.edu/ProteoSAFe/QuerySpectrum?'
-                  f'id=mzspec:{dataset_identifier}:{filename}:scan:{scan}')
-    usi_resolvable = False
-    for spectrum_file in requests.get(lookup_url).json()['row_data']:
-        usi_resolvable = any(
-            spectrum_file['file_descriptor'].lower().endswith(extension)
-            for extension in ['mzml', 'mzxml', 'mgf'])
-        if usi_resolvable:
-            request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/'
-                           f'DownloadResultFile?'
-                           f'task=4f2ac74ea114401787a7e96e143bb4a1&'
-                           f'invoke=annotatedSpectrumImageText&block=0&'
-                           f'file=FILE->{spectrum_file["file_descriptor"]}'
-                           f'&scan={scan}&peptide=*..*&force=false&'
-                           f'format=JSON&uploadfile=True')
-            spectrum_dict = requests.get(request_url).json()
-            mz, intensity = zip(*spectrum_dict['peaks'])
-            if 'precursor' in spectrum_dict:
-                precursor_mz = float(spectrum_dict['precursor'].get('mz', 0))
-                charge = int(spectrum_dict['precursor'].get('charge', 0))
-            else:
-                precursor_mz, charge = 0, 1
-            if dataset_identifier.startswith('PXD'):
-                source_link = (
-                    f'http://proteomecentral.proteomexchange.org/'
-                    f'cgi/GetDataset?ID={dataset_identifier}')
-            else:
-                source_link = (f'https://massive.ucsd.edu/ProteoSAFe/'
-                               f'QueryMSV?id={dataset_identifier}')
+    match = _match_usi(usi)
+    dataset_identifier = match.group(1)
+    index_flag = match.group(3)
+    if index_flag.lower() != 'scan':
+        raise ValueError('Currently supported MassIVE index flags: scan')
+    scan = match.group(4)
+    try:
+        lookup_url = (f'https://massive.ucsd.edu/ProteoSAFe/QuerySpectrum?'
+                      f'id={usi}')
+        lookup_request = requests.get(lookup_url)
+        lookup_request.raise_for_status()
+        for spectrum_file in lookup_request.json()['row_data']:
+            if any(spectrum_file['file_descriptor'].lower().endswith(extension)
+                   for extension in ['mzml', 'mzxml', 'mgf']):
+                request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/'
+                               f'DownloadResultFile?'
+                               f'task=4f2ac74ea114401787a7e96e143bb4a1&'
+                               f'invoke=annotatedSpectrumImageText&block=0&'
+                               f'file=FILE->{spectrum_file["file_descriptor"]}'
+                               f'&scan={scan}&peptide=*..*&force=false&'
+                               f'format=JSON&uploadfile=True')
+                try:
+                    spectrum_request = requests.get(request_url)
+                    spectrum_request.raise_for_status()
+                    spectrum_dict = spectrum_request.json()
+                except (requests.exceptions.HTTPError,
+                        json.decoder.JSONDecodeError):
+                    continue
+                mz, intensity = zip(*spectrum_dict['peaks'])
+                if 'precursor' in spectrum_dict:
+                    precursor_mz = float(
+                        spectrum_dict['precursor'].get('mz', 0))
+                    charge = int(spectrum_dict['precursor'].get('charge', 0))
+                else:
+                    precursor_mz, charge = 0, 0
+                if dataset_identifier.lower().startswith('pxd'):
+                    source_link = (
+                        f'http://proteomecentral.proteomexchange.org/'
+                        f'cgi/GetDataset?ID={dataset_identifier}')
+                else:
+                    source_link = (f'https://massive.ucsd.edu/ProteoSAFe/'
+                                   f'QueryMSV?id={dataset_identifier}')
 
-            return sus.MsmsSpectrum(usi, precursor_mz, charge, mz,
-                                    intensity), source_link
-    if usi_resolvable:
-        raise ValueError('Cannot resolve USI')
+                return sus.MsmsSpectrum(usi, precursor_mz, charge, mz,
+                                        intensity), source_link
+    except requests.exceptions.HTTPError:
+        pass
     raise ValueError('Unsupported/unknown USI')
 
 
 # Parse MOTIFDB from ms2lda.org.
 def _parse_motifdb(usi):
     match = _match_usi(usi)
-    index_flag = match.group(3).lower()
-    if index_flag != 'accession':
+    index_flag = match.group(3)
+    if index_flag.lower() != 'accession':
         raise ValueError('Currently supported MOTIFDB index flags: accession')
     index = match.group(4)
     try:
