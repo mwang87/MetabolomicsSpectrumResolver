@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:latest
+FROM continuumio/miniconda3:4.8.2
 MAINTAINER Mingxun Wang "mwang87@gmail.com"
 
 WORKDIR /app

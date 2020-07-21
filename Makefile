@@ -39,3 +39,7 @@ server-compose-production:
 
 attach:
 	docker exec -i -t metabolomicsusi-web /bin/bash
+
+# Github Testing with Act
+test-actions-unit:
+	act -j unit-test -P ubuntu-latest=nektos/act-environments-ubuntu:18.04 -b

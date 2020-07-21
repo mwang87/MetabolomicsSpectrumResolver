@@ -1,9 +1,11 @@
 name: unittest
 
-on: [push]
+on: 
+  - push
+  - pull_request
 
 jobs:
-  build:
+  unit-test:
 
     runs-on: ubuntu-latest
     strategy:

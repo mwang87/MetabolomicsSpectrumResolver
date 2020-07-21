@@ -508,6 +508,6 @@ def generate_qr():
     return flask.send_file(qr_bytes, 'image/png')
 
 
-@app.errorhandler(500)
+@app.errorhandler(Exception)
 def internal_error(error):
     return flask.render_template('500.html', error=error), 500
