@@ -91,8 +91,8 @@ def parse_usi(usi):
 # Parse GNPS tasks or library spectra.
 def _parse_gnps(usi):
     match = _match_usi(usi)
-    ms_run = match.group(2)
-    if ms_run.startswith('TASK'):
+    ms_run = match.group(2).lower()
+    if ms_run.startswith('task'):
         return _parse_gnps_task(usi)
     else:
         return _parse_gnps_library(usi)
@@ -104,7 +104,7 @@ def _parse_gnps_task(usi):
     gnps_task_match = gnps_task_pattern.match(match.group(2))
     task = gnps_task_match.group(1)
     filename = gnps_task_match.group(2)
-    index_flag = match.group(3)
+    index_flag = match.group(3).lower()
     if index_flag != 'scan':
         raise ValueError('Currently supported GNPS TASK index flags: scan')
     scan = match.group(4)
@@ -132,7 +132,7 @@ def _parse_gnps_task(usi):
 # Parse GNPS library.
 def _parse_gnps_library(usi):
     match = _match_usi(usi)
-    index_flag = match.group(3)
+    index_flag = match.group(3).lower()
     if index_flag != 'accession':
         raise ValueError('Currently supported GNPS library index flags: '
                          'accession')
@@ -159,7 +159,7 @@ def _parse_gnps_library(usi):
 # Parse MassBank entry.
 def _parse_massbank(usi):
     match = _match_usi(usi)
-    index_flag = match.group(3)
+    index_flag = match.group(3).lower()
     if index_flag != 'accession':
         raise ValueError('Currently supported MassBank index flags: accession')
     index = match.group(4)
@@ -190,7 +190,7 @@ def _parse_ms2lda(usi):
     match = _match_usi(usi)
     ms2lda_task_match = ms2lda_task_pattern.match(match.group(2))
     experiment_id = ms2lda_task_match.group(1)
-    index_flag = match.group(3)
+    index_flag = match.group(3).lower()
     if index_flag != 'accession':
         raise ValueError('Currently supported MS2LDA index flags: accession')
     index = match.group(4)
@@ -287,7 +287,7 @@ def _parse_metabolomics_workbench(usi):
 # Parse MOTIFDB from ms2lda.org.
 def _parse_motifdb(usi):
     match = _match_usi(usi)
-    index_flag = match.group(3)
+    index_flag = match.group(3).lower()
     if index_flag != 'accession':
         raise ValueError('Currently supported MOTIFDB index flags: accession')
     index = match.group(4)
