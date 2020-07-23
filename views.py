@@ -465,14 +465,17 @@ def _get_plotting_args(request, mirror=False):
 
 @blueprint.route('/json/')
 def peak_json():
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
-    # Return for JSON includes, peaks, n_peaks, and precursor_mz.
-    spectrum_dict = {
-        'peaks': _get_peaks(spectrum),
-        'n_peaks': len(spectrum.mz),
-        'precursor_mz': spectrum.precursor_mz,
-    }
-    return flask.jsonify(spectrum_dict)
+    try:
+        spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+        # Return for JSON includes, peaks, n_peaks, and precursor_mz.
+        result_dict = {
+            'peaks': _get_peaks(spectrum),
+            'n_peaks': len(spectrum.mz),
+            'precursor_mz': spectrum.precursor_mz}
+    except ValueError as e:
+        result_dict = {'error': {'code': 404,
+                                 'message': str(e)}}
+    return flask.jsonify(result_dict)
 
 
 @blueprint.route('/api/proxi/v0.1/spectra')
