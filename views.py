@@ -3,70 +3,77 @@ import csv
 import gc
 import io
 import json
-import os
-import uuid
+from typing import List, Tuple
 
 import flask
+import matplotlib
 import matplotlib.pyplot as plt
 import numba as nb
 import numpy as np
 import qrcode
 import requests_cache
-from spectrum_utils import plot as sup
-from spectrum_utils import spectrum as sus
+from spectrum_utils import plot as sup, spectrum as sus
 
 import parsing
-from app import app
 
+matplotlib.use('Agg')
 
 requests_cache.install_cache('demo_cache', expire_after=300)
 
 USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
 
-default_plotting_args = {'width': 10,
-                         'height': 6,
-                         'max_intensity_unlabeled': 1.05,
-                         'max_intensity_labeled': 1.25,
-                         'max_intensity_mirror_labeled': 1.50,
-                         'grid': True,
-                         # List of peaks to annotate in the top/bottom
-                         # spectrum.
-                         'annotate_peaks': [True, True],
-                         'annotate_threshold': 0.1,
-                         'annotate_precision': 4,
-                         'annotation_rotation': 90}
+default_plotting_args = {
+    'width': 10,
+    'height': 6,
+    'max_intensity_unlabeled': 1.05,
+    'max_intensity_labeled': 1.25,
+    'max_intensity_mirror_labeled': 1.50,
+    'grid': True,
+    # List of peaks to annotate in the top/bottom
+    # spectrum.
+    'annotate_peaks': [True, True],
+    'annotate_threshold': 0.1,
+    'annotate_precision': 4,
+    'annotation_rotation': 90,
+}
+
+blueprint = flask.Blueprint('ui', __name__)
 
 
-@app.route('/', methods=['GET'])
+@blueprint.route('/', methods=['GET'])
 def render_homepage():
     return flask.render_template('homepage.html')
 
 
-@app.route('/contributors', methods=['GET'])
+@blueprint.route('/contributors', methods=['GET'])
 def render_contributors():
     return flask.render_template('contributors.html')
 
 
-@app.route('/heartbeat', methods=['GET'])
+@blueprint.route('/heartbeat', methods=['GET'])
 def render_heartbeat():
     return json.dumps({'status': 'success'})
 
 
-@app.route('/spectrum/', methods=['GET'])
+@blueprint.route('/spectrum/', methods=['GET'])
 def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
     return flask.render_template(
-        'spectrum.html', usi=flask.request.args.get('usi'),
+        'spectrum.html',
+        usi=flask.request.args.get('usi'),
         source_link=source_link,
-        peaks=[[(float(mz), float(intensity))
-                for mz, intensity in zip(spectrum.mz, spectrum.intensity)]],
-        annotations=[_generate_labels(
-            spectrum, default_plotting_args['annotate_threshold'])])
+        peaks=[
+            _get_peaks(spectrum),
+        ],
+        annotations=[
+            _generate_labels(spectrum),
+        ],
+    )
 
 
-@app.route('/mirror/', methods=['GET'])
+@blueprint.route('/mirror/', methods=['GET'])
 def render_mirror_spectrum():
     spectrum1, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
     spectrum1 = copy.deepcopy(spectrum1)
@@ -78,61 +85,64 @@ def render_mirror_spectrum():
         'mirror.html',
         usi1=flask.request.args.get('usi1'),
         usi2=flask.request.args.get('usi2'),
-        source_link1=source1, source_link2=source2,
-        peaks=[[(float(mz), float(intensity))
-                for mz, intensity in zip(spectrum1.mz, spectrum1.intensity)],
-               [(float(mz), float(intensity))
-                for mz, intensity in zip(spectrum2.mz, spectrum2.intensity)]],
+        source_link1=source1,
+        source_link2=source2,
+        peaks=[
+            _get_peaks(spectrum1),
+            _get_peaks(spectrum2),
+        ],
         annotations=[
-            _generate_labels(
-                spectrum1, default_plotting_args['annotate_threshold']),
-            _generate_labels(
-                spectrum2, default_plotting_args['annotate_threshold'])])
+            _generate_labels(spectrum1),
+            _generate_labels(spectrum2),
+        ],
+    )
 
 
-@app.route('/png/')
+@blueprint.route('/png/')
 def generate_png():
     usi = flask.request.args.get('usi')
     plotting_args = _get_plotting_args(flask.request)
-    output_filename = _generate_figure(usi, 'png', **plotting_args)
-    return flask.send_file(output_filename, mimetype='image/png')
+    buf = _generate_figure(usi, 'png', **plotting_args)
+    return flask.send_file(buf, mimetype='image/png')
 
 
-@app.route('/png/mirror/')
+@blueprint.route('/png/mirror/')
 def generate_mirror_png():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
     plot_pars = _get_plotting_args(flask.request, mirror=True)
-    output_filename = _generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
-    return flask.send_file(output_filename, mimetype='image/png')
+    buf = _generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
+    return flask.send_file(buf, mimetype='image/png')
 
 
-@app.route('/svg/')
+@blueprint.route('/svg/')
 def generate_svg():
     usi = flask.request.args.get('usi')
     plot_pars = _get_plotting_args(flask.request)
-    output_filename = _generate_figure(usi, 'svg', **plot_pars)
-    return flask.send_file(output_filename, mimetype='image/svg+xml')
+    buf = _generate_figure(usi, 'svg', **plot_pars)
+    return flask.send_file(buf, mimetype='image/svg+xml')
 
 
-@app.route('/svg/mirror/')
+@blueprint.route('/svg/mirror/')
 def generate_mirror_svg():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
     plot_pars = _get_plotting_args(flask.request, mirror=True)
-    output_filename = _generate_mirror_figure(usi1, usi2, 'svg', **plot_pars)
-    return flask.send_file(output_filename, mimetype='image/svg+xml')
+    buf = _generate_mirror_figure(usi1, usi2, 'svg', **plot_pars)
+    return flask.send_file(buf, mimetype='image/svg+xml')
 
 
-def _generate_figure(usi, extension, **kwargs):
+def _generate_figure(usi: str, extension: str, **kwargs) -> io.BytesIO:
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     kwargs['annotate_peaks'] = kwargs['annotate_peaks'][0]
     spectrum = _prepare_spectrum(usi, **kwargs)
     sup.spectrum(
-        spectrum, annotate_ions=kwargs['annotate_peaks'],
+        spectrum,
+        annotate_ions=kwargs['annotate_peaks'],
         annot_kws={'rotation': kwargs['annotation_rotation'], 'clip_on': True},
-        grid=kwargs['grid'], ax=ax)
+        grid=kwargs['grid'], ax=ax,
+    )
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
     ax.set_ylim(0, kwargs['max_intensity'])
@@ -156,17 +166,17 @@ def _generate_figure(usi, extension, **kwargs):
                        transform=ax.transAxes)
     subtitle.set_url(f'{USI_SERVER}spectrum/?usi={usi}')
 
-    output_filename = os.path.join(
-        app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
-    plt.savefig(output_filename, bbox_inches='tight')
+    buf = io.BytesIO()
+    plt.savefig(buf, bbox_inches='tight', format=extension)
+    buf.seek(0)
     fig.clear()
     plt.close(fig)
     gc.collect()
 
-    return output_filename
+    return buf
 
 
-def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
+def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) -> io.BytesIO:
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     annotate_peaks = kwargs['annotate_peaks']
@@ -175,7 +185,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     kwargs['annotate_peaks'] = annotate_peaks[1]
     spectrum_bottom = _prepare_spectrum(usi2, **kwargs)
 
-    fragment_mz_tolerance = 0.02    # TODO: Configurable?
+    fragment_mz_tolerance = 0.02  # TODO: Configurable?
 
     if spectrum_top.annotation is None:
         spectrum_top.annotation = np.full_like(
@@ -206,10 +216,14 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     sup.colors['unmatched'] = 'darkgray'
 
     sup.mirror(spectrum_top, spectrum_bottom,
-               {'annotate_ions': kwargs['annotate_peaks'],
-                'annot_kws': {'rotation': kwargs['annotation_rotation'],
-                              'clip_on': True},
-                'grid': kwargs['grid']}, ax=ax)
+               {
+                   'annotate_ions': kwargs['annotate_peaks'],
+                   'annot_kws': {
+                       'rotation': kwargs['annotation_rotation'],
+                       'clip_on': True
+                   },
+                   'grid': kwargs['grid']
+               }, ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
     ax.set_ylim(-kwargs['max_intensity'], kwargs['max_intensity'])
@@ -253,14 +267,14 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
             verticalalignment='bottom', fontsize='large',
             fontweight='bold', transform=ax.transAxes)
 
-    output_filename = os.path.join(
-        app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
-    plt.savefig(output_filename, bbox_inches='tight')
+    buf = io.BytesIO()
+    plt.savefig(buf, bbox_inches='tight', format=extension)
+    buf.seek(0)
     fig.clear()
     plt.close(fig)
     gc.collect()
 
-    return output_filename
+    return buf
 
 
 def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
@@ -342,10 +356,10 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
         peak_match_idx_arr = np.asarray(peak_match_idx)[peak_match_order]
         peaks_used, peaks_used_other = set(), set()
         for peak_match_score, peak_i, peak_other_i in zip(
-                peak_match_scores_arr, peak_match_idx_arr[:, 0],
-                peak_match_idx_arr[:, 1]):
+            peak_match_scores_arr, peak_match_idx_arr[:, 0],
+            peak_match_idx_arr[:, 1]):
             if (peak_i not in peaks_used and
-                    peak_other_i not in peaks_used_other):
+                peak_other_i not in peaks_used_other):
                 score += peak_match_score
                 # Make sure these peaks are not used anymore.
                 peaks_used.add(peak_i)
@@ -354,15 +368,14 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
     return score
 
 
-def _prepare_spectrum(usi, **kwargs):
+def _prepare_spectrum(usi: str, **kwargs) -> sus.MsmsSpectrum:
     spectrum, _ = parsing.parse_usi(usi)
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
 
     if kwargs['annotate_peaks']:
         if kwargs['annotate_peaks'] is True:
-            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
-                spectrum, default_plotting_args['annotate_threshold'])]
+            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(spectrum)]
         for mz in kwargs['annotate_peaks']:
             t = f'{mz:.{kwargs["annotate_precision"]}f}'
             spectrum.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=t)
@@ -373,7 +386,16 @@ def _prepare_spectrum(usi, **kwargs):
     return spectrum
 
 
-def _generate_labels(spec, intensity_threshold):
+def _get_peaks(spectrum: sus.MsmsSpectrum) -> List[Tuple[float, float]]:
+    return [
+        (float(mz), float(intensity))
+        for mz, intensity in zip(spectrum.mz, spectrum.intensity)
+    ]
+
+
+def _generate_labels(spec, intensity_threshold=None):
+    if intensity_threshold is None:
+        intensity_threshold = default_plotting_args['annotate_threshold']
     mz_exclusion_window = (spec.mz[-1] - spec.mz[0]) / 20  # Max 20 labels.
 
     # Annotate peaks in decreasing intensity order.
@@ -381,11 +403,11 @@ def _generate_labels(spec, intensity_threshold):
     for i, mz, intensity in zip(order, spec.mz[order], spec.intensity[order]):
         if intensity < intensity_threshold:
             break
-        else:
-            if not any([abs(mz - spec.mz[already_labeled_i])
-                        <= mz_exclusion_window
-                        for already_labeled_i in labeled_i]):
-                labeled_i.append(i)
+        if not any(
+            abs(mz - spec.mz[already_labeled_i]) <= mz_exclusion_window
+            for already_labeled_i in labeled_i
+        ):
+            labeled_i.append(i)
 
     return labeled_i
 
@@ -441,18 +463,19 @@ def _get_plotting_args(request, mirror=False):
     return plotting_args
 
 
-@app.route('/json/')
+@blueprint.route('/json/')
 def peak_json():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     # Return for JSON includes, peaks, n_peaks, and precursor_mz.
-    spectrum_dict = {'peaks': [(float(mz), float(intensity)) for mz, intensity
-                               in zip(spectrum.mz, spectrum.intensity)],
-                     'n_peaks': len(spectrum.mz),
-                     'precursor_mz': spectrum.precursor_mz}
+    spectrum_dict = {
+        'peaks': _get_peaks(spectrum),
+        'n_peaks': len(spectrum.mz),
+        'precursor_mz': spectrum.precursor_mz,
+    }
     return flask.jsonify(spectrum_dict)
 
 
-@app.route('/api/proxi/v0.1/spectra')
+@blueprint.route('/api/proxi/v0.1/spectra')
 def peak_proxi_json():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
 
@@ -476,7 +499,7 @@ def peak_proxi_json():
     return flask.jsonify([spectrum_dict])
 
 
-@app.route('/csv/')
+@blueprint.route('/csv/')
 def peak_csv():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     csv_str = io.StringIO()
@@ -491,7 +514,7 @@ def peak_csv():
                            attachment_filename=f'{spectrum.identifier}.csv')
 
 
-@app.route('/qrcode/')
+@blueprint.route('/qrcode/')
 def generate_qr():
     # QR Code Rendering.
     if flask.request.args.get('mirror') != 'true':
@@ -508,6 +531,6 @@ def generate_qr():
     return flask.send_file(qr_bytes, 'image/png')
 
 
-@app.errorhandler(Exception)
+@blueprint.errorhandler(Exception)
 def internal_error(error):
     return flask.render_template('500.html', error=error), 500
