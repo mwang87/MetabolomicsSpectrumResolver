@@ -1,9 +1,9 @@
 import functools
 import json
+from typing import Tuple
 
 import requests
 import spectrum_utils.spectrum as sus
-
 
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
@@ -11,7 +11,7 @@ MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
 
 
 @functools.lru_cache(100)
-def parse_usi_legacy(usi):
+def parse_usi_legacy(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     usi_identifier = usi.lower().split(':')[1]
     if usi_identifier.startswith('gnpstask'):
         return _parse_gnps_task(usi)
@@ -36,7 +36,7 @@ def parse_usi_legacy(usi):
 
 
 # Parse GNPS clustered spectra in Molecular Networking.
-def _parse_gnps_task(usi):
+def _parse_gnps_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     tokens = usi.split(':')
     task = tokens[1].split('-')[1]
     filename = tokens[2]
@@ -58,7 +58,7 @@ def _parse_gnps_task(usi):
 
 
 # Parse GNPS library.
-def _parse_gnps_library(usi):
+def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     tokens = usi.split(':')
     identifier = tokens[2]
     request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/SpectrumCommentServlet?'
@@ -74,7 +74,7 @@ def _parse_gnps_library(usi):
 
 
 # Parse MS2LDA from ms2lda.org.
-def _parse_ms2lda(usi):
+def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     tokens = usi.split(':')
     experiment_id = tokens[1].split('-')[1]
     document_id = tokens[3]
@@ -88,7 +88,7 @@ def _parse_ms2lda(usi):
 
 
 # Parse MSV or PXD library.
-def _parse_msv_pxd(usi):
+def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     tokens = usi.split(':')
     dataset_identifier = tokens[1]
     filename = tokens[2]
@@ -138,7 +138,7 @@ def _parse_msv_pxd(usi):
     raise ValueError('Unsupported/unknown USI')
 
 
-def _parse_mtbls(usi):
+def _parse_mtbls(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     tokens = usi.split(':')
     dataset_identifier = tokens[1]
     filename = tokens[2]
@@ -153,7 +153,7 @@ def _parse_mtbls(usi):
     raise ValueError('Unsupported/unknown USI')
 
 
-def _parse_metabolomics_workbench(usi):
+def _parse_metabolomics_workbench(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     tokens = usi.split(':')
     dataset_identifier = tokens[1]
     filename = tokens[2]
@@ -170,7 +170,7 @@ def _parse_metabolomics_workbench(usi):
 
 
 # Parse MOTIFDB from ms2lda.org.
-def _parse_motifdb(usi):
+def _parse_motifdb(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     # E.g. mzspec:MOTIFDB:motif:motif_id.
     tokens = usi.split(':')
     motif_id = tokens[3]
@@ -181,7 +181,7 @@ def _parse_motifdb(usi):
 
 
 # Parse MassBank entry.
-def _parse_massbank(usi):
+def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     # E.g. mzspec:MASSBANK:motif:motif_id.
     tokens = usi.split(':')
     massbank_id = tokens[2]
