@@ -14,7 +14,7 @@ import qrcode
 import requests_cache
 from spectrum_utils import plot as sup, spectrum as sus
 
-from metabolomics_spectrum_resolver import parsing
+import parsing
 
 matplotlib.use('Agg')
 
