@@ -1,6 +1,7 @@
 import functools
 import json
 import re
+from typing import Tuple
 
 import requests
 import spectrum_utils.spectrum as sus
@@ -54,7 +55,7 @@ gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$',
 ms2lda_task_pattern = re.compile('^TASK-(\d+)$', flags=re.IGNORECASE)
 
 
-def _match_usi(usi):
+def _match_usi(usi: str) -> re.Match:
     # First try matching as an official USI, then as a metabolomics draft USI.
     match = usi_pattern.match(usi)
     if match is None:
@@ -65,7 +66,7 @@ def _match_usi(usi):
 
 
 @functools.lru_cache(100)
-def parse_usi(usi):
+def parse_usi(usi: str) -> sus.MsmsSpectrum:
     try:
         match = _match_usi(usi)
     except ValueError as e:
@@ -75,11 +76,13 @@ def parse_usi(usi):
             raise e
     collection = match.group(1).lower()
     # Send all proteomics USIs to MassIVE.
-    if (collection.startswith('msv') or
-            collection.startswith('pxd') or
-            collection.startswith('pxl') or
-            collection.startswith('rpxd') or
-            collection == 'massivekb'):
+    if (
+        collection.startswith('msv') or
+        collection.startswith('pxd') or
+        collection.startswith('pxl') or
+        collection.startswith('rpxd') or
+        collection == 'massivekb'
+    ):
         return _parse_msv_pxd(usi)
     elif collection == 'gnps':
         return _parse_gnps(usi)
@@ -94,7 +97,7 @@ def parse_usi(usi):
 
 
 # Parse GNPS tasks or library spectra.
-def _parse_gnps(usi):
+def _parse_gnps(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     ms_run = match.group(2)
     if ms_run.lower().startswith('task'):
@@ -104,7 +107,7 @@ def _parse_gnps(usi):
 
 
 # Parse GNPS clustered spectra in Molecular Networking.
-def _parse_gnps_task(usi):
+def _parse_gnps_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     gnps_task_match = gnps_task_pattern.match(match.group(2))
     if gnps_task_match is None:
@@ -139,7 +142,7 @@ def _parse_gnps_task(usi):
 
 
 # Parse GNPS library.
-def _parse_gnps_library(usi):
+def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag.lower() != 'accession':
@@ -158,17 +161,20 @@ def _parse_gnps_library(usi):
             spectrum_dict['spectruminfo']['peaks_json']))
         source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/'
                        f'gnpslibraryspectrum.jsp?SpectrumID={index}')
-        return (
-            sus.MsmsSpectrum(
-                usi, float(spectrum_dict['annotations'][0]['Precursor_MZ']),
-                int(spectrum_dict['annotations'][0]['Charge']), mz, intensity),
-            source_link)
+        spectrum = sus.MsmsSpectrum(
+            usi,
+            float(spectrum_dict['annotations'][0]['Precursor_MZ']),
+            int(spectrum_dict['annotations'][0]['Charge']),
+            mz,
+            intensity,
+        )
+        return spectrum, source_link
     except requests.exceptions.HTTPError:
         raise ValueError('Unknown GNPS library USI')
 
 
 # Parse MassBank entry.
-def _parse_massbank(usi):
+def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag.lower() != 'accession':
@@ -197,7 +203,7 @@ def _parse_massbank(usi):
 
 
 # Parse MS2LDA from ms2lda.org.
-def _parse_ms2lda(usi):
+def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, None]:
     match = _match_usi(usi)
     ms2lda_task_match = ms2lda_task_pattern.match(match.group(2))
     if ms2lda_task_match is None:
@@ -224,7 +230,7 @@ def _parse_ms2lda(usi):
 
 
 # Parse MSV or PXD library.
-def _parse_msv_pxd(usi):
+def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     dataset_identifier = match.group(1)
     index_flag = match.group(3)
@@ -232,8 +238,7 @@ def _parse_msv_pxd(usi):
         raise ValueError('Currently supported MassIVE index flags: scan')
     scan = match.group(4)
     try:
-        lookup_url = (f'https://massive.ucsd.edu/ProteoSAFe/QuerySpectrum?'
-                      f'id={usi}')
+        lookup_url = f'https://massive.ucsd.edu/ProteoSAFe/QuerySpectrum?id={usi}'
         lookup_request = requests.get(lookup_url)
         lookup_request.raise_for_status()
         for spectrum_file in lookup_request.json()['row_data']:
@@ -276,7 +281,7 @@ def _parse_msv_pxd(usi):
 
 
 # Parse MOTIFDB from ms2lda.org.
-def _parse_motifdb(usi):
+def _parse_motifdb(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag.lower() != 'accession':

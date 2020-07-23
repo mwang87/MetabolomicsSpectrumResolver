@@ -12,29 +12,29 @@ import numba as nb
 import numpy as np
 import qrcode
 import requests_cache
-from spectrum_utils import plot as sup
-from spectrum_utils import spectrum as sus
+from spectrum_utils import plot as sup, spectrum as sus
 
 import parsing
 from app import app
-
 
 requests_cache.install_cache('demo_cache', expire_after=300)
 
 USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
 
-default_plotting_args = {'width': 10,
-                         'height': 6,
-                         'max_intensity_unlabeled': 1.05,
-                         'max_intensity_labeled': 1.25,
-                         'max_intensity_mirror_labeled': 1.50,
-                         'grid': True,
-                         # List of peaks to annotate in the top/bottom
-                         # spectrum.
-                         'annotate_peaks': [True, True],
-                         'annotate_threshold': 0.1,
-                         'annotate_precision': 4,
-                         'annotation_rotation': 90}
+default_plotting_args = {
+    'width': 10,
+    'height': 6,
+    'max_intensity_unlabeled': 1.05,
+    'max_intensity_labeled': 1.25,
+    'max_intensity_mirror_labeled': 1.50,
+    'grid': True,
+    # List of peaks to annotate in the top/bottom
+    # spectrum.
+    'annotate_peaks': [True, True],
+    'annotate_threshold': 0.1,
+    'annotate_precision': 4,
+    'annotation_rotation': 90
+}
 
 
 @app.route('/', methods=['GET'])
@@ -124,7 +124,7 @@ def generate_mirror_svg():
     return flask.send_file(output_filename, mimetype='image/svg+xml')
 
 
-def _generate_figure(usi, extension, **kwargs):
+def _generate_figure(usi: str, extension: str, **kwargs):
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     kwargs['annotate_peaks'] = kwargs['annotate_peaks'][0]
@@ -175,7 +175,7 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     kwargs['annotate_peaks'] = annotate_peaks[1]
     spectrum_bottom = _prepare_spectrum(usi2, **kwargs)
 
-    fragment_mz_tolerance = 0.02    # TODO: Configurable?
+    fragment_mz_tolerance = 0.02  # TODO: Configurable?
 
     if spectrum_top.annotation is None:
         spectrum_top.annotation = np.full_like(
@@ -206,10 +206,14 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
     sup.colors['unmatched'] = 'darkgray'
 
     sup.mirror(spectrum_top, spectrum_bottom,
-               {'annotate_ions': kwargs['annotate_peaks'],
-                'annot_kws': {'rotation': kwargs['annotation_rotation'],
-                              'clip_on': True},
-                'grid': kwargs['grid']}, ax=ax)
+               {
+                   'annotate_ions': kwargs['annotate_peaks'],
+                   'annot_kws': {
+                       'rotation': kwargs['annotation_rotation'],
+                       'clip_on': True
+                   },
+                   'grid': kwargs['grid']
+               }, ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
     ax.set_ylim(-kwargs['max_intensity'], kwargs['max_intensity'])
@@ -342,10 +346,10 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
         peak_match_idx_arr = np.asarray(peak_match_idx)[peak_match_order]
         peaks_used, peaks_used_other = set(), set()
         for peak_match_score, peak_i, peak_other_i in zip(
-                peak_match_scores_arr, peak_match_idx_arr[:, 0],
-                peak_match_idx_arr[:, 1]):
+            peak_match_scores_arr, peak_match_idx_arr[:, 0],
+            peak_match_idx_arr[:, 1]):
             if (peak_i not in peaks_used and
-                    peak_other_i not in peaks_used_other):
+                peak_other_i not in peaks_used_other):
                 score += peak_match_score
                 # Make sure these peaks are not used anymore.
                 peaks_used.add(peak_i)
@@ -354,7 +358,7 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
     return score
 
 
-def _prepare_spectrum(usi, **kwargs):
+def _prepare_spectrum(usi: str, **kwargs) -> sus.MsmsSpectrum:
     spectrum, _ = parsing.parse_usi(usi)
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
@@ -445,10 +449,12 @@ def _get_plotting_args(request, mirror=False):
 def peak_json():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     # Return for JSON includes, peaks, n_peaks, and precursor_mz.
-    spectrum_dict = {'peaks': [(float(mz), float(intensity)) for mz, intensity
-                               in zip(spectrum.mz, spectrum.intensity)],
-                     'n_peaks': len(spectrum.mz),
-                     'precursor_mz': spectrum.precursor_mz}
+    spectrum_dict = {
+        'peaks': [(float(mz), float(intensity)) for mz, intensity
+                  in zip(spectrum.mz, spectrum.intensity)],
+        'n_peaks': len(spectrum.mz),
+        'precursor_mz': spectrum.precursor_mz
+    }
     return flask.jsonify(spectrum_dict)
 
 
