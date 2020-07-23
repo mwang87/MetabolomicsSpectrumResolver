@@ -480,26 +480,29 @@ def peak_json():
 
 @blueprint.route('/api/proxi/v0.1/spectra')
 def peak_proxi_json():
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    try:
+        spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+        result_dict = {
+            'intensities': spectrum.intensity.tolist(),
+            'mzs': spectrum.mz.tolist(),
+            'attributes': [
+                {
+                    'accession': 'MS:1000744',
+                    'name': 'selected ion m/z',
+                    'value': float(spectrum.precursor_mz)
+                },
+                {
+                    'accession': 'MS:1000041',
+                    'name': 'charge state',
+                    'value': int(spectrum.precursor_charge)
+                }
+            ]
+        }
+    except ValueError as e:
+        result_dict = {'error': {'code': 404,
+                                 'message': str(e)}}
 
-    spectrum_dict = {
-        'intensities': [str(intensity) for intensity in spectrum.intensity],
-        'mzs': [str(mz) for mz in spectrum.mz],
-        'attributes': [
-            {
-                'accession': 'MS:1000744',
-                'name': 'selected ion m/z',
-                'value': str(spectrum.precursor_mz)
-            },
-            {
-                'accession': 'MS:1000041',
-                'name': 'precursor charge',
-                'value': str(spectrum.precursor_charge)
-            }
-        ]
-    }
-
-    return flask.jsonify([spectrum_dict])
+    return flask.jsonify([result_dict])
 
 
 @blueprint.route('/csv/')
