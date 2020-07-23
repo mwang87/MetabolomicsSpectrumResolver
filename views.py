@@ -176,7 +176,8 @@ def _generate_figure(usi: str, extension: str, **kwargs) -> io.BytesIO:
     return buf
 
 
-def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) -> io.BytesIO:
+def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
+        -> io.BytesIO:
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     annotate_peaks = kwargs['annotate_peaks']
@@ -356,10 +357,10 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
         peak_match_idx_arr = np.asarray(peak_match_idx)[peak_match_order]
         peaks_used, peaks_used_other = set(), set()
         for peak_match_score, peak_i, peak_other_i in zip(
-            peak_match_scores_arr, peak_match_idx_arr[:, 0],
-            peak_match_idx_arr[:, 1]):
+                peak_match_scores_arr, peak_match_idx_arr[:, 0],
+                peak_match_idx_arr[:, 1]):
             if (peak_i not in peaks_used and
-                peak_other_i not in peaks_used_other):
+                    peak_other_i not in peaks_used_other):
                 score += peak_match_score
                 # Make sure these peaks are not used anymore.
                 peaks_used.add(peak_i)
@@ -465,38 +466,44 @@ def _get_plotting_args(request, mirror=False):
 
 @blueprint.route('/json/')
 def peak_json():
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
-    # Return for JSON includes, peaks, n_peaks, and precursor_mz.
-    spectrum_dict = {
-        'peaks': _get_peaks(spectrum),
-        'n_peaks': len(spectrum.mz),
-        'precursor_mz': spectrum.precursor_mz,
-    }
-    return flask.jsonify(spectrum_dict)
+    try:
+        spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+        # Return for JSON includes, peaks, n_peaks, and precursor_mz.
+        result_dict = {
+            'peaks': _get_peaks(spectrum),
+            'n_peaks': len(spectrum.mz),
+            'precursor_mz': spectrum.precursor_mz}
+    except ValueError as e:
+        result_dict = {'error': {'code': 404,
+                                 'message': str(e)}}
+    return flask.jsonify(result_dict)
 
 
 @blueprint.route('/api/proxi/v0.1/spectra')
 def peak_proxi_json():
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    try:
+        spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+        result_dict = {
+            'intensities': spectrum.intensity.tolist(),
+            'mzs': spectrum.mz.tolist(),
+            'attributes': [
+                {
+                    'accession': 'MS:1000744',
+                    'name': 'selected ion m/z',
+                    'value': float(spectrum.precursor_mz)
+                },
+                {
+                    'accession': 'MS:1000041',
+                    'name': 'charge state',
+                    'value': int(spectrum.precursor_charge)
+                }
+            ]
+        }
+    except ValueError as e:
+        result_dict = {'error': {'code': 404,
+                                 'message': str(e)}}
 
-    spectrum_dict = {
-        'intensities': [str(intensity) for intensity in spectrum.intensity],
-        'mzs': [str(mz) for mz in spectrum.mz],
-        'attributes': [
-            {
-                'accession': 'MS:1000744',
-                'name': 'selected ion m/z',
-                'value': str(spectrum.precursor_mz)
-            },
-            {
-                'accession': 'MS:1000041',
-                'name': 'precursor charge',
-                'value': str(spectrum.precursor_charge)
-            }
-        ]
-    }
-
-    return flask.jsonify([spectrum_dict])
+    return flask.jsonify([result_dict])
 
 
 @blueprint.route('/csv/')
