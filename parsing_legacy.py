@@ -82,7 +82,7 @@ def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                    f'&document_id={document_id}')
     spectrum_dict = json.loads(requests.get(request_url).text)
     mz, intensity = zip(*spectrum_dict['peaks'])
-    source_link = None
+    source_link = 'None'
     return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 1, mz,
                             intensity), source_link
 
