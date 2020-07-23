@@ -14,8 +14,7 @@ import qrcode
 import requests_cache
 from spectrum_utils import plot as sup, spectrum as sus
 
-import parsing
-from app import app
+from metabolomics_spectrum_resolver import parsing
 
 matplotlib.use('Agg')
 
@@ -38,23 +37,25 @@ default_plotting_args = {
     'annotation_rotation': 90,
 }
 
+blueprint = flask.Blueprint('ui', __name__)
 
-@app.route('/', methods=['GET'])
+
+@blueprint.route('/', methods=['GET'])
 def render_homepage():
     return flask.render_template('homepage.html')
 
 
-@app.route('/contributors', methods=['GET'])
+@blueprint.route('/contributors', methods=['GET'])
 def render_contributors():
     return flask.render_template('contributors.html')
 
 
-@app.route('/heartbeat', methods=['GET'])
+@blueprint.route('/heartbeat', methods=['GET'])
 def render_heartbeat():
     return json.dumps({'status': 'success'})
 
 
-@app.route('/spectrum/', methods=['GET'])
+@blueprint.route('/spectrum/', methods=['GET'])
 def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     spectrum = copy.deepcopy(spectrum)
@@ -72,7 +73,7 @@ def render_spectrum():
     )
 
 
-@app.route('/mirror/', methods=['GET'])
+@blueprint.route('/mirror/', methods=['GET'])
 def render_mirror_spectrum():
     spectrum1, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
     spectrum1 = copy.deepcopy(spectrum1)
@@ -97,7 +98,7 @@ def render_mirror_spectrum():
     )
 
 
-@app.route('/png/')
+@blueprint.route('/png/')
 def generate_png():
     usi = flask.request.args.get('usi')
     plotting_args = _get_plotting_args(flask.request)
@@ -105,7 +106,7 @@ def generate_png():
     return flask.send_file(buf, mimetype='image/png')
 
 
-@app.route('/png/mirror/')
+@blueprint.route('/png/mirror/')
 def generate_mirror_png():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
@@ -114,7 +115,7 @@ def generate_mirror_png():
     return flask.send_file(buf, mimetype='image/png')
 
 
-@app.route('/svg/')
+@blueprint.route('/svg/')
 def generate_svg():
     usi = flask.request.args.get('usi')
     plot_pars = _get_plotting_args(flask.request)
@@ -122,7 +123,7 @@ def generate_svg():
     return flask.send_file(buf, mimetype='image/svg+xml')
 
 
-@app.route('/svg/mirror/')
+@blueprint.route('/svg/mirror/')
 def generate_mirror_svg():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
@@ -462,7 +463,7 @@ def _get_plotting_args(request, mirror=False):
     return plotting_args
 
 
-@app.route('/json/')
+@blueprint.route('/json/')
 def peak_json():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     # Return for JSON includes, peaks, n_peaks, and precursor_mz.
@@ -474,7 +475,7 @@ def peak_json():
     return flask.jsonify(spectrum_dict)
 
 
-@app.route('/api/proxi/v0.1/spectra')
+@blueprint.route('/api/proxi/v0.1/spectra')
 def peak_proxi_json():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
 
@@ -498,7 +499,7 @@ def peak_proxi_json():
     return flask.jsonify([spectrum_dict])
 
 
-@app.route('/csv/')
+@blueprint.route('/csv/')
 def peak_csv():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     csv_str = io.StringIO()
@@ -513,7 +514,7 @@ def peak_csv():
                            attachment_filename=f'{spectrum.identifier}.csv')
 
 
-@app.route('/qrcode/')
+@blueprint.route('/qrcode/')
 def generate_qr():
     # QR Code Rendering.
     if flask.request.args.get('mirror') != 'true':
@@ -530,6 +531,6 @@ def generate_qr():
     return flask.send_file(qr_bytes, 'image/png')
 
 
-@app.errorhandler(Exception)
+@blueprint.errorhandler(Exception)
 def internal_error(error):
     return flask.render_template('500.html', error=error), 500
