@@ -176,7 +176,8 @@ def _generate_figure(usi: str, extension: str, **kwargs) -> io.BytesIO:
     return buf
 
 
-def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) -> io.BytesIO:
+def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
+        -> io.BytesIO:
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     annotate_peaks = kwargs['annotate_peaks']
@@ -356,10 +357,10 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
         peak_match_idx_arr = np.asarray(peak_match_idx)[peak_match_order]
         peaks_used, peaks_used_other = set(), set()
         for peak_match_score, peak_i, peak_other_i in zip(
-            peak_match_scores_arr, peak_match_idx_arr[:, 0],
-            peak_match_idx_arr[:, 1]):
+                peak_match_scores_arr, peak_match_idx_arr[:, 0],
+                peak_match_idx_arr[:, 1]):
             if (peak_i not in peaks_used and
-                peak_other_i not in peaks_used_other):
+                    peak_other_i not in peaks_used_other):
                 score += peak_match_score
                 # Make sure these peaks are not used anymore.
                 peaks_used.add(peak_i)
