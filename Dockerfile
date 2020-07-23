@@ -21,3 +21,4 @@ RUN conda update -n usi -c anaconda openssl
 
 COPY . /app
 WORKDIR /app
+RUN pip install -e .

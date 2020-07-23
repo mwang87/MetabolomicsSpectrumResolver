@@ -1,8 +1,8 @@
 import sys
 sys.path.insert(0, "..")
-import parsing  # noqa: E402
+from src.metabolomics_spectrum_resolver import parsing
 
-import views
+from metabolomics_spectrum_resolver import views
 from usi_test_cases import test_usi_list
 
 
