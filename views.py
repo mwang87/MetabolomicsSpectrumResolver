@@ -84,7 +84,8 @@ def render_mirror_spectrum():
         'mirror.html',
         usi1=flask.request.args.get('usi1'),
         usi2=flask.request.args.get('usi2'),
-        source_link1=source1, source_link2=source2,
+        source_link1=source1,
+        source_link2=source2,
         peaks=[
             _get_peaks(spectrum1),
             _get_peaks(spectrum2),

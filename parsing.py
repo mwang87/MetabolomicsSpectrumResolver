@@ -66,7 +66,7 @@ def _match_usi(usi: str) -> re.Match:
 
 
 @functools.lru_cache(100)
-def parse_usi(usi: str) -> sus.MsmsSpectrum:
+def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     try:
         match = _match_usi(usi)
     except ValueError as e:
@@ -203,7 +203,7 @@ def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
 
 
 # Parse MS2LDA from ms2lda.org.
-def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, None]:
+def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     ms2lda_task_match = ms2lda_task_pattern.match(match.group(2))
     if ms2lda_task_match is None:
@@ -222,7 +222,7 @@ def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, None]:
         if 'error' in spectrum_dict:
             raise ValueError(f'MS2LDA error: {spectrum_dict["error"]}')
         mz, intensity = zip(*spectrum_dict['peaks'])
-        source_link = None
+        source_link = 'None'
         return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 0,
                                 mz, intensity), source_link
     except requests.exceptions.HTTPError:
