@@ -467,7 +467,7 @@ def peak_json():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     # Return for JSON includes, peaks, n_peaks, and precursor_mz.
     spectrum_dict = {
-        'peaks': [_get_peaks(spectrum)],
+        'peaks': _get_peaks(spectrum),
         'n_peaks': len(spectrum.mz),
         'precursor_mz': spectrum.precursor_mz,
     }
