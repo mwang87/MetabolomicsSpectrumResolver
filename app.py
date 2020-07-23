@@ -1,7 +1,9 @@
-import logging
 import os
 
 from flask import Flask
+
+import views
+
 
 APP_ROOT = os.path.dirname(os.path.realpath(__file__))
 
@@ -19,3 +21,4 @@ class CustomFlask(Flask):
 
 app = CustomFlask(__name__)
 app.config.from_object(__name__)
+app.register_blueprint(views.blueprint)
