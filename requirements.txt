@@ -6,3 +6,4 @@ requests_cache
 numba
 matplotlib
 numpy
+scipy
