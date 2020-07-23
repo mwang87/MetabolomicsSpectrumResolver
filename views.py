@@ -3,6 +3,7 @@ import csv
 import gc
 import io
 import json
+from typing import List, Tuple
 
 import flask
 import matplotlib
@@ -34,7 +35,7 @@ default_plotting_args = {
     'annotate_peaks': [True, True],
     'annotate_threshold': 0.1,
     'annotate_precision': 4,
-    'annotation_rotation': 90
+    'annotation_rotation': 90,
 }
 
 
@@ -59,12 +60,16 @@ def render_spectrum():
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
     return flask.render_template(
-        'spectrum.html', usi=flask.request.args.get('usi'),
+        'spectrum.html',
+        usi=flask.request.args.get('usi'),
         source_link=source_link,
-        peaks=[[(float(mz), float(intensity))
-                for mz, intensity in zip(spectrum.mz, spectrum.intensity)]],
-        annotations=[_generate_labels(
-            spectrum, default_plotting_args['annotate_threshold'])])
+        peaks=[
+            _get_peaks(spectrum),
+        ],
+        annotations=[
+            _generate_labels(spectrum),
+        ],
+    )
 
 
 @app.route('/mirror/', methods=['GET'])
@@ -80,15 +85,15 @@ def render_mirror_spectrum():
         usi1=flask.request.args.get('usi1'),
         usi2=flask.request.args.get('usi2'),
         source_link1=source1, source_link2=source2,
-        peaks=[[(float(mz), float(intensity))
-                for mz, intensity in zip(spectrum1.mz, spectrum1.intensity)],
-               [(float(mz), float(intensity))
-                for mz, intensity in zip(spectrum2.mz, spectrum2.intensity)]],
+        peaks=[
+            _get_peaks(spectrum1),
+            _get_peaks(spectrum2),
+        ],
         annotations=[
-            _generate_labels(
-                spectrum1, default_plotting_args['annotate_threshold']),
-            _generate_labels(
-                spectrum2, default_plotting_args['annotate_threshold'])])
+            _generate_labels(spectrum1),
+            _generate_labels(spectrum2),
+        ],
+    )
 
 
 @app.route('/png/')
@@ -126,16 +131,16 @@ def generate_mirror_svg():
 
 
 def _generate_figure(usi: str, extension: str, **kwargs) -> io.BytesIO:
-    # fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
-    fig = plt.gcf()
-    ax = plt.gca()
+    fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     kwargs['annotate_peaks'] = kwargs['annotate_peaks'][0]
     spectrum = _prepare_spectrum(usi, **kwargs)
     sup.spectrum(
-        spectrum, annotate_ions=kwargs['annotate_peaks'],
+        spectrum,
+        annotate_ions=kwargs['annotate_peaks'],
         annot_kws={'rotation': kwargs['annotation_rotation'], 'clip_on': True},
-        grid=kwargs['grid'], ax=ax)
+        grid=kwargs['grid'], ax=ax,
+    )
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
     ax.set_ylim(0, kwargs['max_intensity'])
@@ -170,9 +175,7 @@ def _generate_figure(usi: str, extension: str, **kwargs) -> io.BytesIO:
 
 
 def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) -> io.BytesIO:
-    # fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
-    fig = plt.gcf()
-    ax = plt.gca()
+    fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     annotate_peaks = kwargs['annotate_peaks']
     kwargs['annotate_peaks'] = annotate_peaks[0]
@@ -370,8 +373,7 @@ def _prepare_spectrum(usi: str, **kwargs) -> sus.MsmsSpectrum:
 
     if kwargs['annotate_peaks']:
         if kwargs['annotate_peaks'] is True:
-            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
-                spectrum, default_plotting_args['annotate_threshold'])]
+            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(spectrum)]
         for mz in kwargs['annotate_peaks']:
             t = f'{mz:.{kwargs["annotate_precision"]}f}'
             spectrum.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=t)
@@ -382,7 +384,16 @@ def _prepare_spectrum(usi: str, **kwargs) -> sus.MsmsSpectrum:
     return spectrum
 
 
-def _generate_labels(spec, intensity_threshold):
+def _get_peaks(spectrum: sus.MsmsSpectrum) -> List[Tuple[float, float]]:
+    return [
+        (float(mz), float(intensity))
+        for mz, intensity in zip(spectrum.mz, spectrum.intensity)
+    ]
+
+
+def _generate_labels(spec, intensity_threshold=None):
+    if intensity_threshold is None:
+        intensity_threshold = default_plotting_args['annotate_threshold']
     mz_exclusion_window = (spec.mz[-1] - spec.mz[0]) / 20  # Max 20 labels.
 
     # Annotate peaks in decreasing intensity order.
@@ -390,11 +401,11 @@ def _generate_labels(spec, intensity_threshold):
     for i, mz, intensity in zip(order, spec.mz[order], spec.intensity[order]):
         if intensity < intensity_threshold:
             break
-        else:
-            if not any([abs(mz - spec.mz[already_labeled_i])
-                        <= mz_exclusion_window
-                        for already_labeled_i in labeled_i]):
-                labeled_i.append(i)
+        if not any(
+            abs(mz - spec.mz[already_labeled_i]) <= mz_exclusion_window
+            for already_labeled_i in labeled_i
+        ):
+            labeled_i.append(i)
 
     return labeled_i
 
@@ -455,10 +466,9 @@ def peak_json():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     # Return for JSON includes, peaks, n_peaks, and precursor_mz.
     spectrum_dict = {
-        'peaks': [(float(mz), float(intensity)) for mz, intensity
-                  in zip(spectrum.mz, spectrum.intensity)],
+        'peaks': [_get_peaks(spectrum)],
         'n_peaks': len(spectrum.mz),
-        'precursor_mz': spectrum.precursor_mz
+        'precursor_mz': spectrum.precursor_mz,
     }
     return flask.jsonify(spectrum_dict)
 
