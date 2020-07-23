@@ -3,10 +3,9 @@ import csv
 import gc
 import io
 import json
-import os
-import uuid
 
 import flask
+import matplotlib
 import matplotlib.pyplot as plt
 import numba as nb
 import numpy as np
@@ -16,6 +15,8 @@ from spectrum_utils import plot as sup, spectrum as sus
 
 import parsing
 from app import app
+
+matplotlib.use('Agg')
 
 requests_cache.install_cache('demo_cache', expire_after=300)
 
@@ -94,8 +95,8 @@ def render_mirror_spectrum():
 def generate_png():
     usi = flask.request.args.get('usi')
     plotting_args = _get_plotting_args(flask.request)
-    output_filename = _generate_figure(usi, 'png', **plotting_args)
-    return flask.send_file(output_filename, mimetype='image/png')
+    buf = _generate_figure(usi, 'png', **plotting_args)
+    return flask.send_file(buf, mimetype='image/png')
 
 
 @app.route('/png/mirror/')
@@ -103,16 +104,16 @@ def generate_mirror_png():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
     plot_pars = _get_plotting_args(flask.request, mirror=True)
-    output_filename = _generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
-    return flask.send_file(output_filename, mimetype='image/png')
+    buf = _generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
+    return flask.send_file(buf, mimetype='image/png')
 
 
 @app.route('/svg/')
 def generate_svg():
     usi = flask.request.args.get('usi')
     plot_pars = _get_plotting_args(flask.request)
-    output_filename = _generate_figure(usi, 'svg', **plot_pars)
-    return flask.send_file(output_filename, mimetype='image/svg+xml')
+    buf = _generate_figure(usi, 'svg', **plot_pars)
+    return flask.send_file(buf, mimetype='image/svg+xml')
 
 
 @app.route('/svg/mirror/')
@@ -120,12 +121,14 @@ def generate_mirror_svg():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
     plot_pars = _get_plotting_args(flask.request, mirror=True)
-    output_filename = _generate_mirror_figure(usi1, usi2, 'svg', **plot_pars)
-    return flask.send_file(output_filename, mimetype='image/svg+xml')
+    buf = _generate_mirror_figure(usi1, usi2, 'svg', **plot_pars)
+    return flask.send_file(buf, mimetype='image/svg+xml')
 
 
-def _generate_figure(usi: str, extension: str, **kwargs):
-    fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
+def _generate_figure(usi: str, extension: str, **kwargs) -> io.BytesIO:
+    # fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
+    fig = plt.gcf()
+    ax = plt.gca()
 
     kwargs['annotate_peaks'] = kwargs['annotate_peaks'][0]
     spectrum = _prepare_spectrum(usi, **kwargs)
@@ -156,18 +159,20 @@ def _generate_figure(usi: str, extension: str, **kwargs):
                        transform=ax.transAxes)
     subtitle.set_url(f'{USI_SERVER}spectrum/?usi={usi}')
 
-    output_filename = os.path.join(
-        app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
-    plt.savefig(output_filename, bbox_inches='tight')
+    buf = io.BytesIO()
+    plt.savefig(buf, bbox_inches='tight', format=extension)
+    buf.seek(0)
     fig.clear()
     plt.close(fig)
     gc.collect()
 
-    return output_filename
+    return buf
 
 
-def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
-    fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
+def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) -> io.BytesIO:
+    # fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
+    fig = plt.gcf()
+    ax = plt.gca()
 
     annotate_peaks = kwargs['annotate_peaks']
     kwargs['annotate_peaks'] = annotate_peaks[0]
@@ -257,14 +262,14 @@ def _generate_mirror_figure(usi1, usi2, extension, **kwargs):
             verticalalignment='bottom', fontsize='large',
             fontweight='bold', transform=ax.transAxes)
 
-    output_filename = os.path.join(
-        app.config['TEMPFOLDER'], f'{uuid.uuid4()}.{extension}')
-    plt.savefig(output_filename, bbox_inches='tight')
+    buf = io.BytesIO()
+    plt.savefig(buf, bbox_inches='tight', format=extension)
+    buf.seek(0)
     fig.clear()
     plt.close(fig)
     gc.collect()
 
-    return output_filename
+    return buf
 
 
 def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
