@@ -129,6 +129,15 @@ $(document).ready(function() {
             </div>
         </div>
         <div class="form-group row">
+            <div class="col-4 col-form-label font-weight-bold text-right">Fragment tolerance</div>
+            <div class="col-8 input-group">
+                <input type="number" id="fragment_mz_tolerance" class="form-control" min="0.001" max="1" value="0.02" step="0.01">
+                <div class="input-group-append">
+                    <span class="input-group-text"><i>m/z</i></span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
             <div class="col-2 offset-5">
                 <button class="btn btn-primary" onclick=updateFigure()>Update Figure</button>
             </div>
@@ -156,6 +165,7 @@ $(document).ready(function() {
             `&annotate_peaks=${JSON.stringify(annotate_peaks)}` +
             `&annotate_precision=${$("#annotate_precision").val()}` +
             `&annotation_rotation=${$("#annotation_rotation").val()}` +
-            `&cosine=${$("#cosine").val()}`;
+            `&cosine=${$("#cosine").val()}` +
+            `&fragment_mz_tolerance=${$("#fragment_mz_tolerance").val()}`;
     }
 </script>

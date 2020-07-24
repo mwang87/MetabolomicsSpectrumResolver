@@ -35,7 +35,8 @@ default_plotting_args = {
     'annotate_threshold': 0.1,
     'annotate_precision': 4,
     'annotation_rotation': 90,
-    'cosine': 'standard'
+    'cosine': 'standard',
+    'fragment_mz_tolerance': 0.02
 }
 
 blueprint = flask.Blueprint('ui', __name__)
@@ -187,7 +188,7 @@ def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
     kwargs['annotate_peaks'] = annotate_peaks[1]
     spectrum_bottom = _prepare_spectrum(usi2, **kwargs)
 
-    fragment_mz_tolerance = 0.02  # TODO: Configurable?
+    fragment_mz_tolerance = kwargs['fragment_mz_tolerance']
 
     if spectrum_top.annotation is None:
         spectrum_top.annotation = np.full_like(
@@ -463,6 +464,10 @@ def _get_plotting_args(request, mirror=False):
                                if cosine_type is None else cosine_type)
     if plotting_args['cosine'] == 'off':
         plotting_args['cosine'] = False
+    fragment_mz_tolerance = request.args.get('fragment_mz_tolerance')
+    plotting_args['fragment_mz_tolerance'] = (
+        default_plotting_args['fragment_mz_tolerance']
+        if fragment_mz_tolerance is None else float(fragment_mz_tolerance))
 
     return plotting_args
 
