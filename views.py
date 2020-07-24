@@ -35,6 +35,7 @@ default_plotting_args = {
     'annotate_threshold': 0.1,
     'annotate_precision': 4,
     'annotation_rotation': 90,
+    'cosine': 'standard'
 }
 
 blueprint = flask.Blueprint('ui', __name__)
@@ -235,38 +236,47 @@ def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-    title = ax.text(0.5, 1.19, f'Top: {usi1}', horizontalalignment='center',
+    text_y = 1.2 if kwargs['cosine'] else 1.15
+    title = ax.text(0.5, text_y, f'Top: {usi1}', horizontalalignment='center',
                     verticalalignment='bottom', fontsize='x-large',
                     fontweight='bold', transform=ax.transAxes)
     title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+    text_y -= 0.04
     subtitle = (
         f'Precursor m/z: '
         f'{spectrum_top.precursor_mz:.{kwargs["annotate_precision"]}f} '
         if spectrum_top.precursor_mz > 0 else '')
     subtitle += f'Charge: {spectrum_top.precursor_charge}'
-    subtitle = ax.text(0.5, 1.15, subtitle, horizontalalignment='center',
+    subtitle = ax.text(0.5, text_y, subtitle, horizontalalignment='center',
                        verticalalignment='bottom', fontsize='large',
                        transform=ax.transAxes)
     subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
-    title = ax.text(0.5, 1.1, f'Bottom: {usi2}', horizontalalignment='center',
-                    verticalalignment='bottom', fontsize='x-large',
-                    fontweight='bold', transform=ax.transAxes)
+    text_y -= 0.06
+    title = ax.text(0.5, text_y, f'Bottom: {usi2}',
+                    horizontalalignment='center', verticalalignment='bottom',
+                    fontsize='x-large', fontweight='bold',
+                    transform=ax.transAxes)
     title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+    text_y -= 0.04
     subtitle = (
         f'Precursor m/z: '
         f'{spectrum_bottom.precursor_mz:.{kwargs["annotate_precision"]}f} '
         if spectrum_bottom.precursor_mz > 0 else '')
     subtitle += f'Charge: {spectrum_bottom.precursor_charge}'
-    subtitle = ax.text(0.5, 1.06, subtitle, horizontalalignment='center',
+    subtitle = ax.text(0.5, text_y, subtitle, horizontalalignment='center',
                        verticalalignment='bottom', fontsize='large',
                        transform=ax.transAxes)
     subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+    text_y -= 0.06
 
-    similarity = cosine(spectrum_top, spectrum_bottom, fragment_mz_tolerance)
-    subtitle_score = f'Cosine similarity = {similarity:.4f}'
-    ax.text(0.5, 1.02, subtitle_score, horizontalalignment='center',
-            verticalalignment='bottom', fontsize='large',
-            fontweight='bold', transform=ax.transAxes)
+    print(kwargs['cosine'])
+    if kwargs['cosine']:
+        similarity = cosine(spectrum_top, spectrum_bottom,
+                            fragment_mz_tolerance)
+        subtitle_score = f'Cosine similarity = {similarity:.4f}'
+        ax.text(0.5, text_y, subtitle_score, horizontalalignment='center',
+                verticalalignment='bottom', fontsize='x-large',
+                fontweight='bold', transform=ax.transAxes)
 
     buf = io.BytesIO()
     plt.savefig(buf, bbox_inches='tight', format=extension)
@@ -460,6 +470,11 @@ def _get_plotting_args(request, mirror=False):
     else:
         plotting_args['max_intensity'] = \
             default_plotting_args['max_intensity_unlabeled']
+    cosine_type = request.args.get('cosine')
+    plotting_args['cosine'] = (default_plotting_args['cosine']
+                               if cosine_type is None else cosine_type)
+    if plotting_args['cosine'] == 'off':
+        plotting_args['cosine'] = False
 
     return plotting_args
 
