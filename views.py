@@ -248,7 +248,7 @@ def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
         title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
         text_y -= 0.04
         subtitle = (
-            f'Precursor m/z: '
+            f'Precursor $m$/$z$: '
             f'{spec.precursor_mz:.{kwargs["annotate_precision"]}f} '
             if spec.precursor_mz > 0 else '')
         subtitle += f'Charge: {spec.precursor_charge}'
