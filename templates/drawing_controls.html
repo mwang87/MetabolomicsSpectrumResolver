@@ -120,6 +120,15 @@ $(document).ready(function() {
             </div>
         </div>
         <div class="form-group row">
+            <div class="col-4 col-form-label font-weight-bold text-right">Cosine</div>
+            <div class="col-8 input-group">
+                <select class="form-control" id="cosine">
+                    <option value="standard" selected>Standard</option>
+                    <option value="off">Off</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group row">
             <div class="col-2 offset-5">
                 <button class="btn btn-primary" onclick=updateFigure()>Update Figure</button>
             </div>
@@ -146,6 +155,7 @@ $(document).ready(function() {
             `&grid=${$("#grid").prop("checked")}` +
             `&annotate_peaks=${JSON.stringify(annotate_peaks)}` +
             `&annotate_precision=${$("#annotate_precision").val()}` +
-            `&annotation_rotation=${$("#annotation_rotation").val()}`;
+            `&annotation_rotation=${$("#annotation_rotation").val()}` +
+            `&cosine=${$("#cosine").val()}`;
     }
 </script>
