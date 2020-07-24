@@ -237,39 +237,27 @@ def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
         ax.xaxis.set_ticks_position('bottom')
 
     text_y = 1.2 if kwargs['cosine'] else 1.15
-    title = ax.text(0.5, text_y, f'Top: {usi1}', horizontalalignment='center',
-                    verticalalignment='bottom', fontsize='x-large',
-                    fontweight='bold', transform=ax.transAxes)
-    title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
-    text_y -= 0.04
-    subtitle = (
-        f'Precursor m/z: '
-        f'{spectrum_top.precursor_mz:.{kwargs["annotate_precision"]}f} '
-        if spectrum_top.precursor_mz > 0 else '')
-    subtitle += f'Charge: {spectrum_top.precursor_charge}'
-    subtitle = ax.text(0.5, text_y, subtitle, horizontalalignment='center',
-                       verticalalignment='bottom', fontsize='large',
-                       transform=ax.transAxes)
-    subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
-    text_y -= 0.06
-    title = ax.text(0.5, text_y, f'Bottom: {usi2}',
-                    horizontalalignment='center', verticalalignment='bottom',
-                    fontsize='x-large', fontweight='bold',
-                    transform=ax.transAxes)
-    title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
-    text_y -= 0.04
-    subtitle = (
-        f'Precursor m/z: '
-        f'{spectrum_bottom.precursor_mz:.{kwargs["annotate_precision"]}f} '
-        if spectrum_bottom.precursor_mz > 0 else '')
-    subtitle += f'Charge: {spectrum_bottom.precursor_charge}'
-    subtitle = ax.text(0.5, text_y, subtitle, horizontalalignment='center',
-                       verticalalignment='bottom', fontsize='large',
-                       transform=ax.transAxes)
-    subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
-    text_y -= 0.06
+    for usi, spec, loc in zip([usi1, usi2], [spectrum_top, spectrum_bottom],
+                              ['Top', 'Bottom']):
+        title = ax.text(0.5, text_y, f'{loc}: {usi}',
+                        horizontalalignment='center',
+                        verticalalignment='bottom',
+                        fontsize='x-large',
+                        fontweight='bold',
+                        transform=ax.transAxes)
+        title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+        text_y -= 0.04
+        subtitle = (
+            f'Precursor m/z: '
+            f'{spec.precursor_mz:.{kwargs["annotate_precision"]}f} '
+            if spec.precursor_mz > 0 else '')
+        subtitle += f'Charge: {spec.precursor_charge}'
+        subtitle = ax.text(0.5, text_y, subtitle, horizontalalignment='center',
+                           verticalalignment='bottom', fontsize='large',
+                           transform=ax.transAxes)
+        subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+        text_y -= 0.06
 
-    print(kwargs['cosine'])
     if kwargs['cosine']:
         similarity = cosine(spectrum_top, spectrum_bottom,
                             fragment_mz_tolerance)
