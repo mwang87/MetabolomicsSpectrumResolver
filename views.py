@@ -214,9 +214,9 @@ def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
             spectrum_bottom.annotation[i].ion_type = 'unmatched'
 
     # Colors for mirror plot peaks, subject to change.
-    sup.colors['top'] = '#212121'
-    sup.colors['bottom'] = '#388E3C'
-    sup.colors['unmatched'] = 'darkgray'
+    sup.colors['top'] = '#212121' if kwargs['cosine'] else sup.colors[None]
+    sup.colors['bottom'] = '#388E3C' if kwargs['cosine'] else sup.colors[None]
+    sup.colors['unmatched'] = 'darkgray' if kwargs['cosine'] else sup.colors[None]
 
     sup.mirror(spectrum_top, spectrum_bottom,
                {
