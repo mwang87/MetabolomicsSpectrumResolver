@@ -1,3 +1,4 @@
+import collections
 import copy
 import csv
 import gc
@@ -35,9 +36,15 @@ default_plotting_args = {
     'annotate_threshold': 0.1,
     'annotate_precision': 4,
     'annotation_rotation': 90,
+    'cosine': 'standard',
+    'fragment_mz_tolerance': 0.02
 }
 
 blueprint = flask.Blueprint('ui', __name__)
+
+
+SpectrumTuple = collections.namedtuple(
+    'SpectrumTuple', ['precursor_mz', 'precursor_charge', 'mz', 'intensity'])
 
 
 @blueprint.route('/', methods=['GET'])
@@ -186,30 +193,37 @@ def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
     kwargs['annotate_peaks'] = annotate_peaks[1]
     spectrum_bottom = _prepare_spectrum(usi2, **kwargs)
 
-    fragment_mz_tolerance = 0.02  # TODO: Configurable?
+    fragment_mz_tolerance = kwargs['fragment_mz_tolerance']
 
-    if spectrum_top.annotation is None:
-        spectrum_top.annotation = np.full_like(
-            spectrum_top.mz, None, object)
-    if spectrum_bottom.annotation is None:
-        spectrum_bottom.annotation = np.full_like(
-            spectrum_bottom.mz, None, object)
-    for i, (annotation, mz) in enumerate(zip(spectrum_top.annotation,
-                                             spectrum_top.mz)):
-        if annotation is None:
-            spectrum_top.annotation[i] = sus.FragmentAnnotation(0, mz, '')
-        if np.min(np.abs(spectrum_bottom.mz - mz)) < fragment_mz_tolerance:
-            spectrum_top.annotation[i].ion_type = 'top'
-        else:
-            spectrum_top.annotation[i].ion_type = 'unmatched'
-    for i, (annotation, mz) in enumerate(zip(spectrum_bottom.annotation,
-                                             spectrum_bottom.mz)):
-        if annotation is None:
-            spectrum_bottom.annotation[i] = sus.FragmentAnnotation(0, mz, '')
-        if np.min(np.abs(spectrum_top.mz - mz)) < fragment_mz_tolerance:
-            spectrum_bottom.annotation[i].ion_type = 'bottom'
-        else:
-            spectrum_bottom.annotation[i].ion_type = 'unmatched'
+    if kwargs['cosine']:
+        # Initialize the annotations as unmatched.
+        if spectrum_top.annotation is None:
+            spectrum_top.annotation = np.full_like(
+                spectrum_top.mz, None, object)
+        if spectrum_bottom.annotation is None:
+            spectrum_bottom.annotation = np.full_like(
+                spectrum_bottom.mz, None, object)
+        for annotation in spectrum_top.annotation:
+            if annotation is not None:
+                annotation.ion_type = 'unmatched'
+        for annotation in spectrum_bottom.annotation:
+            if annotation is not None:
+                annotation.ion_type = 'unmatched'
+        # Assign the matching peak annotations.
+        similarity, peak_matches = cosine(
+            spectrum_top, spectrum_bottom, fragment_mz_tolerance,
+            kwargs['cosine'] == 'shifted')
+        for top_i, bottom_i in peak_matches:
+            if spectrum_top.annotation[top_i] is None:
+                spectrum_top.annotation[top_i] = sus.FragmentAnnotation(
+                    0, spectrum_top.mz[top_i], '')
+            spectrum_top.annotation[top_i].ion_type = 'top'
+            if spectrum_bottom.annotation[bottom_i] is None:
+                spectrum_bottom.annotation[bottom_i] = sus.FragmentAnnotation(
+                    0, spectrum_bottom.mz[bottom_i], '')
+            spectrum_bottom.annotation[bottom_i].ion_type = 'bottom'
+    else:
+        similarity = 0
 
     # Colors for mirror plot peaks, subject to change.
     sup.colors['top'] = '#212121'
@@ -217,14 +231,10 @@ def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
     sup.colors['unmatched'] = 'darkgray'
 
     sup.mirror(spectrum_top, spectrum_bottom,
-               {
-                   'annotate_ions': kwargs['annotate_peaks'],
-                   'annot_kws': {
-                       'rotation': kwargs['annotation_rotation'],
-                       'clip_on': True
-                   },
-                   'grid': kwargs['grid']
-               }, ax=ax)
+               {'annotate_ions': kwargs['annotate_peaks'],
+                'annot_kws': {'rotation': kwargs['annotation_rotation'],
+                              'clip_on': True},
+                'grid': kwargs['grid']}, ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
     ax.set_ylim(-kwargs['max_intensity'], kwargs['max_intensity'])
@@ -235,38 +245,33 @@ def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-    title = ax.text(0.5, 1.19, f'Top: {usi1}', horizontalalignment='center',
-                    verticalalignment='bottom', fontsize='x-large',
-                    fontweight='bold', transform=ax.transAxes)
-    title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
-    subtitle = (
-        f'Precursor m/z: '
-        f'{spectrum_top.precursor_mz:.{kwargs["annotate_precision"]}f} '
-        if spectrum_top.precursor_mz > 0 else '')
-    subtitle += f'Charge: {spectrum_top.precursor_charge}'
-    subtitle = ax.text(0.5, 1.15, subtitle, horizontalalignment='center',
-                       verticalalignment='bottom', fontsize='large',
-                       transform=ax.transAxes)
-    subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
-    title = ax.text(0.5, 1.1, f'Bottom: {usi2}', horizontalalignment='center',
-                    verticalalignment='bottom', fontsize='x-large',
-                    fontweight='bold', transform=ax.transAxes)
-    title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
-    subtitle = (
-        f'Precursor m/z: '
-        f'{spectrum_bottom.precursor_mz:.{kwargs["annotate_precision"]}f} '
-        if spectrum_bottom.precursor_mz > 0 else '')
-    subtitle += f'Charge: {spectrum_bottom.precursor_charge}'
-    subtitle = ax.text(0.5, 1.06, subtitle, horizontalalignment='center',
-                       verticalalignment='bottom', fontsize='large',
-                       transform=ax.transAxes)
-    subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+    text_y = 1.2 if kwargs['cosine'] else 1.15
+    for usi, spec, loc in zip([usi1, usi2], [spectrum_top, spectrum_bottom],
+                              ['Top', 'Bottom']):
+        title = ax.text(0.5, text_y, f'{loc}: {usi}',
+                        horizontalalignment='center',
+                        verticalalignment='bottom',
+                        fontsize='x-large',
+                        fontweight='bold',
+                        transform=ax.transAxes)
+        title.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+        text_y -= 0.04
+        subtitle = (
+            f'Precursor $m$/$z$: '
+            f'{spec.precursor_mz:.{kwargs["annotate_precision"]}f} '
+            if spec.precursor_mz > 0 else '')
+        subtitle += f'Charge: {spec.precursor_charge}'
+        subtitle = ax.text(0.5, text_y, subtitle, horizontalalignment='center',
+                           verticalalignment='bottom', fontsize='large',
+                           transform=ax.transAxes)
+        subtitle.set_url(f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}')
+        text_y -= 0.06
 
-    similarity = cosine(spectrum_top, spectrum_bottom, fragment_mz_tolerance)
-    subtitle_score = f'Cosine similarity = {similarity:.4f}'
-    ax.text(0.5, 1.02, subtitle_score, horizontalalignment='center',
-            verticalalignment='bottom', fontsize='large',
-            fontweight='bold', transform=ax.transAxes)
+    if kwargs['cosine']:
+        subtitle_score = f'Cosine similarity = {similarity:.4f}'
+        ax.text(0.5, text_y, subtitle_score, horizontalalignment='center',
+                verticalalignment='bottom', fontsize='x-large',
+                fontweight='bold', transform=ax.transAxes)
 
     buf = io.BytesIO()
     plt.savefig(buf, bbox_inches='tight', format=extension)
@@ -279,7 +284,8 @@ def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
 
 
 def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
-           fragment_mz_tolerance: float) -> float:
+           fragment_mz_tolerance: float, allow_shift: bool) \
+        -> Tuple[float, List[Tuple[int, int]]]:
     """
     Compute the cosine similarity between the given spectra.
 
@@ -291,63 +297,90 @@ def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
         The second spectrum.
     fragment_mz_tolerance : float
         The fragment m/z tolerance used to match peaks.
+    allow_shift : bool
+        Boolean flag indicating whether to allow peak shifts or not.
 
     Returns
     -------
-    float
-        The cosine similarity between the given spectra.
+    Tuple[float, List[Tuple[int, int]]]
+        A tuple consisting of (i) the cosine similarity between both spectra,
+        and (ii) the indexes of matching peaks in both spectra.
     """
-    return _cosine(spectrum1.mz, np.copy(spectrum1.intensity),
-                   spectrum2.mz, np.copy(spectrum2.intensity),
-                   fragment_mz_tolerance)
+    spec_tup1 = SpectrumTuple(
+        spectrum1.precursor_mz, spectrum1.precursor_charge, spectrum1.mz,
+        np.copy(spectrum1.intensity) / np.linalg.norm(spectrum1.intensity))
+    spec_tup2 = SpectrumTuple(
+        spectrum2.precursor_mz, spectrum2.precursor_charge, spectrum2.mz,
+        np.copy(spectrum2.intensity) / np.linalg.norm(spectrum2.intensity))
+    return _cosine(spec_tup1, spec_tup2, fragment_mz_tolerance, allow_shift)
 
 
 @nb.njit
-def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
-            intensity_other: np.ndarray, fragment_mz_tol: float) -> float:
+def _cosine(spec: SpectrumTuple, spec_other: SpectrumTuple,
+            fragment_mz_tolerance: float, allow_shift: bool) \
+        -> Tuple[float, List[Tuple[int, int]]]:
     """
     Compute the cosine similarity between the given spectra.
 
     Parameters
     ----------
-    mz : np.ndarray
-        The first spectrum's m/z values.
-    intensity : np.ndarray
-        The first spectrum's intensity values.
-    mz_other : np.ndarray
-        The second spectrum's m/z values.
-    intensity_other : np.ndarray
-        The second spectrum's intensity values.
-    fragment_mz_tol : float
+    spec : SpectrumTuple
+        Numba-compatible tuple containing information from the first spectrum.
+    spec_other : SpectrumTuple
+        Numba-compatible tuple containing information from the second spectrum.
+    fragment_mz_tolerance : float
         The fragment m/z tolerance used to match peaks in both spectra with
         each other.
+    allow_shift : bool
+        Boolean flag indicating whether to allow peak shifts or not.
 
     Returns
     -------
-    float
-        The cosine similarity between both spectra.
+    Tuple[float, List[Tuple[int, int]]]
+        A tuple consisting of (i) the cosine similarity between both spectra,
+        and (ii) the indexes of matching peaks in both spectra.
     """
-    intensity /= np.linalg.norm(intensity)
-    intensity_other /= np.linalg.norm(intensity_other)
+    # Find the matching peaks between both spectra, optionally allowing for
+    # shifted peaks.
+    # Candidate peak indices depend on whether we allow shifts
+    # (check all shifted peaks as well) or not.
+    # Account for unknown precursor charge (default: 1).
+    precursor_charge = max(spec.precursor_charge, 1)
+    precursor_mass_diff = ((spec.precursor_mz - spec_other.precursor_mz)
+                           * precursor_charge)
+    # Only take peak shifts into account if the mass difference is relevant.
+    num_shifts = 1
+    if allow_shift and abs(precursor_mass_diff) >= fragment_mz_tolerance:
+        num_shifts += precursor_charge
+    other_peak_index = np.zeros(num_shifts, np.uint16)
+    mass_diff = np.zeros(num_shifts, np.float32)
+    for charge in range(1, num_shifts):
+        mass_diff[charge] = precursor_mass_diff / charge
+
     # Find the matching peaks between both spectra.
     peak_match_scores, peak_match_idx = [], []
-    peak_other_i = 0
-    for peak_i, (peak_mz, peak_intensity) in enumerate(zip(mz, intensity)):
+    for peak_index, (peak_mz, peak_intensity) in enumerate(zip(
+            spec.mz, spec.intensity)):
         # Advance while there is an excessive mass difference.
-        while (peak_other_i < len(mz_other) - 1 and
-               peak_mz - fragment_mz_tol > mz_other[peak_other_i]):
-            peak_other_i += 1
+        for cpi in range(num_shifts):
+            while (other_peak_index[cpi] < len(spec_other.mz) - 1 and
+                   (peak_mz - fragment_mz_tolerance >
+                    spec_other.mz[other_peak_index[cpi]] + mass_diff[cpi])):
+                other_peak_index[cpi] += 1
         # Match the peaks within the fragment mass window if possible.
-        peak_other_window_i = peak_other_i
-        while (peak_other_window_i < len(mz_other) and
-               abs(peak_mz - (mz_other[peak_other_window_i]))
-               <= fragment_mz_tol):
-            peak_match_scores.append(
-                peak_intensity * intensity_other[peak_other_window_i])
-            peak_match_idx.append((peak_i, peak_other_window_i))
-            peak_other_window_i += 1
+        for cpi in range(num_shifts):
+            index = 0
+            other_peak_i = other_peak_index[cpi] + index
+            while (other_peak_i < len(spec_other.mz) and
+                   abs(peak_mz - (spec_other.mz[other_peak_i]
+                       + mass_diff[cpi])) <= fragment_mz_tolerance):
+                peak_match_scores.append(
+                    peak_intensity * spec_other.intensity[other_peak_i])
+                peak_match_idx.append((peak_index, other_peak_i))
+                index += 1
+                other_peak_i = other_peak_index[cpi] + index
 
-    score = 0
+    score, peak_matches = 0., []
     if len(peak_match_scores) > 0:
         # Use the most prominent peak matches to compute the score (sort in
         # descending order).
@@ -355,18 +388,20 @@ def _cosine(mz: np.ndarray, intensity: np.ndarray, mz_other: np.ndarray,
         peak_match_order = np.argsort(peak_match_scores_arr)[::-1]
         peak_match_scores_arr = peak_match_scores_arr[peak_match_order]
         peak_match_idx_arr = np.asarray(peak_match_idx)[peak_match_order]
-        peaks_used, peaks_used_other = set(), set()
-        for peak_match_score, peak_i, peak_other_i in zip(
+        peaks_used, other_peaks_used = set(), set()
+        for peak_match_score, peak_i, other_peak_i in zip(
                 peak_match_scores_arr, peak_match_idx_arr[:, 0],
                 peak_match_idx_arr[:, 1]):
-            if (peak_i not in peaks_used and
-                    peak_other_i not in peaks_used_other):
+            if (peak_i not in peaks_used
+                    and other_peak_i not in other_peaks_used):
                 score += peak_match_score
+                # Save the matched peaks.
+                peak_matches.append((peak_i, other_peak_i))
                 # Make sure these peaks are not used anymore.
                 peaks_used.add(peak_i)
-                peaks_used_other.add(peak_other_i)
+                other_peaks_used.add(other_peak_i)
 
-    return score
+    return score, peak_matches
 
 
 def _prepare_spectrum(usi: str, **kwargs) -> sus.MsmsSpectrum:
@@ -379,7 +414,8 @@ def _prepare_spectrum(usi: str, **kwargs) -> sus.MsmsSpectrum:
             kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(spectrum)]
         for mz in kwargs['annotate_peaks']:
             t = f'{mz:.{kwargs["annotate_precision"]}f}'
-            spectrum.annotate_mz_fragment(mz, 0, 0.01, 'Da', text=t)
+            spectrum.annotate_mz_fragment(
+                mz, 0, kwargs['fragment_mz_tolerance'], 'Da', text=t)
 
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
@@ -460,6 +496,15 @@ def _get_plotting_args(request, mirror=False):
     else:
         plotting_args['max_intensity'] = \
             default_plotting_args['max_intensity_unlabeled']
+    cosine_type = request.args.get('cosine')
+    plotting_args['cosine'] = (default_plotting_args['cosine']
+                               if cosine_type is None else cosine_type)
+    if plotting_args['cosine'] == 'off':
+        plotting_args['cosine'] = False
+    fragment_mz_tolerance = request.args.get('fragment_mz_tolerance')
+    plotting_args['fragment_mz_tolerance'] = (
+        default_plotting_args['fragment_mz_tolerance']
+        if fragment_mz_tolerance is None else float(fragment_mz_tolerance))
 
     return plotting_args
 
