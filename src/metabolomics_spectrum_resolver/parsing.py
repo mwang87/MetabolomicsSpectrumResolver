@@ -55,7 +55,7 @@ gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$',
 ms2lda_task_pattern = re.compile('^TASK-(\d+)$', flags=re.IGNORECASE)
 
 
-def _match_usi(usi: str) -> re.Match:
+def _match_usi(usi: str):
     # First try matching as an official USI, then as a metabolomics draft USI.
     match = usi_pattern.match(usi)
     if match is None:
