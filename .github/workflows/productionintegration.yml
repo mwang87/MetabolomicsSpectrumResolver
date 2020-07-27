@@ -22,4 +22,5 @@ jobs:
     - name: Test with pytest
       run: |
         pip install nose2
+        pip install .
         cd test-production-integration	&& nose2 -v

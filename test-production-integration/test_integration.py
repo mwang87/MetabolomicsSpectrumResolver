@@ -2,7 +2,7 @@ import os
 import requests
 from urllib.parse import quote
 
-from usi_test_cases import test_usi_list
+from metabolomics_spectrum_resolver.usi_test_cases import test_usi_list
 
 
 PRODUCTION_URL = os.environ.get(

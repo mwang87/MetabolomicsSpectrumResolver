@@ -1,11 +1,6 @@
-import os
-
 from flask import Flask
 
-import views
-
-
-APP_ROOT = os.path.dirname(os.path.realpath(__file__))
+from metabolomics_spectrum_resolver import views
 
 
 class CustomFlask(Flask):
@@ -22,3 +17,6 @@ class CustomFlask(Flask):
 app = CustomFlask(__name__)
 app.config.from_object(__name__)
 app.register_blueprint(views.blueprint)
+
+if __name__ == '__main__':
+    app.run()

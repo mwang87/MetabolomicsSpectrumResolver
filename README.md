@@ -23,6 +23,35 @@ Supported USI Types:
         Thus, they are subject to change, and so for the moment, they will be specified as `mzdraft` instead of `mzspec` in the first block. 
         Thank you for your patience and working with us!
 
+## Installation
+
+This package can be installed from the source on [GitHub](https://github.com/mwang87/MetabolomicsSpectrumResolver)
+with the following:
+
+```bash
+$ pip install git+https://github.com/mwang87/MetabolomicsSpectrumResolver.git
+```
+
+It can be installed in development mode with the following:
+
+```bash
+$ git clone https://github.com/mwang87/MetabolomicsSpectrumResolver.git
+$ cd MetabolomicsSpectrumResolver
+$ pip install -e .
+```
+
+Where `-e` denotes the package is installed in editable mode.
+
+## Deployment
+
+After installing with `pip`, the entrypoint `metabolomics_spectrum_resolver` will be available
+as a bash command for running the app with a Flask development server. Warning! This should
+not be used in production, but is useful for testing.
+
+```bash
+$ metabolomics_spectrum_resolver --port 5000 --host 0.0.0.0
+```
+
 ## Example USI URLs
 
 ### MS2LDA

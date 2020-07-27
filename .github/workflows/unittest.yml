@@ -52,4 +52,5 @@ jobs:
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
         source ~/.bashrc
+        pip install .
         cd test	&& nose2 -v

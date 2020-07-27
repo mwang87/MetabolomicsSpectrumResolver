@@ -1,9 +1,6 @@
-import sys
-sys.path.insert(0, "..")
-import parsing  # noqa: E402
+from metabolomics_spectrum_resolver.usi_test_cases import test_usi_list
 
-import views
-from usi_test_cases import test_usi_list
+from metabolomics_spectrum_resolver import parsing, views
 
 
 def test_uri_parse():

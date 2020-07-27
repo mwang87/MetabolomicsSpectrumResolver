@@ -1,9 +1,0 @@
-flask
-spectrum_utils
-requests
-qrcode
-requests_cache
-numba
-matplotlib
-numpy
-scipy

@@ -6,7 +6,7 @@ from typing import Tuple
 import requests
 import spectrum_utils.spectrum as sus
 
-import parsing_legacy
+from metabolomics_spectrum_resolver import parsing_legacy
 
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
