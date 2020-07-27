@@ -222,7 +222,7 @@ def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         if 'error' in spectrum_dict:
             raise ValueError(f'MS2LDA error: {spectrum_dict["error"]}')
         mz, intensity = zip(*spectrum_dict['peaks'])
-        source_link = 'None'
+        source_link = f'http://ms2lda.org/basicviz/show_doc/{index}/'
         return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 0,
                                 mz, intensity), source_link
     except requests.exceptions.HTTPError:
