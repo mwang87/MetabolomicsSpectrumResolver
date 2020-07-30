@@ -71,12 +71,9 @@ def render_spectrum():
         'spectrum.html',
         usi=flask.request.args.get('usi'),
         source_link=source_link,
-        peaks=[
-            _get_peaks(spectrum),
-        ],
-        annotations=[
-            _generate_labels(spectrum),
-        ],
+        peaks=[_get_peaks(spectrum)],
+        annotations=[_generate_labels(spectrum)],
+        plotting_args=_get_plotting_args(flask.request)
     )
 
 
@@ -94,14 +91,9 @@ def render_mirror_spectrum():
         usi2=flask.request.args.get('usi2'),
         source_link1=source1,
         source_link2=source2,
-        peaks=[
-            _get_peaks(spectrum1),
-            _get_peaks(spectrum2),
-        ],
-        annotations=[
-            _generate_labels(spectrum1),
-            _generate_labels(spectrum2),
-        ],
+        peaks=[_get_peaks(spectrum1), _get_peaks(spectrum2)],
+        annotations=[_generate_labels(spectrum1), _generate_labels(spectrum2)],
+        plotting_args=_get_plotting_args(flask.request)
     )
 
 
@@ -117,16 +109,16 @@ def generate_png():
 def generate_mirror_png():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
-    plot_pars = _get_plotting_args(flask.request, mirror=True)
-    buf = _generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
+    plotting_args = _get_plotting_args(flask.request, mirror=True)
+    buf = _generate_mirror_figure(usi1, usi2, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
 
 
 @blueprint.route('/svg/')
 def generate_svg():
     usi = flask.request.args.get('usi')
-    plot_pars = _get_plotting_args(flask.request)
-    buf = _generate_figure(usi, 'svg', **plot_pars)
+    plotting_args = _get_plotting_args(flask.request)
+    buf = _generate_figure(usi, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
 
 
@@ -134,8 +126,8 @@ def generate_svg():
 def generate_mirror_svg():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
-    plot_pars = _get_plotting_args(flask.request, mirror=True)
-    buf = _generate_mirror_figure(usi1, usi2, 'svg', **plot_pars)
+    plotting_args = _get_plotting_args(flask.request, mirror=True)
+    buf = _generate_mirror_figure(usi1, usi2, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
 
 
