@@ -93,7 +93,7 @@ def render_mirror_spectrum():
         source_link2=source2,
         peaks=[_get_peaks(spectrum1), _get_peaks(spectrum2)],
         annotations=[_generate_labels(spectrum1), _generate_labels(spectrum2)],
-        plotting_args=_get_plotting_args(flask.request)
+        plotting_args=_get_plotting_args(flask.request, True)
     )
 
 
