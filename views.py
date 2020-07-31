@@ -24,8 +24,8 @@ requests_cache.install_cache('demo_cache', expire_after=300)
 USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
 
 default_plotting_args = {
-    'width': 10,
-    'height': 6,
+    'width': 10.0,
+    'height': 6.0,
     'max_intensity_unlabeled': 1.05,
     'max_intensity_labeled': 1.25,
     'max_intensity_mirror_labeled': 1.50,
