@@ -26,6 +26,23 @@ $(document).ready(function() {
 } );
 </script>
 
+(% set draw_parameters = {
+    'width': plotting_args['width'] | default(10, true),
+    'height': plotting_args['height'] | default(6, true),
+    'mz_min': plotting_args['mz_min'] | default(none, true),
+    'mz_max': plotting_args['mz_max'] | default(none, true),
+    'max_intensity': (plotting_args['max_intensity'] * 100 |
+                      default(none, true)),
+    'grid': plotting_args['grid'] == true,
+    'annotate_precision': (plotting_args['annotate_precision'] |
+                           default(4, true)),
+    'annotation_rotation': (plotting_args['annotation_rotation'] |
+                            default(90, true)),
+    'cosine': plotting_args['cosine'],
+    'fragment_mz_tolerance': (plotting_args['fragment_mz_tolerance'] |
+                              default(0.02, true))
+} %)
+
 <div class="row">
     <div class="col-6 offset-3">
         <h3 class="text-center">Drawing Controls</h3>
@@ -33,12 +50,12 @@ $(document).ready(function() {
         <div class="form-group row">
             <div class="col-4 col-form-label font-weight-bold text-right">Figure size</div>
             <div class="col-8 input-group">
-                <input type="number" id="width" class="form-control" min="1" max="20" value="((plotting_args['width']|default(10, true)))" step="any">
+                <input type="number" id="width" class="form-control" min="1" max="20" value="((draw_parameters['width']))" step="any">
                 <div class="input-group-append">
                     <span class="input-group-text">"</span>
                 </div>
                 <span class="col-form-label">&nbsp;X&nbsp;</span>
-                <input type="number" id="height" class="form-control" min="1" max="20" value="((plotting_args['height']|default(6, true)))" step="any">
+                <input type="number" id="height" class="form-control" min="1" max="20" value="((draw_parameters['height']))" step="any">
                 <div class="input-group-append">
                     <span class="input-group-text">"</span>
                 </div>
@@ -47,12 +64,12 @@ $(document).ready(function() {
         <div class="form-group row">
             <div class="col-4 col-form-label font-weight-bold text-right">Mass range</div>
             <div class="col-8 input-group">
-                <input type="number" id="mz_min" class="form-control" min="0" value="((plotting_args['mz_min']|default(none, true)))" step="any">
+                <input type="number" id="mz_min" class="form-control" min="0" value="((draw_parameters['mz_min']))" step="any">
                 <div class="input-group-append">
                     <span class="input-group-text"><i>m/z</i></span>
                 </div>
                 <span class="col-form-label">&nbsp;&ndash;&nbsp;</span>
-                <input type="number" id="mz_max" class="form-control" min="0" value="((plotting_args['mz_max']|default(none, true)))" step="any">
+                <input type="number" id="mz_max" class="form-control" min="0" value="((draw_parameters['mz_max']))" step="any">
                 <div class="input-group-append">
                     <span class="input-group-text"><i>m/z</i></span>
                 </div>
@@ -62,7 +79,7 @@ $(document).ready(function() {
             <div class="col-4 col-form-label font-weight-bold text-right">Intensity range</div>
             <div class="col-8 input-group">
                 <span class="col-form-label">Maximum intensity:&nbsp;</span>
-                <input type="number" id="max_intensity" class="form-control" min="0" max="200" value="((plotting_args['max_intensity'] * 100|default(none, true)))" step="1">
+                <input type="number" id="max_intensity" class="form-control" min="0" max="200" value="((draw_parameters['max_intensity']))" step="1">
                 <div class="input-group-append">
                     <span class="input-group-text">&percnt;</span>
                 </div>
@@ -72,7 +89,7 @@ $(document).ready(function() {
             <div class="col-4 col-form-label font-weight-bold text-right">Grid</div>
             <div class="col-8">
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="grid" (("checked" if plotting_args["grid"] == true else ""))>
+                    <input type="checkbox" class="form-check-input" id="grid" (("checked" if draw_parameters['grid'] else ""))>
                     <label class="form-check-label col-form-label" for="grid">&nbsp;Display grid</label>
                 </div>
             </div>
@@ -107,13 +124,13 @@ $(document).ready(function() {
             <div class="col-4 col-form-label font-weight-bold text-right">Label precision</div>
             <div class="col-8 input-group">
                 <span class="col-form-label">Decimal places:&nbsp;</span>
-                <input type="number" id="annotate_precision" class="form-control" min="0" max="10" value="((plotting_args['annotate_precision']|default(4, true)))" step="1">
+                <input type="number" id="annotate_precision" class="form-control" min="0" max="10" value="((draw_parameters['annotate_precision']))" step="1">
             </div>
         </div>
         <div class="form-group row">
             <div class="col-4 col-form-label font-weight-bold text-right">Label rotation</div>
             <div class="col-8 input-group">
-                <input type="number" id="annotation_rotation" class="form-control" min="0" max="90" value="((plotting_args['annotation_rotation']|default(90, true)))" step="1">
+                <input type="number" id="annotation_rotation" class="form-control" min="0" max="90" value="((draw_parameters['annotation_rotation']))" step="1">
                 <div class="input-group-append">
                     <span class="input-group-text">&deg;</span>
                 </div>
@@ -123,16 +140,16 @@ $(document).ready(function() {
             <div class="col-4 col-form-label font-weight-bold text-right">Cosine</div>
             <div class="col-8 input-group">
                 <select class="form-control custom-select" id="cosine">
-                    <option value="standard" (("selected" if plotting_args["cosine"] == "standard"))>Standard</option>
-                    <option value="shifted" (("selected" if plotting_args["cosine"] == "shifted"))>Shifted</option>
-                    <option value="off" (("selected" if plotting_args["cosine"] == false))>Off</option>
+                    <option value="standard" (("selected" if draw_parameters['cosine'] == 'standard'))>Standard</option>
+                    <option value="shifted" (("selected" if draw_parameters['cosine'] == 'shifted'))>Shifted</option>
+                    <option value="off" (("selected" if draw_parameters['cosine'] == false))>Off</option>
                 </select>
             </div>
         </div>
         <div class="form-group row">
             <div class="col-4 col-form-label font-weight-bold text-right">Fragment tolerance</div>
             <div class="col-8 input-group">
-                <input type="number" id="fragment_mz_tolerance" class="form-control" min="0.01" max="1" value="((plotting_args['fragment_mz_tolerance']|default(0.02, true)))" step="0.01">
+                <input type="number" id="fragment_mz_tolerance" class="form-control" min="0.01" max="1" value="((draw_parameters['fragment_mz_tolerance']))" step="0.01">
                 <div class="input-group-append">
                     <span class="input-group-text"><i>m/z</i></span>
                 </div>
