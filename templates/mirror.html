@@ -65,9 +65,7 @@
     </div>
 
     <div class="row">
-        <img class="mx-auto"
-             id="render_spectrum"
-             src="/svg/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))"/>
+        <img class="mx-auto" id="render_spectrum" src="data:,"/>
     </div>
 
     (% include 'drawing_controls.html' %)
@@ -81,6 +79,9 @@
         $("#download_svg")[0].href = svg_url + draw_parameters;
         $("#download_png")[0].href = (
             "/png/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))" + draw_parameters);
+        window.history.pushState(
+            {}, "",
+            "/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))" + draw_parameters);
     }
 </script>
 
