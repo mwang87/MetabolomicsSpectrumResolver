@@ -67,13 +67,23 @@ def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
+
+    plotting_arguments = _get_plotting_args(flask.request)
+
+    peak_annotations = []
+    if plotting_arguments["annotate_peaks"][0] is not True:
+        peak_annotations = _generate_selected_labels(spectrum, 
+            plotting_arguments["annotate_peaks"][0])
+    else:
+        peak_annotations = _generate_labels(spectrum)
+
     return flask.render_template(
         'spectrum.html',
         usi=flask.request.args.get('usi'),
         source_link=source_link,
         peaks=[_get_peaks(spectrum)],
-        annotations=[_generate_labels(spectrum)],
-        plotting_args=_get_plotting_args(flask.request)
+        annotations=[peak_annotations],
+        plotting_args=plotting_arguments
     )
 
 
@@ -421,7 +431,15 @@ def _get_peaks(spectrum: sus.MsmsSpectrum) -> List[Tuple[float, float]]:
         for mz, intensity in zip(spectrum.mz, spectrum.intensity)
     ]
 
+# Generates labels, given set of mz
+def _generate_selected_labels(spec, selected_masses):
+    labeled_i = []
+    for fragment_mz in selected_masses:
+        index = sus._get_mz_peak_index(spec.mz, spec.intensity, fragment_mz, 0.001, 'Da', 'most_intense')
+        labeled_i.append(index)
+    return labeled_i
 
+# Generates default labels
 def _generate_labels(spec, intensity_threshold=None):
     if intensity_threshold is None:
         intensity_threshold = default_plotting_args['annotate_threshold']

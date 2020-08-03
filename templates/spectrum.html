@@ -67,6 +67,7 @@
     </div>
 
     (% include 'drawing_controls.html' %)
+
 </div>
 
 <script type="text/javascript">
@@ -76,8 +77,13 @@
         $("#render_spectrum")[0].src = svg_url + draw_parameters;
         $("#download_svg")[0].href = svg_url + draw_parameters;
         $("#download_png")[0].href = "/png/?usi=(( usi ))" + draw_parameters;
-        window.history.pushState(
+        window.history.replaceState(
             {}, "", "/spectrum/?usi=(( usi ))" + draw_parameters);
+    }
+
+    function resetFigure() {
+        window.location.href = (
+            {}, "", "/spectrum/?usi=(( usi ))");
     }
 </script>
 
