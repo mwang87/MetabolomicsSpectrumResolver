@@ -95,6 +95,23 @@ def render_mirror_spectrum():
     spectrum2, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
     spectrum2 = copy.deepcopy(spectrum2)
     spectrum2.scale_intensity(max_intensity=1)
+
+    plotting_arguments = _get_plotting_args(flask.request, True)
+
+    spectrum1_peak_annotations = []
+    if plotting_arguments["annotate_peaks"][0] is not True:
+        spectrum1_peak_annotations = _generate_selected_labels(spectrum1, 
+            plotting_arguments["annotate_peaks"][0])
+    else:
+        spectrum1_peak_annotations = _generate_labels(spectrum1)
+
+    spectrum2_peak_annotations = []
+    if plotting_arguments["annotate_peaks"][1] is not True:
+        spectrum2_peak_annotations = _generate_selected_labels(spectrum2, 
+            plotting_arguments["annotate_peaks"][1])
+    else:
+        spectrum2_peak_annotations = _generate_labels(spectrum2)
+
     return flask.render_template(
         'mirror.html',
         usi1=flask.request.args.get('usi1'),
@@ -102,8 +119,8 @@ def render_mirror_spectrum():
         source_link1=source1,
         source_link2=source2,
         peaks=[_get_peaks(spectrum1), _get_peaks(spectrum2)],
-        annotations=[_generate_labels(spectrum1), _generate_labels(spectrum2)],
-        plotting_args=_get_plotting_args(flask.request, True)
+        annotations=[spectrum1_peak_annotations, spectrum2_peak_annotations],
+        plotting_args=plotting_arguments
     )
 
 
