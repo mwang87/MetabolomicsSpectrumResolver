@@ -79,7 +79,7 @@
         $("#download_svg")[0].href = svg_url + draw_parameters;
         $("#download_png")[0].href = (
             "/png/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))" + draw_parameters);
-        window.history.pushState(
+        window.history.replaceState(
             {}, "",
             "/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))" + draw_parameters);
     }
