@@ -24,8 +24,8 @@ requests_cache.install_cache('demo_cache', expire_after=300)
 USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
 
 default_plotting_args = {
-    'width': 10,
-    'height': 6,
+    'width': 10.0,
+    'height': 6.0,
     'max_intensity_unlabeled': 1.05,
     'max_intensity_labeled': 1.25,
     'max_intensity_mirror_labeled': 1.50,
@@ -67,16 +67,23 @@ def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     spectrum = copy.deepcopy(spectrum)
     spectrum.scale_intensity(max_intensity=1)
+
+    plotting_arguments = _get_plotting_args(flask.request)
+
+    peak_annotations = []
+    if plotting_arguments["annotate_peaks"][0] is not True:
+        peak_annotations = _generate_selected_labels(spectrum, 
+            plotting_arguments["annotate_peaks"][0])
+    else:
+        peak_annotations = _generate_labels(spectrum)
+
     return flask.render_template(
         'spectrum.html',
         usi=flask.request.args.get('usi'),
         source_link=source_link,
-        peaks=[
-            _get_peaks(spectrum),
-        ],
-        annotations=[
-            _generate_labels(spectrum),
-        ],
+        peaks=[_get_peaks(spectrum)],
+        annotations=[peak_annotations],
+        plotting_args=plotting_arguments
     )
 
 
@@ -88,20 +95,32 @@ def render_mirror_spectrum():
     spectrum2, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
     spectrum2 = copy.deepcopy(spectrum2)
     spectrum2.scale_intensity(max_intensity=1)
+
+    plotting_arguments = _get_plotting_args(flask.request, True)
+
+    spectrum1_peak_annotations = []
+    if plotting_arguments["annotate_peaks"][0] is not True:
+        spectrum1_peak_annotations = _generate_selected_labels(spectrum1, 
+            plotting_arguments["annotate_peaks"][0])
+    else:
+        spectrum1_peak_annotations = _generate_labels(spectrum1)
+
+    spectrum2_peak_annotations = []
+    if plotting_arguments["annotate_peaks"][1] is not True:
+        spectrum2_peak_annotations = _generate_selected_labels(spectrum2, 
+            plotting_arguments["annotate_peaks"][1])
+    else:
+        spectrum2_peak_annotations = _generate_labels(spectrum2)
+
     return flask.render_template(
         'mirror.html',
         usi1=flask.request.args.get('usi1'),
         usi2=flask.request.args.get('usi2'),
         source_link1=source1,
         source_link2=source2,
-        peaks=[
-            _get_peaks(spectrum1),
-            _get_peaks(spectrum2),
-        ],
-        annotations=[
-            _generate_labels(spectrum1),
-            _generate_labels(spectrum2),
-        ],
+        peaks=[_get_peaks(spectrum1), _get_peaks(spectrum2)],
+        annotations=[spectrum1_peak_annotations, spectrum2_peak_annotations],
+        plotting_args=plotting_arguments
     )
 
 
@@ -117,16 +136,16 @@ def generate_png():
 def generate_mirror_png():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
-    plot_pars = _get_plotting_args(flask.request, mirror=True)
-    buf = _generate_mirror_figure(usi1, usi2, 'png', **plot_pars)
+    plotting_args = _get_plotting_args(flask.request, mirror=True)
+    buf = _generate_mirror_figure(usi1, usi2, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
 
 
 @blueprint.route('/svg/')
 def generate_svg():
     usi = flask.request.args.get('usi')
-    plot_pars = _get_plotting_args(flask.request)
-    buf = _generate_figure(usi, 'svg', **plot_pars)
+    plotting_args = _get_plotting_args(flask.request)
+    buf = _generate_figure(usi, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
 
 
@@ -134,8 +153,8 @@ def generate_svg():
 def generate_mirror_svg():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
-    plot_pars = _get_plotting_args(flask.request, mirror=True)
-    buf = _generate_mirror_figure(usi1, usi2, 'svg', **plot_pars)
+    plotting_args = _get_plotting_args(flask.request, mirror=True)
+    buf = _generate_mirror_figure(usi1, usi2, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
 
 
@@ -429,7 +448,15 @@ def _get_peaks(spectrum: sus.MsmsSpectrum) -> List[Tuple[float, float]]:
         for mz, intensity in zip(spectrum.mz, spectrum.intensity)
     ]
 
+# Generates labels, given set of mz
+def _generate_selected_labels(spec, selected_masses):
+    labeled_i = []
+    for fragment_mz in selected_masses:
+        index = sus._get_mz_peak_index(spec.mz, spec.intensity, fragment_mz, 0.001, 'Da', 'most_intense')
+        labeled_i.append(index)
+    return labeled_i
 
+# Generates default labels
 def _generate_labels(spec, intensity_threshold=None):
     if intensity_threshold is None:
         intensity_threshold = default_plotting_args['annotate_threshold']
