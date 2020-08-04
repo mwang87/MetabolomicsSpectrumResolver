@@ -1,9 +1,14 @@
-<link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/select/1.3.1/css/select.dataTables.min.css">
+<link rel="stylesheet"
+      href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+<link rel="stylesheet"
+      href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet"
+      href="https://cdn.datatables.net/select/1.3.1/css/select.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js">
+</script>
+<script src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js">
+</script>
 <script>
 $(document).ready(function() {
     $('.table').DataTable({
@@ -19,70 +24,117 @@ $(document).ready(function() {
         order: [[ 1, 'asc' ]]
     });
 
-    let annotations = ((annotations));
-    for (let table_i = 0; table_i < document.getElementsByClassName("table").length; table_i++) {
-        $("#peaks_" + table_i).DataTable().rows(annotations[table_i]).select();
+    // Select annotated peaks in the data table.
+    let annotations = (( annotations ));
+    for (let table_i = 0;
+            table_i < document.getElementsByClassName('table').length;
+            table_i++) {
+        $('#peaks_' + table_i).DataTable().rows(annotations[table_i]).select();
     }
+
+    // Set initial drawing parameters.
+    updateFigure();
 } );
 </script>
+
+(% set draw_parameters = {
+    'width': plotting_args['width'] | default(10.0, true),
+    'height': plotting_args['height'] | default(6.0, true),
+    'mz_min': plotting_args['mz_min'] | default(none, true),
+    'mz_max': plotting_args['mz_max'] | default(none, true),
+    'max_intensity': (plotting_args['max_intensity'] * 100 |
+                      default(none, true)),
+    'grid': plotting_args['grid'] == true,
+    'annotate_precision': (plotting_args['annotate_precision'] |
+                           default(4, true)),
+    'annotation_rotation': (plotting_args['annotation_rotation'] |
+                            default(90, true)),
+    'cosine': plotting_args['cosine'],
+    'fragment_mz_tolerance': (plotting_args['fragment_mz_tolerance'] |
+                              default(0.02, true))
+} %)
 
 <div class="row">
     <div class="col-6 offset-3">
         <h3 class="text-center">Drawing Controls</h3>
         <hr>
         <div class="form-group row">
-            <div class="col-4 col-form-label font-weight-bold text-right">Figure size</div>
+            <div class="col-4 col-form-label font-weight-bold text-right">
+                Figure size
+            </div>
             <div class="col-8 input-group">
-                <input type="number" id="width" class="form-control" min="1" max="20" value="10" step="any">
+                <input type="number" id="width" class="form-control"
+                       min="1" max="20" value="(( draw_parameters['width'] ))"
+                       step="any">
                 <div class="input-group-append">
                     <span class="input-group-text">"</span>
                 </div>
                 <span class="col-form-label">&nbsp;X&nbsp;</span>
-                <input type="number" id="height" class="form-control" min="1" max="20" value="6" step="any">
+                <input type="number" id="height" class="form-control"
+                       min="1" max="20" value="(( draw_parameters['height'] ))"
+                       step="any">
                 <div class="input-group-append">
                     <span class="input-group-text">"</span>
                 </div>
             </div>
         </div>
         <div class="form-group row">
-            <div class="col-4 col-form-label font-weight-bold text-right">Mass range</div>
+            <div class="col-4 col-form-label font-weight-bold text-right">
+                Mass range
+            </div>
             <div class="col-8 input-group">
-                <input type="number" id="mz_min" class="form-control" min="0" step="any">
+                <input type="number" id="mz_min" class="form-control"
+                       min="0" value="(( draw_parameters['mz_min'] ))"
+                       step="any">
                 <div class="input-group-append">
                     <span class="input-group-text"><i>m/z</i></span>
                 </div>
                 <span class="col-form-label">&nbsp;&ndash;&nbsp;</span>
-                <input type="number" id="mz_max" class="form-control" min="0" step="any">
+                <input type="number" id="mz_max" class="form-control"
+                       min="0" value="(( draw_parameters['mz_max'] ))"
+                       step="any">
                 <div class="input-group-append">
                     <span class="input-group-text"><i>m/z</i></span>
                 </div>
             </div>
         </div>
         <div class="form-group row">
-            <div class="col-4 col-form-label font-weight-bold text-right">Intensity range</div>
+            <div class="col-4 col-form-label font-weight-bold text-right">
+                Intensity range
+            </div>
             <div class="col-8 input-group">
                 <span class="col-form-label">Maximum intensity:&nbsp;</span>
-                <input type="number" id="max_intensity" class="form-control" min="0" max="200" step="1">
+                <input type="number" id="max_intensity" class="form-control"
+                       min="0" max="200"
+                       value="(( draw_parameters['max_intensity'] ))" step="1">
                 <div class="input-group-append">
                     <span class="input-group-text">&percnt;</span>
                 </div>
             </div>
         </div>
         <div class="form-group row">
-            <div class="col-4 col-form-label font-weight-bold text-right">Grid</div>
+            <div class="col-4 col-form-label font-weight-bold text-right">
+                Grid
+            </div>
             <div class="col-8">
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="grid" checked="checked">
-                    <label class="form-check-label col-form-label" for="grid">&nbsp;Display grid</label>
+                    <input type="checkbox" class="form-check-input" id="grid"
+                           (( "checked" if draw_parameters['grid'] ))>
+                    <label class="form-check-label col-form-label" for="grid">
+                        &nbsp;Display grid
+                    </label>
                 </div>
             </div>
         </div>
         <div class="form-group row">
-            <div class="col-4 col-form-label font-weight-bold text-right">Peak labeling</div>
+            <div class="col-4 col-form-label font-weight-bold text-right">
+                Peak labeling
+            </div>
             <div class="col-8">
                 (% for spectrum in peaks %)
                     (% set spectrum_loop = loop %)
-                    <table id="peaks_((spectrum_loop.index - 1))" class="table">
+                    <table class="table"
+                           id="peaks_(( spectrum_loop.index - 1 ))">
                         <thead>
                             <tr class="align-self-center">
                                 <th></th>
@@ -94,8 +146,12 @@ $(document).ready(function() {
                             (% for peak in spectrum %)
                                 <tr>
                                     <td></td>
-                                    <td class="text-right">(( '{:.4f}'.format(peak[0]) ))</td>
-                                    <td class="text-right">(( '{:.0%}'.format(peak[1]) ))</td>
+                                    <td class="text-right">
+                                        (( '{:.4f}'.format(peak[0]) ))
+                                    </td>
+                                    <td class="text-right">
+                                        (( '{:.0%}'.format(peak[1]) ))
+                                    </td>
                                 </tr>
                             (% endfor %)
                         </tbody>
@@ -104,43 +160,74 @@ $(document).ready(function() {
             </div>
         </div>
         <div class="form-group row">
-            <div class="col-4 col-form-label font-weight-bold text-right">Label precision</div>
+            <div class="col-4 col-form-label font-weight-bold text-right">
+                Label precision
+            </div>
             <div class="col-8 input-group">
                 <span class="col-form-label">Decimal places:&nbsp;</span>
-                <input type="number" id="annotate_precision" class="form-control" min="0" max="10" value="4" step="1">
+                <input type="number" id="annotate_precision"
+                       class="form-control" min="0" max="10"
+                       value="(( draw_parameters['annotate_precision'] ))"
+                       step="1">
             </div>
         </div>
         <div class="form-group row">
-            <div class="col-4 col-form-label font-weight-bold text-right">Label rotation</div>
+            <div class="col-4 col-form-label font-weight-bold text-right">
+                Label rotation
+            </div>
             <div class="col-8 input-group">
-                <input type="number" id="annotation_rotation" class="form-control" min="0" max="90" value="90" step="1">
+                <input type="number" id="annotation_rotation"
+                       class="form-control" min="0" max="90"
+                       value="(( draw_parameters['annotation_rotation'] ))"
+                       step="1">
                 <div class="input-group-append">
                     <span class="input-group-text">&deg;</span>
                 </div>
             </div>
         </div>
         <div class="form-group row">
-            <div class="col-4 col-form-label font-weight-bold text-right">Cosine</div>
+            <div class="col-4 col-form-label font-weight-bold text-right">
+                Cosine
+            </div>
             <div class="col-8 input-group">
                 <select class="form-control custom-select" id="cosine">
-                    <option value="standard" selected>Standard</option>
-                    <option value="shifted">Shifted</option>
-                    <option value="off">Off</option>
+                    <option value="standard"
+                            (( "selected" if draw_parameters['cosine'] == 'standard' ))>
+                        Standard
+                    </option>
+                    <option value="shifted"
+                            (( "selected" if draw_parameters['cosine'] == 'shifted' ))>
+                        Shifted
+                    </option>
+                    <option value="off"
+                            (( "selected" if draw_parameters['cosine'] == false ))>
+                        Off
+                    </option>
                 </select>
             </div>
         </div>
         <div class="form-group row">
-            <div class="col-4 col-form-label font-weight-bold text-right">Fragment tolerance</div>
+            <div class="col-4 col-form-label font-weight-bold text-right">
+                Fragment tolerance
+            </div>
             <div class="col-8 input-group">
-                <input type="number" id="fragment_mz_tolerance" class="form-control" min="0.01" max="1" value="0.02" step="0.01">
+                <input type="number" id="fragment_mz_tolerance"
+                       class="form-control" min="0.01" max="1"
+                       value="(( draw_parameters['fragment_mz_tolerance'] ))"
+                       step="0.01">
                 <div class="input-group-append">
                     <span class="input-group-text"><i>m/z</i></span>
                 </div>
             </div>
         </div>
         <div class="form-group row">
-            <div class="col-2 offset-5">
-                <button class="btn btn-primary" onclick=updateFigure()>Update Figure</button>
+            <div class="offset-4">
+                <button class="btn btn-primary" onclick=updateFigure()>
+                    Update Figure
+                </button>
+                <button class="btn btn-secondary" onclick=resetFigure()>
+                    Reset Figure
+                </button>
             </div>
         </div>
     </div>
@@ -149,9 +236,12 @@ $(document).ready(function() {
 <script type="text/javascript">
     function getDrawingControls() {
         let annotate_peaks = [];
-        for (let table_i = 0; table_i < document.getElementsByClassName("table").length; table_i++) {
+        for (let table_i = 0;
+                table_i < document.getElementsByClassName('table').length;
+                table_i++) {
             let selected_peaks = [];
-            let table_peaks = $("#peaks_" + table_i).DataTable().rows({selected: true}).data();
+            let table_peaks = ($('#peaks_' + table_i).DataTable()
+                               .rows({selected: true}).data());
             for (let i = 0; i < table_peaks.length; i++) {
                 selected_peaks.push(parseFloat(table_peaks[i][1]));
             }
