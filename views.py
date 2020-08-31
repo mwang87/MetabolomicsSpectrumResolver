@@ -168,7 +168,7 @@ def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
                     verticalalignment='bottom', fontsize='x-large',
                     fontweight='bold', transform=ax.transAxes)
     title.set_url(f'{USI_SERVER}spectrum/?usi={usi}')
-    subtitle = (f'Precursor m/z: '
+    subtitle = (f'Precursor $m$/$z$: '
                 f'{spectrum.precursor_mz:.{kwargs["annotate_precision"]}f} '
                 if spectrum.precursor_mz > 0 else '')
     subtitle += f'Charge: {spectrum.precursor_charge}'
