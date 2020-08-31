@@ -4,7 +4,7 @@ import csv
 import gc
 import io
 import json
-from typing import List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import flask
 import matplotlib
@@ -13,6 +13,7 @@ import numba as nb
 import numpy as np
 import qrcode
 import requests_cache
+import werkzeug
 from spectrum_utils import plot as sup, spectrum as sus
 
 import parsing
@@ -65,7 +66,7 @@ def render_heartbeat():
 @blueprint.route('/spectrum/', methods=['GET'])
 def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
-    plotting_args = _get_plotting_args(flask.request)
+    plotting_args = _get_plotting_args(flask.request.args)
     plotting_args['annotate_peaks'] = plotting_args['annotate_peaks'][0]
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     return flask.render_template(
@@ -75,7 +76,7 @@ def render_spectrum():
         peaks=[_get_peaks(spectrum)],
         annotations=[_generate_labels(
             spectrum, plotting_args['annotate_threshold'])],
-        plotting_args=_get_plotting_args(flask.request)
+        plotting_args=_get_plotting_args(flask.request.args)
     )
 
 
@@ -93,14 +94,14 @@ def render_mirror_spectrum():
         source_link2=source2,
         peaks=[_get_peaks(spectrum1), _get_peaks(spectrum2)],
         annotations=[_generate_labels(spectrum1), _generate_labels(spectrum2)],
-        plotting_args=_get_plotting_args(flask.request)
+        plotting_args=_get_plotting_args(flask.request.args)
     )
 
 
 @blueprint.route('/png/')
 def generate_png():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
-    plotting_args = _get_plotting_args(flask.request)
+    plotting_args = _get_plotting_args(flask.request.args)
     buf = _generate_figure(spectrum, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
 
@@ -109,7 +110,7 @@ def generate_png():
 def generate_mirror_png():
     spectrum1, _ = parsing.parse_usi(flask.request.args.get('usi1'))
     spectrum2, _ = parsing.parse_usi(flask.request.args.get('usi2'))
-    plotting_args = _get_plotting_args(flask.request, mirror=True)
+    plotting_args = _get_plotting_args(flask.request.args, mirror=True)
     buf = _generate_mirror_figure(spectrum1, spectrum2, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
 
@@ -117,7 +118,7 @@ def generate_mirror_png():
 @blueprint.route('/svg/')
 def generate_svg():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
-    plotting_args = _get_plotting_args(flask.request)
+    plotting_args = _get_plotting_args(flask.request.args)
     buf = _generate_figure(spectrum, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
 
@@ -500,66 +501,92 @@ def _get_peaks(spectrum: sus.MsmsSpectrum) -> List[Tuple[float, float]]:
             for mz, intensity in zip(spectrum.mz, spectrum.intensity)]
 
 
-def _get_plotting_args(request, mirror=False):
-    plotting_args = {}
-    width = request.args.get('width')
-    plotting_args['width'] = (default_plotting_args['width']
-                              if width is None else float(width))
-    height = request.args.get('height')
-    plotting_args['height'] = (default_plotting_args['height']
-                               if height is None else float(height))
-    mz_min = request.args.get('mz_min')
-    plotting_args['mz_min'] = float(mz_min) if mz_min else None
-    mz_max = request.args.get('mz_max')
-    plotting_args['mz_max'] = float(mz_max) if mz_max else None
-    grid = request.args.get('grid')
-    plotting_args['grid'] = (default_plotting_args['grid']
-                             if grid is None else grid == 'true')
-    annotate_peaks_args = request.args.get('annotate_peaks')
-    annotate_peaks = ([[mz for mz in peaks]
-                       for peaks in json.loads(annotate_peaks_args)]
-                      if annotate_peaks_args is not None else
-                      default_plotting_args['annotate_peaks'])
-    plotting_args['annotate_peaks'] = annotate_peaks
-    annotate_precision = request.args.get('annotate_precision')
-    plotting_args['annotate_threshold'] = \
-        default_plotting_args['annotate_threshold']
-    plotting_args['annotate_precision'] = (
-        default_plotting_args['annotate_precision']
-        if not annotate_precision else int(annotate_precision))
-    annotation_rotation = request.args.get('annotation_rotation')
-    plotting_args['annotation_rotation'] = (
-        default_plotting_args['annotation_rotation']
-        if not annotation_rotation else float(annotation_rotation))
-    max_intensity = request.args.get('max_intensity')
-    # Explicitly specified maximum intensity.
-    if max_intensity:
-        plotting_args['max_intensity'] = float(max_intensity) / 100
-    # Default labeled maximum intensity.
-    elif any(annotate_peaks):
-        # Default mirror plot labeled maximum intensity.
-        if mirror:
-            plotting_args['max_intensity'] = \
-                default_plotting_args['max_intensity_mirror_labeled']
-        # Default standard plot labeled maximum intensity.
-        else:
-            plotting_args['max_intensity'] = \
-                default_plotting_args['max_intensity_labeled']
-    # Default unlabeled maximum intensity.
-    else:
-        plotting_args['max_intensity'] = \
-            default_plotting_args['max_intensity_unlabeled']
-    cosine_type = request.args.get('cosine')
-    plotting_args['cosine'] = (default_plotting_args['cosine']
-                               if cosine_type is None else cosine_type)
-    if plotting_args['cosine'] == 'off':
-        plotting_args['cosine'] = False
-    fragment_mz_tolerance = request.args.get('fragment_mz_tolerance')
-    plotting_args['fragment_mz_tolerance'] = (
-        default_plotting_args['fragment_mz_tolerance']
-        if fragment_mz_tolerance is None else float(fragment_mz_tolerance))
+def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
+                       mirror: bool = False) -> Dict[str, Any]:
+    """
+    Get the plotting configuration and spectrum processing options.
+
+    Parameters
+    ----------
+    args : werkzeug.datastructures.ImmutableMultiDict
+        The arguments from the plotting web requests.
+    mirror : bool
+        Flag indicating whether this is a mirror spectrum or not.
+
+    Returns
+    -------
+    A dictionary with the plotting configuration and spectrum processing
+    options.
+    """
+    plotting_args = {
+        'width': args.get(
+            'width', default_plotting_args['width'], type=float),
+        'height': args.get(
+            'height', default_plotting_args['height'], type=float),
+        'mz_min': args.get('mz_min', None, type=float),
+        'mz_max': args.get('mz_max', None, type=float),
+        'grid': args.get(
+            'grid', default_plotting_args['grid'],
+            type=lambda grid: grid == 'true'),
+        'annotate_peaks': args.get(
+            'annotate_peaks', default_plotting_args['annotate_peaks'],
+            type=lambda annotate_peaks_args: json.loads(annotate_peaks_args)),
+        'annotate_precision': args.get(
+            'annotate_precision', default_plotting_args['annotate_precision'],
+            type=int),
+        'annotate_threshold': default_plotting_args['annotate_threshold'],
+        'annotation_rotation': args.get(
+            'annotation_rotation',
+            default_plotting_args['annotation_rotation'], type=float),
+        'max_intensity': args.get('max_intensity', None, type=float),
+        'cosine': args.get(
+            'cosine', default_plotting_args['cosine'],
+            type=lambda cos: cos if cos != 'off' else False),
+        'fragment_mz_tolerance': args.get(
+            'fragment_mz_tolerance',
+            default_plotting_args['fragment_mz_tolerance'], type=float)
+    }
+    plotting_args['max_intensity'] = _get_max_intensity(
+        plotting_args['max_intensity'], any(plotting_args['annotate_peaks']),
+        mirror)
 
     return plotting_args
+
+
+def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
+                       mirror: bool) -> float:
+    """
+    Convert the maximum intensity from the web request.
+
+    If no maximum intensity is specified the default value will be determined
+    based on the type of plot (standard/mirror, unlabeled/labeled).
+
+    Parameters
+    ----------
+    max_intensity : Optional[float]
+        The maximum intensity specified in the web request.
+    annotate_peaks : bool
+        Flag indicating whether peaks are annotated or not.
+    mirror : bool
+        Flag indicating whether this is a standard plot or a mirror plot.
+
+    Returns
+    -------
+    float
+        The maximum intensity.
+    """
+    if max_intensity is not None:
+        return float(max_intensity) / 100
+    # If the intensity is not specified, use a default value based on plot
+    # type.
+    elif annotate_peaks:
+        # Labeled (because peak annotations are provided) mirror or standard
+        # plot.
+        return (default_plotting_args['max_intensity_mirror_labeled'] if mirror
+                else default_plotting_args['max_intensity_labeled'])
+    else:
+        # Unlabeled plot (no differentiation between standard and mirror).
+        return default_plotting_args['max_intensity_unlabeled']
 
 
 @blueprint.route('/json/')
