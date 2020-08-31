@@ -461,38 +461,63 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs) \
     return spectrum
 
 
-def _get_peaks(spectrum: sus.MsmsSpectrum) -> List[Tuple[float, float]]:
-    return [
-        (float(mz), float(intensity))
-        for mz, intensity in zip(spectrum.mz, spectrum.intensity)
-    ]
+def _generate_labels(spec: sus.MsmsSpectrum,
+                     intensity_threshold: float = None,
+                     num_labels: int = 20) -> List[int]:
+    """
+    Heuristic approach to label spectrum peaks.
 
-# Generates labels, given set of mz
-def _generate_selected_labels(spec, selected_masses):
-    labeled_i = []
-    for fragment_mz in selected_masses:
-        index = sus._get_mz_peak_index(spec.mz, spec.intensity, fragment_mz, 0.001, 'Da', 'most_intense')
-        labeled_i.append(index)
-    return labeled_i
+    This will provide indices of the most intense peaks to be labeled, taking
+    care not to label peaks that are too close to each other.
 
-# Generates default labels
-def _generate_labels(spec, intensity_threshold=None):
+    Parameters
+    ----------
+    spec : sus.MsmsSpectrum
+        The spectrum whose peaks are labeled.
+    intensity_threshold : float
+        The minimum intensity for peaks to be labeled.
+    num_labels : int
+        The maximum number of peaks that will be labeled. This won't always
+        necessarily match the actual number of peaks that will be labeled.
+
+    Returns
+    -------
+    List[int]
+        Tndices of the peaks that will be labeled.
+    """
     if intensity_threshold is None:
         intensity_threshold = default_plotting_args['annotate_threshold']
-    mz_exclusion_window = (spec.mz[-1] - spec.mz[0]) / 20  # Max 20 labels.
+    mz_exclusion_window = (spec.mz[-1] - spec.mz[0]) / num_labels
 
     # Annotate peaks in decreasing intensity order.
     labeled_i, order = [], np.argsort(spec.intensity)[::-1]
     for i, mz, intensity in zip(order, spec.mz[order], spec.intensity[order]):
         if intensity < intensity_threshold:
             break
-        if not any(
-            abs(mz - spec.mz[already_labeled_i]) <= mz_exclusion_window
-            for already_labeled_i in labeled_i
-        ):
+        if not any(abs(mz - spec.mz[already_labeled_i]) <= mz_exclusion_window
+                   for already_labeled_i in labeled_i):
             labeled_i.append(i)
 
     return labeled_i
+
+
+def _get_peaks(spectrum: sus.MsmsSpectrum) -> List[Tuple[float, float]]:
+    """
+    Get the spectrum peaks as a list of tuples of (m/z, intensity).
+
+    Parameters
+    ----------
+    spectrum : sus.MsmsSpectrum
+        The spectrum whose peaks are returned.
+
+    Returns
+    -------
+    List[Tuple[float, float]]
+        A list with (m/z, intensity) tuples for all peaks in the given
+        spectrum.
+    """
+    return [(float(mz), float(intensity))
+            for mz, intensity in zip(spectrum.mz, spectrum.intensity)]
 
 
 def _get_plotting_args(request, mirror=False):
