@@ -65,53 +65,26 @@ def render_heartbeat():
 @blueprint.route('/spectrum/', methods=['GET'])
 def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
-    spectrum = copy.deepcopy(spectrum)
-    spectrum.scale_intensity(max_intensity=1)
-
-    plotting_arguments = _get_plotting_args(flask.request)
-
-    peak_annotations = []
-    if plotting_arguments["annotate_peaks"][0] is not True:
-        peak_annotations = _generate_selected_labels(spectrum, 
-            plotting_arguments["annotate_peaks"][0])
-    else:
-        peak_annotations = _generate_labels(spectrum)
-
+    plotting_args = _get_plotting_args(flask.request)
+    plotting_args['annotate_peaks'] = plotting_args['annotate_peaks'][0]
+    spectrum = _prepare_spectrum(spectrum, **plotting_args)
     return flask.render_template(
         'spectrum.html',
         usi=flask.request.args.get('usi'),
         source_link=source_link,
         peaks=[_get_peaks(spectrum)],
-        annotations=[peak_annotations],
-        plotting_args=plotting_arguments
+        annotations=[_generate_labels(
+            spectrum, plotting_args['annotate_threshold'])],
+        plotting_args=_get_plotting_args(flask.request)
     )
 
 
 @blueprint.route('/mirror/', methods=['GET'])
 def render_mirror_spectrum():
     spectrum1, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
-    spectrum1 = copy.deepcopy(spectrum1)
-    spectrum1.scale_intensity(max_intensity=1)
+    spectrum1 = _prepare_spectrum(spectrum1)
     spectrum2, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
-    spectrum2 = copy.deepcopy(spectrum2)
-    spectrum2.scale_intensity(max_intensity=1)
-
-    plotting_arguments = _get_plotting_args(flask.request, True)
-
-    spectrum1_peak_annotations = []
-    if plotting_arguments["annotate_peaks"][0] is not True:
-        spectrum1_peak_annotations = _generate_selected_labels(spectrum1, 
-            plotting_arguments["annotate_peaks"][0])
-    else:
-        spectrum1_peak_annotations = _generate_labels(spectrum1)
-
-    spectrum2_peak_annotations = []
-    if plotting_arguments["annotate_peaks"][1] is not True:
-        spectrum2_peak_annotations = _generate_selected_labels(spectrum2, 
-            plotting_arguments["annotate_peaks"][1])
-    else:
-        spectrum2_peak_annotations = _generate_labels(spectrum2)
-
+    spectrum2 = _prepare_spectrum(spectrum2)
     return flask.render_template(
         'mirror.html',
         usi1=flask.request.args.get('usi1'),
@@ -119,50 +92,53 @@ def render_mirror_spectrum():
         source_link1=source1,
         source_link2=source2,
         peaks=[_get_peaks(spectrum1), _get_peaks(spectrum2)],
-        annotations=[spectrum1_peak_annotations, spectrum2_peak_annotations],
-        plotting_args=plotting_arguments
+        annotations=[_generate_labels(spectrum1), _generate_labels(spectrum2)],
+        plotting_args=_get_plotting_args(flask.request)
     )
 
 
 @blueprint.route('/png/')
 def generate_png():
-    usi = flask.request.args.get('usi')
+    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     plotting_args = _get_plotting_args(flask.request)
-    buf = _generate_figure(usi, 'png', **plotting_args)
+    buf = _generate_figure(spectrum, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
 
 
 @blueprint.route('/png/mirror/')
 def generate_mirror_png():
-    usi1 = flask.request.args.get('usi1')
-    usi2 = flask.request.args.get('usi2')
+    spectrum1, _ = parsing.parse_usi(flask.request.args.get('usi1'))
+    spectrum2, _ = parsing.parse_usi(flask.request.args.get('usi2'))
     plotting_args = _get_plotting_args(flask.request, mirror=True)
-    buf = _generate_mirror_figure(usi1, usi2, 'png', **plotting_args)
+    buf = _generate_mirror_figure(spectrum1, spectrum2, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
 
 
 @blueprint.route('/svg/')
 def generate_svg():
-    usi = flask.request.args.get('usi')
+    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     plotting_args = _get_plotting_args(flask.request)
-    buf = _generate_figure(usi, 'svg', **plotting_args)
+    buf = _generate_figure(spectrum, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
 
 
 @blueprint.route('/svg/mirror/')
 def generate_mirror_svg():
-    usi1 = flask.request.args.get('usi1')
-    usi2 = flask.request.args.get('usi2')
+    spectrum1, _ = parsing.parse_usi(flask.request.args.get('usi1'))
+    spectrum2, _ = parsing.parse_usi(flask.request.args.get('usi2'))
     plotting_args = _get_plotting_args(flask.request, mirror=True)
-    buf = _generate_mirror_figure(usi1, usi2, 'svg', **plotting_args)
+    buf = _generate_mirror_figure(spectrum1, spectrum2, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
 
 
-def _generate_figure(usi: str, extension: str, **kwargs) -> io.BytesIO:
+def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str, **kwargs) \
+        -> io.BytesIO:
+    usi = spectrum.identifier
+
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     kwargs['annotate_peaks'] = kwargs['annotate_peaks'][0]
-    spectrum = _prepare_spectrum(usi, **kwargs)
+    spectrum = _prepare_spectrum(spectrum, **kwargs)
     sup.spectrum(
         spectrum,
         annotate_ions=kwargs['annotate_peaks'],
@@ -202,15 +178,19 @@ def _generate_figure(usi: str, extension: str, **kwargs) -> io.BytesIO:
     return buf
 
 
-def _generate_mirror_figure(usi1: str, usi2: str, extension: str, **kwargs) \
-        -> io.BytesIO:
+def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
+                            spectrum_bottom: sus.MsmsSpectrum,
+                            extension: str, **kwargs) -> io.BytesIO:
+    usi1 = spectrum_top.identifier
+    usi2 = spectrum_bottom.identifier
+
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
     annotate_peaks = kwargs['annotate_peaks']
     kwargs['annotate_peaks'] = annotate_peaks[0]
-    spectrum_top = _prepare_spectrum(usi1, **kwargs)
+    spectrum_top = _prepare_spectrum(spectrum_top, **kwargs)
     kwargs['annotate_peaks'] = annotate_peaks[1]
-    spectrum_bottom = _prepare_spectrum(usi2, **kwargs)
+    spectrum_bottom = _prepare_spectrum(spectrum_bottom, **kwargs)
 
     fragment_mz_tolerance = kwargs['fragment_mz_tolerance']
 
