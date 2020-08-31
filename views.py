@@ -66,7 +66,6 @@ def render_heartbeat():
 def render_spectrum():
     spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
     plotting_args = _get_plotting_args(flask.request.args)
-    plotting_args['annotate_peaks'] = plotting_args['annotate_peaks'][0]
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     return flask.render_template(
         'spectrum.html',
@@ -545,9 +544,13 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
             'fragment_mz_tolerance',
             default_plotting_args['fragment_mz_tolerance'], type=float)
     }
+    # Set maximum intensity based on the plot type.
     plotting_args['max_intensity'] = _get_max_intensity(
         plotting_args['max_intensity'], any(plotting_args['annotate_peaks']),
         mirror)
+    # Set annotate_peaks for standard plots.
+    if not mirror:
+        plotting_args['annotate_peaks'] = plotting_args['annotate_peaks'][0]
 
     return plotting_args
 
