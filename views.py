@@ -80,19 +80,23 @@ def render_spectrum():
 
 @blueprint.route('/mirror/', methods=['GET'])
 def render_mirror_spectrum():
-    spectrum1, source1 = parsing.parse_usi(flask.request.args.get('usi1'))
-    spectrum1 = _prepare_spectrum(spectrum1)
-    spectrum2, source2 = parsing.parse_usi(flask.request.args.get('usi2'))
-    spectrum2 = _prepare_spectrum(spectrum2)
+    usi1 = flask.request.args.get('usi1')
+    usi2 = flask.request.args.get('usi2')
+    plotting_args = _get_plotting_args(flask.request.args, mirror=True)
+    spectrum1, source1 = parsing.parse_usi(usi1)
+    spectrum2, source2 = parsing.parse_usi(usi2)
+    spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
+                                                   plotting_args)
     return flask.render_template(
         'mirror.html',
-        usi1=flask.request.args.get('usi1'),
-        usi2=flask.request.args.get('usi2'),
+        usi1=usi1,
+        usi2=usi2,
         source_link1=source1,
         source_link2=source2,
         peaks=[_get_peaks(spectrum1), _get_peaks(spectrum2)],
-        annotations=[_generate_labels(spectrum1), _generate_labels(spectrum2)],
-        plotting_args=_get_plotting_args(flask.request.args)
+        annotations=[spectrum1.annotation.nonzero()[0].tolist(),
+                     spectrum2.annotation.nonzero()[0].tolist()],
+        plotting_args=plotting_args
     )
 
 
@@ -106,9 +110,11 @@ def generate_png():
 
 @blueprint.route('/png/mirror/')
 def generate_mirror_png():
+    plotting_args = _get_plotting_args(flask.request.args, mirror=True)
     spectrum1, _ = parsing.parse_usi(flask.request.args.get('usi1'))
     spectrum2, _ = parsing.parse_usi(flask.request.args.get('usi2'))
-    plotting_args = _get_plotting_args(flask.request.args, mirror=True)
+    spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
+                                                   plotting_args)
     buf = _generate_mirror_figure(spectrum1, spectrum2, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
 
@@ -123,9 +129,11 @@ def generate_svg():
 
 @blueprint.route('/svg/mirror/')
 def generate_mirror_svg():
+    plotting_args = _get_plotting_args(flask.request.args, mirror=True)
     spectrum1, _ = parsing.parse_usi(flask.request.args.get('usi1'))
     spectrum2, _ = parsing.parse_usi(flask.request.args.get('usi2'))
-    plotting_args = _get_plotting_args(flask.request, mirror=True)
+    spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
+                                                   plotting_args)
     buf = _generate_mirror_figure(spectrum1, spectrum2, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
 
@@ -497,6 +505,39 @@ def _get_peaks(spectrum: sus.MsmsSpectrum) -> List[Tuple[float, float]]:
     """
     return [(float(mz), float(intensity))
             for mz, intensity in zip(spectrum.mz, spectrum.intensity)]
+
+
+def _prepare_mirror_spectra(spectrum1: sus.MsmsSpectrum,
+                            spectrum2: sus.MsmsSpectrum,
+                            plotting_args: Dict[str, Any]) \
+        -> Tuple[sus.MsmsSpectrum, sus.MsmsSpectrum]:
+    """
+    Process two spectra for plotting in a mirror plot.
+
+    This function modifies the `plotting_args` dictionary so that it can be
+    used to process both spectra separately with `_prepare_spectrum`.
+
+    Parameters
+    ----------
+    spectrum1 : sus.MsmsSpectrum
+        The first spectrum to be processed.
+    spectrum2 : sus.MsmsSpectrum
+        The second spectrum to be processed.
+    plotting_args : Dict[str, Any]
+        The processing and plotting settings.
+
+    Returns
+    -------
+    Tuple[sus.MsmsSpectrum, sus.MsmsSpectrum]
+        Both processed spectra.
+    """
+    annotate_peaks = plotting_args['annotate_peaks']
+    plotting_args['annotate_peaks'] = annotate_peaks[0]
+    spectrum1 = _prepare_spectrum(spectrum1, **plotting_args)
+    plotting_args['annotate_peaks'] = annotate_peaks[1]
+    spectrum2 = _prepare_spectrum(spectrum2, **plotting_args)
+    plotting_args['annotate_peaks'] = annotate_peaks
+    return spectrum1, spectrum2
 
 
 def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
