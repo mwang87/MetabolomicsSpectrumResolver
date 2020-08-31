@@ -31,8 +31,7 @@ default_plotting_args = {
     'max_intensity_labeled': 1.25,
     'max_intensity_mirror_labeled': 1.50,
     'grid': True,
-    # List of peaks to annotate in the top/bottom
-    # spectrum.
+    # List of peaks to annotate in the top/bottom spectrum.
     'annotate_peaks': [True, True],
     'annotate_threshold': 0.1,
     'annotate_precision': 4,
@@ -464,7 +463,7 @@ def _generate_labels(spec: sus.MsmsSpectrum,
     Returns
     -------
     List[int]
-        Tndices of the peaks that will be labeled.
+        Indices of the peaks that will be labeled.
     """
     if intensity_threshold is None:
         intensity_threshold = default_plotting_args['annotate_threshold']
