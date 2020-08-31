@@ -64,17 +64,17 @@ def render_heartbeat():
 
 @blueprint.route('/spectrum/', methods=['GET'])
 def render_spectrum():
-    spectrum, source_link = parsing.parse_usi(flask.request.args.get('usi'))
+    usi = flask.request.args.get('usi')
+    spectrum, source_link = parsing.parse_usi(usi)
     plotting_args = _get_plotting_args(flask.request.args)
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     return flask.render_template(
         'spectrum.html',
-        usi=flask.request.args.get('usi'),
+        usi=usi,
         source_link=source_link,
         peaks=[_get_peaks(spectrum)],
-        annotations=[_generate_labels(
-            spectrum, plotting_args['annotate_threshold'])],
-        plotting_args=_get_plotting_args(flask.request.args)
+        annotations=[spectrum.annotation.nonzero()[0].tolist()],
+        plotting_args=plotting_args
     )
 
 
@@ -405,9 +405,9 @@ def _cosine(spec: SpectrumTuple, spec_other: SpectrumTuple,
 def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs) \
         -> sus.MsmsSpectrum:
     """
-    Preprocesss a spectrum for plotting.
+    Process a spectrum for plotting.
 
-    Preprocessing includes restricting the m/z range, base peak normalizing
+    Processing includes restricting the m/z range, base peak normalizing
     peak intensities, and annotating spectrum peaks (either prespecified or
     using the heuristic approach in `_generate_labels`).
     These operations will not modify the original spectrum.
@@ -415,14 +415,14 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs) \
     Parameters
     ----------
     spectrum : sus.MsmsSpectrum
-        The spectrum to be preprocessed for plotting.
+        The spectrum to be processed for plotting.
     kwargs : Dict
-        The preprocessing and plotting settings.
+        The processing and plotting settings.
 
     Returns
     -------
     sus.MsmsSpectrum
-        The preprocessed spectrum.
+        The processed spectrum.
     """
     spectrum = copy.deepcopy(spectrum)
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
