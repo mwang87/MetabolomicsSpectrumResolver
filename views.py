@@ -663,14 +663,12 @@ def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
 def peak_json():
     try:
         spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
-        # Return for JSON includes, peaks, n_peaks, and precursor_mz.
         result_dict = {
             'peaks': _get_peaks(spectrum),
             'n_peaks': len(spectrum.mz),
             'precursor_mz': spectrum.precursor_mz}
     except ValueError as e:
-        result_dict = {'error': {'code': 404,
-                                 'message': str(e)}}
+        result_dict = {'error': {'code': 404, 'message': str(e)}}
     return flask.jsonify(result_dict)
 
 
@@ -695,9 +693,7 @@ def peak_proxi_json():
             ]
         }
     except ValueError as e:
-        result_dict = {'error': {'code': 404,
-                                 'message': str(e)}}
-
+        result_dict = {'error': {'code': 404, 'message': str(e)}}
     return flask.jsonify([result_dict])
 
 
@@ -718,7 +714,6 @@ def peak_csv():
 
 @blueprint.route('/qrcode/')
 def generate_qr():
-    # QR Code Rendering.
     if flask.request.args.get('mirror') != 'true':
         usi = flask.request.args.get('usi')
         url = f'{USI_SERVER}spectrum/?usi={usi}'
@@ -728,7 +723,7 @@ def generate_qr():
         url = f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}'
     qr_image = qrcode.make(url, box_size=2)
     qr_bytes = io.BytesIO()
-    qr_image.save(qr_bytes, format='PNG')
+    qr_image.save(qr_bytes, format='png')
     qr_bytes.seek(0)
     return flask.send_file(qr_bytes, 'image/png')
 
