@@ -423,9 +423,30 @@ def _cosine(spec: SpectrumTuple, spec_other: SpectrumTuple,
     return score, peak_matches
 
 
-def _prepare_spectrum(usi: str, **kwargs) -> sus.MsmsSpectrum:
-    spectrum, _ = parsing.parse_usi(usi)
+def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs) \
+        -> sus.MsmsSpectrum:
+    """
+    Preprocesss a spectrum for plotting.
+
+    Preprocessing includes restricting the m/z range, base peak normalizing
+    peak intensities, and annotating spectrum peaks (either prespecified or
+    using the heuristic approach in `_generate_labels`).
+    These operations will not modify the original spectrum.
+
+    Parameters
+    ----------
+    spectrum : sus.MsmsSpectrum
+        The spectrum to be preprocessed for plotting.
+    kwargs : Dict
+        The preprocessing and plotting settings.
+
+    Returns
+    -------
+    sus.MsmsSpectrum
+        The preprocessed spectrum.
+    """
     spectrum = copy.deepcopy(spectrum)
+    spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
 
     if kwargs['annotate_peaks']:
@@ -433,12 +454,9 @@ def _prepare_spectrum(usi: str, **kwargs) -> sus.MsmsSpectrum:
             kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
                 spectrum, kwargs['annotate_threshold'])]
         for mz in kwargs['annotate_peaks']:
-            t = f'{mz:.{kwargs["annotate_precision"]}f}'
             spectrum.annotate_mz_fragment(
-                mz, 0, kwargs['fragment_mz_tolerance'], 'Da', text=t)
-
-    spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
-    spectrum.scale_intensity(max_intensity=1)
+                mz, 0, kwargs['fragment_mz_tolerance'], 'Da',
+                text=f'{mz:.{kwargs["annotate_precision"]}f}')
 
     return spectrum
 
