@@ -65,8 +65,8 @@ def render_heartbeat():
 @blueprint.route('/spectrum/', methods=['GET'])
 def render_spectrum():
     usi = flask.request.args.get('usi')
-    spectrum, source_link = parsing.parse_usi(usi)
     plotting_args = _get_plotting_args(flask.request.args)
+    spectrum, source_link = parsing.parse_usi(usi)
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     return flask.render_template(
         'spectrum.html',
@@ -102,8 +102,9 @@ def render_mirror_spectrum():
 
 @blueprint.route('/png/')
 def generate_png():
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     plotting_args = _get_plotting_args(flask.request.args)
+    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum = _prepare_spectrum(spectrum, **plotting_args)
     buf = _generate_figure(spectrum, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
 
@@ -121,8 +122,9 @@ def generate_mirror_png():
 
 @blueprint.route('/svg/')
 def generate_svg():
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
     plotting_args = _get_plotting_args(flask.request.args)
+    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum = _prepare_spectrum(spectrum, **plotting_args)
     buf = _generate_figure(spectrum, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
 
@@ -138,8 +140,8 @@ def generate_mirror_svg():
     return flask.send_file(buf, mimetype='image/svg+xml')
 
 
-def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str, **kwargs) \
-        -> io.BytesIO:
+def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
+                     **kwargs: Any) -> io.BytesIO:
     usi = spectrum.identifier
 
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
@@ -410,7 +412,7 @@ def _cosine(spec: SpectrumTuple, spec_other: SpectrumTuple,
     return score, peak_matches
 
 
-def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs) \
+def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) \
         -> sus.MsmsSpectrum:
     """
     Process a spectrum for plotting.
@@ -424,7 +426,7 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs) \
     ----------
     spectrum : sus.MsmsSpectrum
         The spectrum to be processed for plotting.
-    kwargs : Dict
+    kwargs : Any
         The processing and plotting settings.
 
     Returns
