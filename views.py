@@ -142,18 +142,31 @@ def generate_mirror_svg():
 
 def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
                      **kwargs: Any) -> io.BytesIO:
+    """
+    Generate a spectrum plot.
+
+    Parameters
+    ----------
+    spectrum : sus.MsmsSpectrum
+        The spectrum to be plotted.
+    extension : str
+        Image format.
+    kwargs : Any
+        Plotting settings.
+
+    Returns
+    -------
+    io.BytesIO
+        Bytes buffer containing the spectrum plot.
+    """
     usi = spectrum.identifier
 
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
-    kwargs['annotate_peaks'] = kwargs['annotate_peaks']
-    spectrum = _prepare_spectrum(spectrum, **kwargs)
     sup.spectrum(
-        spectrum,
-        annotate_ions=kwargs['annotate_peaks'],
+        spectrum, annotate_ions=kwargs['annotate_peaks'],
         annot_kws={'rotation': kwargs['annotation_rotation'], 'clip_on': True},
-        grid=kwargs['grid'], ax=ax,
-    )
+        grid=kwargs['grid'], ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
     ax.set_ylim(0, kwargs['max_intensity'])
@@ -189,20 +202,32 @@ def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
 
 def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
                             spectrum_bottom: sus.MsmsSpectrum,
-                            extension: str, **kwargs) -> io.BytesIO:
+                            extension: str, **kwargs: Any) -> io.BytesIO:
+    """
+    Generate a mirror plot of two spectra.
+
+    Parameters
+    ----------
+    spectrum_top : sus.MsmsSpectrum
+        The spectrum to be plotted at the top of the mirror plot.
+    spectrum_bottom : sus.MsmsSpectrum
+        The spectrum to be plotted at the bottom of the mirror plot.
+    extension : str
+        Image format.
+    kwargs : Any
+        Plotting settings.
+
+    Returns
+    -------
+    io.BytesIO
+        Bytes buffer containing the mirror plot.
+    """
     usi1 = spectrum_top.identifier
     usi2 = spectrum_bottom.identifier
 
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
-    annotate_peaks = kwargs['annotate_peaks']
-    kwargs['annotate_peaks'] = annotate_peaks[0]
-    spectrum_top = _prepare_spectrum(spectrum_top, **kwargs)
-    kwargs['annotate_peaks'] = annotate_peaks[1]
-    spectrum_bottom = _prepare_spectrum(spectrum_bottom, **kwargs)
-
-    fragment_mz_tolerance = kwargs['fragment_mz_tolerance']
-
+    # Determine cosine similarity and matching peaks.
     if kwargs['cosine']:
         # Initialize the annotations as unmatched.
         if spectrum_top.annotation is None:
@@ -219,7 +244,7 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
                 annotation.ion_type = 'unmatched'
         # Assign the matching peak annotations.
         similarity, peak_matches = cosine(
-            spectrum_top, spectrum_bottom, fragment_mz_tolerance,
+            spectrum_top, spectrum_bottom, kwargs['fragment_mz_tolerance'],
             kwargs['cosine'] == 'shifted')
         for top_i, bottom_i in peak_matches:
             if spectrum_top.annotation[top_i] is None:
@@ -233,7 +258,7 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
     else:
         similarity = 0
 
-    # Colors for mirror plot peaks, subject to change.
+    # Colors for mirror plot peaks (subject to change).
     sup.colors['top'] = '#212121'
     sup.colors['bottom'] = '#388E3C'
     sup.colors['unmatched'] = 'darkgray'
