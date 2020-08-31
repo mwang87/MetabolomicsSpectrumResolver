@@ -430,7 +430,8 @@ def _prepare_spectrum(usi: str, **kwargs) -> sus.MsmsSpectrum:
 
     if kwargs['annotate_peaks']:
         if kwargs['annotate_peaks'] is True:
-            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(spectrum)]
+            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
+                spectrum, kwargs['annotate_threshold'])]
         for mz in kwargs['annotate_peaks']:
             t = f'{mz:.{kwargs["annotate_precision"]}f}'
             spectrum.annotate_mz_fragment(
@@ -498,6 +499,8 @@ def _get_plotting_args(request, mirror=False):
                       default_plotting_args['annotate_peaks'])
     plotting_args['annotate_peaks'] = annotate_peaks
     annotate_precision = request.args.get('annotate_precision')
+    plotting_args['annotate_threshold'] = \
+        default_plotting_args['annotate_threshold']
     plotting_args['annotate_precision'] = (
         default_plotting_args['annotate_precision']
         if not annotate_precision else int(annotate_precision))
