@@ -136,7 +136,7 @@ def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str, **kwargs) \
 
     fig, ax = plt.subplots(figsize=(kwargs['width'], kwargs['height']))
 
-    kwargs['annotate_peaks'] = kwargs['annotate_peaks'][0]
+    kwargs['annotate_peaks'] = kwargs['annotate_peaks']
     spectrum = _prepare_spectrum(spectrum, **kwargs)
     sup.spectrum(
         spectrum,
