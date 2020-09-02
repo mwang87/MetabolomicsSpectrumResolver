@@ -187,3 +187,9 @@ def test_render_spectrum_drawing_controls_fragment_mz_tolerance(client):
         assert (float(html.xpath('//input[@id="fragment_mz_tolerance"]'
                                  '/@value')[0])
                 == fragment_mz_tolerance)
+
+
+def test_internal_error(client):
+    usi = 'this:is:not:a:valid:usi'
+    response = client.get('/spectrum/', query_string=f'usi={usi}')
+    assert response.status_code == 500
