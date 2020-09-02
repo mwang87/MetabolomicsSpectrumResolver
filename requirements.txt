@@ -1,7 +1,9 @@
 flask
+lxml
 matplotlib
 numba
 numpy
+pytest
 qrcode
 requests
 requests_cache
