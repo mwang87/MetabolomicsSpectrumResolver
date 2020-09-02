@@ -8,6 +8,8 @@ sys.path.insert(0, '..')
 
 import pytest
 from lxml import etree
+from PIL import Image
+from pyzbar import pyzbar
 
 import app
 
@@ -467,6 +469,48 @@ def test_peak_csv_invalid(client):
     usi = 'this:is:not:a:valid:usi'
     response = client.get('/csv/', query_string=f'usi={usi}')
     assert response.status_code == 500
+
+
+def test_generate_qr(client):
+    for usi in usis_to_test:
+        response = client.get('/qrcode/', query_string=f'usi={usi}')
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert imghdr.what(None, response.data) == 'png'
+        with io.BytesIO(response.data) as image_bytes:
+            with Image.open(image_bytes) as image:
+                qr = pyzbar.decode(image)[0]
+                assert qr.data.decode().endswith(f'/spectrum/?usi={usi}')
+
+
+def test_generate_qr_drawing_controls(client):
+    width, height = 20.0, 10.0
+    mz_min, mz_max = 50.0, 500.0
+    max_intensity = 175.0
+    grid = 'true'
+    annotate_precision = 2
+    annotation_rotation = 45
+    cosine = 'shifted'
+    fragment_mz_tolerance = 0.5
+    plotting_args = (f'&width={width}&height={height}'
+                     f'&mz_min={mz_min}&mz_max={mz_max}'
+                     f'&max_intensity={max_intensity}'
+                     f'&grid={grid}'
+                     f'&annotate_precision={annotate_precision}'
+                     f'&annotation_rotation={annotation_rotation}'
+                     f'&cosine={cosine}'
+                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    for usi in usis_to_test:
+        response = client.get('/qrcode/',
+                              query_string=f'usi={usi}&{plotting_args}')
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert imghdr.what(None, response.data) == 'png'
+        with io.BytesIO(response.data) as image_bytes:
+            with Image.open(image_bytes) as image:
+                qr = pyzbar.decode(image)[0]
+                assert qr.data.decode().endswith(f'/spectrum/?usi={usi}'
+                                                 f'&{plotting_args}')
 
 
 def test_internal_error(client):
