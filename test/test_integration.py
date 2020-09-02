@@ -449,7 +449,7 @@ def test_peak_proxi_json_invalid(client):
     usi = 'this:is:not:a:valid:usi'
     response = client.get('/api/proxi/v0.1/spectra', query_string=f'usi={usi}')
     assert response.status_code == 200
-    response_dict = json.loads(response.data)
+    response_dict = json.loads(response.data)[0]
     assert 'error' in response_dict
     assert response_dict['error']['code'] == 404
     assert 'message' in response_dict['error']
