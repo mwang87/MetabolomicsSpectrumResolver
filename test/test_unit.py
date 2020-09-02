@@ -197,3 +197,18 @@ def test_get_plotting_args_invalid_annotate_precision():
         annotate_precision=-1))
     assert (plotting_args['annotate_precision']
             == views.default_plotting_args['annotate_precision'])
+    plotting_args = views._get_plotting_args(_get_plotting_args(
+        annotate_precision=-1), mirror=True)
+    assert (plotting_args['annotate_precision']
+            == views.default_plotting_args['annotate_precision'])
+
+
+def test_get_plotting_args_invalid_fragment_mz_tolerance():
+    plotting_args = views._get_plotting_args(_get_plotting_args(
+        fragment_mz_tolerance=-1))
+    assert (plotting_args['fragment_mz_tolerance']
+            == views.default_plotting_args['fragment_mz_tolerance'])
+    plotting_args = views._get_plotting_args(_get_plotting_args(
+        fragment_mz_tolerance=-1), mirror=True)
+    assert (plotting_args['fragment_mz_tolerance']
+            == views.default_plotting_args['fragment_mz_tolerance'])
