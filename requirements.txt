@@ -3,7 +3,9 @@ lxml
 matplotlib
 numba
 numpy
+PIL
 pytest
+pyzbar
 qrcode
 requests
 requests_cache
