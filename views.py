@@ -631,6 +631,10 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
     if plotting_args['annotate_precision'] < 0:
         plotting_args['annotate_precision'] = \
             default_plotting_args['annotate_precision']
+    # Make sure that the fragment m/z tolerance is valid.
+    if plotting_args['fragment_mz_tolerance'] < 0:
+        plotting_args['fragment_mz_tolerance'] = \
+            default_plotting_args['fragment_mz_tolerance']
 
     return plotting_args
 
