@@ -481,7 +481,8 @@ def test_generate_qr(client):
         with io.BytesIO(response.data) as image_bytes:
             with Image.open(image_bytes) as image:
                 qr = pyzbar.decode(image)[0]
-                assert qr.data.decode().endswith(f'/spectrum/?usi={usi}')
+                assert urllib.parse.unquote(qr.data.decode()).endswith(
+                    f'/spectrum/?usi={usi}')
 
 
 def test_generate_qr_drawing_controls(client):
@@ -512,6 +513,51 @@ def test_generate_qr_drawing_controls(client):
                 qr = pyzbar.decode(image)[0]
                 assert urllib.parse.unquote(qr.data.decode()).endswith(
                     f'/spectrum/?usi={usi}&{plotting_args}')
+
+
+def test_generate_qr_mirror(client):
+    for usi1, usi2 in pairwise(usis_to_test):
+        response = client.get(
+            '/qrcode/', query_string=f'mirror=true&usi1={usi1}&usi2={usi2}')
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert imghdr.what(None, response.data) == 'png'
+        with io.BytesIO(response.data) as image_bytes:
+            with Image.open(image_bytes) as image:
+                qr = pyzbar.decode(image)[0]
+                assert urllib.parse.unquote(qr.data.decode()).endswith(
+                    f'/mirror/?usi1={usi1}&usi2={usi2}')
+
+
+def test_generate_qr_mirror_drawing_controls(client):
+    width, height = 20.0, 10.0
+    mz_min, mz_max = 50.0, 500.0
+    max_intensity = 175.0
+    grid = 'true'
+    annotate_precision = 2
+    annotation_rotation = 45
+    cosine = 'shifted'
+    fragment_mz_tolerance = 0.5
+    plotting_args = (f'&width={width}&height={height}'
+                     f'&mz_min={mz_min}&mz_max={mz_max}'
+                     f'&max_intensity={max_intensity}'
+                     f'&grid={grid}'
+                     f'&annotate_precision={annotate_precision}'
+                     f'&annotation_rotation={annotation_rotation}'
+                     f'&cosine={cosine}'
+                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    for usi1, usi2 in pairwise(usis_to_test):
+        response = client.get('/qrcode/',
+                              query_string=f'mirror=true&usi1={usi1}'
+                                           f'&usi2={usi2}&{plotting_args}')
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert imghdr.what(None, response.data) == 'png'
+        with io.BytesIO(response.data) as image_bytes:
+            with Image.open(image_bytes) as image:
+                qr = pyzbar.decode(image)[0]
+                assert urllib.parse.unquote(qr.data.decode()).endswith(
+                    f'/mirror/?usi1={usi1}&usi2={usi2}&{plotting_args}')
 
 
 def test_internal_error(client):

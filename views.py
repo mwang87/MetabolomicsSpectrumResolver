@@ -716,10 +716,10 @@ def peak_csv():
 
 @blueprint.route('/qrcode/')
 def generate_qr():
-    url = flask.request.url.replace(
-        '/qrcode/',
-        '/spectrum/' if flask.request.args.get('mirror') != 'true'
-        else '/mirror/')
+    if flask.request.args.get('mirror') != 'true':
+        url = flask.request.url.replace('/qrcode/', '/spectrum/')
+    else:
+        url = flask.request.url.replace('/qrcode/?mirror=true&', '/mirror/?')
     qr_image = qrcode.make(url, box_size=2)
     qr_bytes = io.BytesIO()
     qr_image.save(qr_bytes, format='png')
