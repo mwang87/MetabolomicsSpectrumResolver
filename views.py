@@ -617,9 +617,9 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
         plotting_args['height'] = default_plotting_args['height']
     # Make sure that the mass range is valid.
     if plotting_args['mz_min'] is not None and plotting_args['mz_min'] <= 0:
-        del plotting_args['mz_min']
+        plotting_args['mz_min'] = None
     if plotting_args['mz_max'] is not None and plotting_args['mz_max'] <= 0:
-        del plotting_args['mz_max']
+        plotting_args['mz_max'] = None
     # Set maximum intensity based on the plot type.
     plotting_args['max_intensity'] = _get_max_intensity(
         plotting_args['max_intensity'], any(plotting_args['annotate_peaks']),

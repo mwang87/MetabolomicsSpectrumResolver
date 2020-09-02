@@ -137,7 +137,6 @@ def test_parse_motifdb():
 
 def _get_plotting_args(**kwargs):
     plotting_args = views.default_plotting_args.copy()
-    plotting_args['mz_min'], plotting_args['mz_max'] = 50, 500
     plotting_args['max_intensity'] = plotting_args['max_intensity_unlabeled']
     del plotting_args['annotate_peaks']
     for key, value in kwargs.items():
@@ -158,17 +157,28 @@ def test_get_plotting_args_invalid_figsize():
     assert plotting_args['height'] == views.default_plotting_args['height']
 
 
+def test_get_plotting_args_unspecified_mz_range():
+    plotting_args = views._get_plotting_args(_get_plotting_args())
+    assert plotting_args['mz_min'] is None
+    plotting_args = views._get_plotting_args(_get_plotting_args())
+    assert plotting_args['mz_max'] is None
+    plotting_args = views._get_plotting_args(_get_plotting_args(), mirror=True)
+    assert plotting_args['mz_min'] is None
+    plotting_args = views._get_plotting_args(_get_plotting_args(), mirror=True)
+    assert plotting_args['mz_max'] is None
+
+
 def test_get_plotting_args_invalid_mz_range():
     plotting_args = views._get_plotting_args(_get_plotting_args(mz_min=-100))
-    assert 'mz_min' not in plotting_args
+    assert plotting_args['mz_min'] is None
     plotting_args = views._get_plotting_args(_get_plotting_args(mz_max=-100))
-    assert 'mz_max' not in plotting_args
+    assert plotting_args['mz_max'] is None
     plotting_args = views._get_plotting_args(_get_plotting_args(mz_min=-100),
                                              mirror=True)
-    assert 'mz_min' not in plotting_args
+    assert plotting_args['mz_min'] is None
     plotting_args = views._get_plotting_args(_get_plotting_args(mz_max=-100),
                                              mirror=True)
-    assert 'mz_max' not in plotting_args
+    assert plotting_args['mz_max'] is None
 
 
 def test_get_plotting_args_invalid_max_intensity():
