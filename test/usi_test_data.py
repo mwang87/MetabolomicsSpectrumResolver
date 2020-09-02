@@ -1,4 +1,4 @@
-test_usi_list = [
+usis_to_test = [
     # Real USIs.
     'mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943',
     'mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555',
