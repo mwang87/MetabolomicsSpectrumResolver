@@ -1,3 +1,4 @@
+import imghdr
 import io
 import itertools
 import json
@@ -254,6 +255,72 @@ def test_render_mirror_drawing_controls(client):
         assert (float(html.xpath('//input[@id="fragment_mz_tolerance"]'
                                  '/@value')[0])
                 == fragment_mz_tolerance)
+
+
+def test_generate_png(client):
+    for usi in usis_to_test:
+        response = client.get('/png/', query_string=f'usi={usi}')
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert imghdr.what(None, response.data) == 'png'
+
+
+def test_generate_png_drawing_controls(client):
+    width, height = 20.0, 10.0
+    mz_min, mz_max = 50.0, 500.0
+    max_intensity = 175.0
+    grid = 'true'
+    annotate_precision = 2
+    annotation_rotation = 45
+    cosine = 'shifted'
+    fragment_mz_tolerance = 0.5
+    plotting_args = (f'&width={width}&height={height}'
+                     f'&mz_min={mz_min}&mz_max={mz_max}'
+                     f'&max_intensity={max_intensity}'
+                     f'&grid={grid}'
+                     f'&annotate_precision={annotate_precision}'
+                     f'&annotation_rotation={annotation_rotation}'
+                     f'&cosine={cosine}'
+                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    for usi in usis_to_test:
+        response = client.get('/png/',
+                              query_string=f'usi={usi}&{plotting_args}')
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert imghdr.what(None, response.data) == 'png'
+
+
+def test_generate_svg(client):
+    for usi in usis_to_test:
+        response = client.get('/svg/', query_string=f'usi={usi}')
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert b'<!DOCTYPE svg' in response.data
+
+
+def test_generate_svg_drawing_controls(client):
+    width, height = 20.0, 10.0
+    mz_min, mz_max = 50.0, 500.0
+    max_intensity = 175.0
+    grid = 'true'
+    annotate_precision = 2
+    annotation_rotation = 45
+    cosine = 'shifted'
+    fragment_mz_tolerance = 0.5
+    plotting_args = (f'&width={width}&height={height}'
+                     f'&mz_min={mz_min}&mz_max={mz_max}'
+                     f'&max_intensity={max_intensity}'
+                     f'&grid={grid}'
+                     f'&annotate_precision={annotate_precision}'
+                     f'&annotation_rotation={annotation_rotation}'
+                     f'&cosine={cosine}'
+                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    for usi in usis_to_test:
+        response = client.get('/svg/',
+                              query_string=f'usi={usi}&{plotting_args}')
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert b'<!DOCTYPE svg' in response.data
 
 
 def test_internal_error(client):
