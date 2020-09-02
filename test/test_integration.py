@@ -7,6 +7,7 @@ import sys
 sys.path.insert(0, '..')
 
 import pytest
+import urllib.parse
 from lxml import etree
 from PIL import Image
 from pyzbar import pyzbar
@@ -509,8 +510,8 @@ def test_generate_qr_drawing_controls(client):
         with io.BytesIO(response.data) as image_bytes:
             with Image.open(image_bytes) as image:
                 qr = pyzbar.decode(image)[0]
-                assert qr.data.decode().endswith(f'/spectrum/?usi={usi}'
-                                                 f'&{plotting_args}')
+                assert urllib.parse.unquote(qr.data.decode()).endswith(
+                    f'/spectrum/?usi={usi}&{plotting_args}')
 
 
 def test_internal_error(client):
