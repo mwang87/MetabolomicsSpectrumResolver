@@ -180,3 +180,10 @@ def test_get_plotting_args_invalid_max_intensity():
         max_intensity=-1), mirror=True)
     assert (plotting_args['max_intensity']
             == views.default_plotting_args['max_intensity_mirror_labeled'])
+
+
+def test_get_plotting_args_invalid_annotate_precision():
+    plotting_args = views._get_plotting_args(_get_plotting_args(
+        annotate_precision=-1))
+    assert (plotting_args['annotate_precision']
+            == views.default_plotting_args['annotate_precision'])

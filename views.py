@@ -627,6 +627,10 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
     # Set annotate_peaks for standard plots.
     if not mirror:
         plotting_args['annotate_peaks'] = plotting_args['annotate_peaks'][0]
+    # Make sure that the annotation precision is valid.
+    if plotting_args['annotate_precision'] < 0:
+        plotting_args['annotate_precision'] = \
+            default_plotting_args['annotate_precision']
 
     return plotting_args
 
