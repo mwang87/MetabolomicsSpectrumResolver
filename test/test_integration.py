@@ -17,6 +17,25 @@ import app
 from usi_test_data import usis_to_test
 
 
+def _get_custom_plotting_args_str():
+    width, height = 20.0, 10.0
+    mz_min, mz_max = 50.0, 500.0
+    max_intensity = 175.0
+    grid = 'true'
+    annotate_precision = 2
+    annotation_rotation = 45
+    cosine = 'shifted'
+    fragment_mz_tolerance = 0.5
+    return (f'&width={width}&height={height}'
+            f'&mz_min={mz_min}&mz_max={mz_max}'
+            f'&max_intensity={max_intensity}'
+            f'&grid={grid}'
+            f'&annotate_precision={annotate_precision}'
+            f'&annotation_rotation={annotation_rotation}'
+            f'&cosine={cosine}'
+            f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+
+
 @pytest.fixture
 def client():
     app.app.config['TESTING'] = True
@@ -270,22 +289,7 @@ def test_generate_png(client):
 
 
 def test_generate_png_drawing_controls(client):
-    width, height = 20.0, 10.0
-    mz_min, mz_max = 50.0, 500.0
-    max_intensity = 175.0
-    grid = 'true'
-    annotate_precision = 2
-    annotation_rotation = 45
-    cosine = 'shifted'
-    fragment_mz_tolerance = 0.5
-    plotting_args = (f'&width={width}&height={height}'
-                     f'&mz_min={mz_min}&mz_max={mz_max}'
-                     f'&max_intensity={max_intensity}'
-                     f'&grid={grid}'
-                     f'&annotate_precision={annotate_precision}'
-                     f'&annotation_rotation={annotation_rotation}'
-                     f'&cosine={cosine}'
-                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    plotting_args = _get_custom_plotting_args_str()
     for usi in usis_to_test:
         response = client.get('/png/',
                               query_string=f'usi={usi}&{plotting_args}')
@@ -304,22 +308,7 @@ def test_generate_png_mirror(client):
 
 
 def test_generate_png_mirror_drawing_controls(client):
-    width, height = 20.0, 10.0
-    mz_min, mz_max = 50.0, 500.0
-    max_intensity = 175.0
-    grid = 'true'
-    annotate_precision = 2
-    annotation_rotation = 45
-    cosine = 'shifted'
-    fragment_mz_tolerance = 0.5
-    plotting_args = (f'&width={width}&height={height}'
-                     f'&mz_min={mz_min}&mz_max={mz_max}'
-                     f'&max_intensity={max_intensity}'
-                     f'&grid={grid}'
-                     f'&annotate_precision={annotate_precision}'
-                     f'&annotation_rotation={annotation_rotation}'
-                     f'&cosine={cosine}'
-                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    plotting_args = _get_custom_plotting_args_str()
     for usi1, usi2 in pairwise(usis_to_test):
         response = client.get(
             '/png/mirror/',
@@ -338,22 +327,7 @@ def test_generate_svg(client):
 
 
 def test_generate_svg_drawing_controls(client):
-    width, height = 20.0, 10.0
-    mz_min, mz_max = 50.0, 500.0
-    max_intensity = 175.0
-    grid = 'true'
-    annotate_precision = 2
-    annotation_rotation = 45
-    cosine = 'shifted'
-    fragment_mz_tolerance = 0.5
-    plotting_args = (f'&width={width}&height={height}'
-                     f'&mz_min={mz_min}&mz_max={mz_max}'
-                     f'&max_intensity={max_intensity}'
-                     f'&grid={grid}'
-                     f'&annotate_precision={annotate_precision}'
-                     f'&annotation_rotation={annotation_rotation}'
-                     f'&cosine={cosine}'
-                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    plotting_args = _get_custom_plotting_args_str()
     for usi in usis_to_test:
         response = client.get('/svg/',
                               query_string=f'usi={usi}&{plotting_args}')
@@ -372,22 +346,7 @@ def test_generate_svg_mirror(client):
 
 
 def test_generate_svg_mirror_drawing_controls(client):
-    width, height = 20.0, 10.0
-    mz_min, mz_max = 50.0, 500.0
-    max_intensity = 175.0
-    grid = 'true'
-    annotate_precision = 2
-    annotation_rotation = 45
-    cosine = 'shifted'
-    fragment_mz_tolerance = 0.5
-    plotting_args = (f'&width={width}&height={height}'
-                     f'&mz_min={mz_min}&mz_max={mz_max}'
-                     f'&max_intensity={max_intensity}'
-                     f'&grid={grid}'
-                     f'&annotate_precision={annotate_precision}'
-                     f'&annotation_rotation={annotation_rotation}'
-                     f'&cosine={cosine}'
-                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    plotting_args = _get_custom_plotting_args_str()
     for usi1, usi2 in pairwise(usis_to_test):
         response = client.get(
             '/svg/mirror/',
@@ -486,22 +445,7 @@ def test_generate_qr(client):
 
 
 def test_generate_qr_drawing_controls(client):
-    width, height = 20.0, 10.0
-    mz_min, mz_max = 50.0, 500.0
-    max_intensity = 175.0
-    grid = 'true'
-    annotate_precision = 2
-    annotation_rotation = 45
-    cosine = 'shifted'
-    fragment_mz_tolerance = 0.5
-    plotting_args = (f'&width={width}&height={height}'
-                     f'&mz_min={mz_min}&mz_max={mz_max}'
-                     f'&max_intensity={max_intensity}'
-                     f'&grid={grid}'
-                     f'&annotate_precision={annotate_precision}'
-                     f'&annotation_rotation={annotation_rotation}'
-                     f'&cosine={cosine}'
-                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    plotting_args = _get_custom_plotting_args_str()
     for usi in usis_to_test:
         response = client.get('/qrcode/',
                               query_string=f'usi={usi}&{plotting_args}')
@@ -530,22 +474,7 @@ def test_generate_qr_mirror(client):
 
 
 def test_generate_qr_mirror_drawing_controls(client):
-    width, height = 20.0, 10.0
-    mz_min, mz_max = 50.0, 500.0
-    max_intensity = 175.0
-    grid = 'true'
-    annotate_precision = 2
-    annotation_rotation = 45
-    cosine = 'shifted'
-    fragment_mz_tolerance = 0.5
-    plotting_args = (f'&width={width}&height={height}'
-                     f'&mz_min={mz_min}&mz_max={mz_max}'
-                     f'&max_intensity={max_intensity}'
-                     f'&grid={grid}'
-                     f'&annotate_precision={annotate_precision}'
-                     f'&annotation_rotation={annotation_rotation}'
-                     f'&cosine={cosine}'
-                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    plotting_args = _get_custom_plotting_args_str()
     for usi1, usi2 in pairwise(usis_to_test):
         response = client.get('/qrcode/',
                               query_string=f'mirror=true&usi1={usi1}'
