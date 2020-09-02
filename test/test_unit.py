@@ -1,4 +1,5 @@
 import io
+import json
 import sys
 sys.path.insert(0, '..')
 
@@ -15,6 +16,22 @@ def client():
     app.app.config['TESTING'] = True
     with app.app.test_client() as client:
         yield client
+
+
+def test_render_homepage(client):
+    response = client.get('/')
+    assert response.status_code == 200
+
+
+def test_render_contributors(client):
+    response = client.get('/contributors')
+    assert response.status_code == 200
+
+
+def test_render_heartbeat(client):
+    response = client.get('/heartbeat')
+    assert response.status_code == 200
+    assert json.loads(response.data) == {'status': 'success'}
 
 
 def test_render_spectrum(client):
