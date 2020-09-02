@@ -1,4 +1,5 @@
 import io
+import itertools
 import json
 import sys
 sys.path.insert(0, '..')
@@ -184,6 +185,72 @@ def test_render_spectrum_drawing_controls_fragment_mz_tolerance(client):
         # Test whether the plotting arguments are reflected in the drawing
         # controls.
         html = etree.parse(io.BytesIO(response.data), parser)
+        assert (float(html.xpath('//input[@id="fragment_mz_tolerance"]'
+                                 '/@value')[0])
+                == fragment_mz_tolerance)
+
+
+# itertools recipe.
+def pairwise(iterable):
+    """s -> (s0,s1), (s1,s2), (s2, s3), ..."""
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
+
+def test_render_mirror(client):
+    for usi1, usi2 in pairwise(usis_to_test):
+        response = client.get('/mirror/',
+                              query_string=f'usi1={usi1}&usi2={usi2}')
+        assert response.status_code == 200
+        assert usi1.encode() in response.data
+        assert usi2.encode() in response.data
+
+
+def test_render_mirror_drawing_controls(client):
+    parser = etree.HTMLParser()
+    width, height = 20.0, 10.0
+    mz_min, mz_max = 50.0, 500.0
+    max_intensity = 175.0
+    grid = 'true'
+    annotate_precision = 2
+    annotation_rotation = 45
+    cosine = 'shifted'
+    fragment_mz_tolerance = 0.5
+    plotting_args = (f'&width={width}&height={height}'
+                     f'&mz_min={mz_min}&mz_max={mz_max}'
+                     f'&max_intensity={max_intensity}'
+                     f'&grid={grid}'
+                     f'&annotate_precision={annotate_precision}'
+                     f'&annotation_rotation={annotation_rotation}'
+                     f'&cosine={cosine}'
+                     f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+    for usi1, usi2 in pairwise(usis_to_test):
+        response = client.get(
+            '/mirror/',
+            query_string=f'usi1={usi1}&usi2={usi2}&{plotting_args}')
+        assert response.status_code == 200
+        # Test whether the plotting arguments are reflected in the drawing
+        # controls.
+        html = etree.parse(io.BytesIO(response.data), parser)
+        assert float(html.xpath('//input[@id="width"]/@value')[0]) == width
+        assert float(html.xpath('//input[@id="height"]/@value')[0]) == height
+        assert float(html.xpath('//input[@id="mz_min"]/@value')[0]) == mz_min
+        assert float(html.xpath('//input[@id="mz_max"]/@value')[0]) == mz_max
+        assert (float(html.xpath('//input[@id="max_intensity"]/@value')[0])
+                == max_intensity)
+        assert html.xpath('//input[@id="grid"]/@checked')[0] == 'checked'
+        assert (int(html.xpath('//input[@id="annotate_precision"]/@value')[0])
+                == annotate_precision)
+        assert (float(html.xpath('//input[@id="annotation_rotation"]'
+                                 '/@value')[0])
+                == annotation_rotation)
+        assert (html.xpath(f'//select[@id="cosine"]'
+                           f'/option[@value="{cosine}"]/@selected')[0]
+                == 'selected')
+        assert (len(html.xpath(f'//select[@id="cosine"]'
+                               f'/option[@value!="{cosine}"]/@selected'))
+                == 0)
         assert (float(html.xpath('//input[@id="fragment_mz_tolerance"]'
                                  '/@value')[0])
                 == fragment_mz_tolerance)
