@@ -156,3 +156,27 @@ def test_get_plotting_args_invalid_figsize():
     plotting_args = views._get_plotting_args(_get_plotting_args(height=-1),
                                              mirror=True)
     assert plotting_args['height'] == views.default_plotting_args['height']
+
+
+def test_get_plotting_args_invalid_mz_range():
+    plotting_args = views._get_plotting_args(_get_plotting_args(mz_min=-100))
+    assert 'mz_min' not in plotting_args
+    plotting_args = views._get_plotting_args(_get_plotting_args(mz_max=-100))
+    assert 'mz_max' not in plotting_args
+    plotting_args = views._get_plotting_args(_get_plotting_args(mz_min=-100),
+                                             mirror=True)
+    assert 'mz_min' not in plotting_args
+    plotting_args = views._get_plotting_args(_get_plotting_args(mz_max=-100),
+                                             mirror=True)
+    assert 'mz_max' not in plotting_args
+
+
+def test_get_plotting_args_invalid_max_intensity():
+    plotting_args = views._get_plotting_args(_get_plotting_args(
+        max_intensity=-1))
+    assert (plotting_args['max_intensity']
+            == views.default_plotting_args['max_intensity_labeled'])
+    plotting_args = views._get_plotting_args(_get_plotting_args(
+        max_intensity=-1), mirror=True)
+    assert (plotting_args['max_intensity']
+            == views.default_plotting_args['max_intensity_mirror_labeled'])
