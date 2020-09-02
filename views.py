@@ -701,16 +701,17 @@ def peak_proxi_json():
 @blueprint.route('/csv/')
 def peak_csv():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
-    csv_str = io.StringIO()
-    writer = csv.writer(csv_str)
-    writer.writerow(['mz', 'intensity'])
-    for mz, intensity in zip(spectrum.mz, spectrum.intensity):
-        writer.writerow([mz, intensity])
-    csv_bytes = io.BytesIO()
-    csv_bytes.write(csv_str.getvalue().encode('utf-8'))
-    csv_bytes.seek(0)
-    return flask.send_file(csv_bytes, mimetype='text/csv', as_attachment=True,
-                           attachment_filename=f'{spectrum.identifier}.csv')
+    with io.StringIO() as csv_str:
+        writer = csv.writer(csv_str)
+        writer.writerow(['mz', 'intensity'])
+        for mz, intensity in zip(spectrum.mz, spectrum.intensity):
+            writer.writerow([mz, intensity])
+        csv_bytes = io.BytesIO()
+        csv_bytes.write(csv_str.getvalue().encode('utf-8'))
+        csv_bytes.seek(0)
+        return flask.send_file(
+            csv_bytes, mimetype='text/csv', as_attachment=True,
+            attachment_filename=f'{spectrum.identifier}.csv')
 
 
 @blueprint.route('/qrcode/')
