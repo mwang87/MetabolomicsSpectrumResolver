@@ -1,3 +1,4 @@
+import csv
 import imghdr
 import io
 import itertools
@@ -449,6 +450,23 @@ def test_peak_proxi_json_invalid(client):
     assert 'error' in response_dict
     assert response_dict['error']['code'] == 404
     assert 'message' in response_dict['error']
+
+
+def test_peak_csv(client):
+    for usi in usis_to_test:
+        response = client.get('/csv/', query_string=f'usi={usi}')
+        assert response.status_code == 200
+        with io.StringIO(response.data.decode()) as response_csv:
+            csv_reader = csv.reader(response_csv)
+            assert next(csv_reader) == ['mz', 'intensity']
+            for peak in csv_reader:
+                assert len(peak) == 2
+
+
+def test_peak_csv_invalid(client):
+    usi = 'this:is:not:a:valid:usi'
+    response = client.get('/csv/', query_string=f'usi={usi}')
+    assert response.status_code == 500
 
 
 def test_internal_error(client):
