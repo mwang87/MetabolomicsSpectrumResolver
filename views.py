@@ -673,10 +673,13 @@ def peak_json():
 @blueprint.route('/api/proxi/v0.1/spectra')
 def peak_proxi_json():
     try:
-        spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+        usi = flask.request.args.get('usi')
+        spectrum, _ = parsing.parse_usi(usi)
         result_dict = {
-            'intensities': spectrum.intensity.tolist(),
+            'usi': usi,
+            'status': 'READABLE',
             'mzs': spectrum.mz.tolist(),
+            'intensities': spectrum.intensity.tolist(),
             'attributes': [
                 {
                     'accession': 'MS:1000744',
