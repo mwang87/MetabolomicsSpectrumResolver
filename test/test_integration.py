@@ -393,6 +393,64 @@ def test_generate_svg_mirror_drawing_controls(client):
         assert b'<!DOCTYPE svg' in response.data
 
 
+def test_peak_json(client):
+    for usi in usis_to_test:
+        response = client.get('/json/', query_string=f'usi={usi}')
+        assert response.status_code == 200
+        response_dict = json.loads(response.data)
+        assert 'peaks' in response_dict
+        assert 'n_peaks' in response_dict
+        assert 'precursor_mz' in response_dict
+        assert response_dict['n_peaks'] == len(response_dict['peaks'])
+        for peak in response_dict['peaks']:
+            assert len(peak) == 2
+
+
+def test_peak_json_invalid(client):
+    usi = 'this:is:not:a:valid:usi'
+    response = client.get('/json/', query_string=f'usi={usi}')
+    assert response.status_code == 200
+    response_dict = json.loads(response.data)
+    assert 'error' in response_dict
+    assert response_dict['error']['code'] == 404
+    assert 'message' in response_dict['error']
+
+
+def test_peak_proxi_json(client):
+    for usi in usis_to_test:
+        response = client.get('/api/proxi/v0.1/spectra',
+                              query_string=f'usi={usi}')
+        assert response.status_code == 200
+        response_dict = json.loads(response.data)[0]
+        assert 'usi' in response_dict
+        assert 'status' in response_dict
+        assert response_dict['status'] == 'READABLE'
+        assert 'mzs' in response_dict
+        assert 'intensities' in response_dict
+        assert len(response_dict['mzs']) == len(response_dict['intensities'])
+        assert 'attributes' in response_dict
+        for attribute in response_dict['attributes']:
+            assert 'accession' in attribute
+            assert 'name' in attribute
+            assert 'value' in attribute
+            if attribute['accession'] == 'MS:1000744':
+                assert attribute['name'] == 'selected ion m/z'
+            elif attribute['accession'] == 'MS:1000041':
+                assert attribute['name'] == 'charge state'
+        # TODO: Validate using the PROXI swagger definition.
+        #   https://github.com/HUPO-PSI/proxi-schemas/blob/master/specs/swagger.yaml
+
+
+def test_peak_proxi_json_invalid(client):
+    usi = 'this:is:not:a:valid:usi'
+    response = client.get('/api/proxi/v0.1/spectra', query_string=f'usi={usi}')
+    assert response.status_code == 200
+    response_dict = json.loads(response.data)
+    assert 'error' in response_dict
+    assert response_dict['error']['code'] == 404
+    assert 'message' in response_dict['error']
+
+
 def test_internal_error(client):
     usi = 'this:is:not:a:valid:usi'
     response = client.get('/spectrum/', query_string=f'usi={usi}')
