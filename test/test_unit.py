@@ -2,8 +2,10 @@ import sys
 sys.path.insert(0, '..')
 
 import pytest
+import werkzeug.datastructures
 
 import parsing
+import views
 
 from usi_test_data import usis_to_test
 
@@ -131,3 +133,26 @@ def test_parse_motifdb():
     # Invalid index.
     with pytest.raises(ValueError):
         parsing.parse_usi(usi.replace(':171163', ':this_index_does_not_exist'))
+
+
+def _get_plotting_args(**kwargs):
+    plotting_args = views.default_plotting_args.copy()
+    plotting_args['mz_min'], plotting_args['mz_max'] = 50, 500
+    plotting_args['max_intensity'] = plotting_args['max_intensity_unlabeled']
+    del plotting_args['annotate_peaks']
+    for key, value in kwargs.items():
+        plotting_args[key] = value
+    return werkzeug.datastructures.ImmutableMultiDict(plotting_args)
+
+
+def test_get_plotting_args_invalid_figsize():
+    plotting_args = views._get_plotting_args(_get_plotting_args(width=-1))
+    assert plotting_args['width'] == views.default_plotting_args['width']
+    plotting_args = views._get_plotting_args(_get_plotting_args(height=-1))
+    assert plotting_args['height'] == views.default_plotting_args['height']
+    plotting_args = views._get_plotting_args(_get_plotting_args(width=-1),
+                                             mirror=True)
+    assert plotting_args['width'] == views.default_plotting_args['width']
+    plotting_args = views._get_plotting_args(_get_plotting_args(height=-1),
+                                             mirror=True)
+    assert plotting_args['height'] == views.default_plotting_args['height']

@@ -610,6 +610,11 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
             'fragment_mz_tolerance',
             default_plotting_args['fragment_mz_tolerance'], type=float)
     }
+    # Make sure that the figure size is valid.
+    if plotting_args['width'] <= 0:
+        plotting_args['width'] = default_plotting_args['width']
+    if plotting_args['height'] <= 0:
+        plotting_args['height'] = default_plotting_args['height']
     # Set maximum intensity based on the plot type.
     plotting_args['max_intensity'] = _get_max_intensity(
         plotting_args['max_intensity'], any(plotting_args['annotate_peaks']),
