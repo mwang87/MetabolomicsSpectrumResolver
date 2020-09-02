@@ -230,12 +230,6 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
     # Determine cosine similarity and matching peaks.
     if kwargs['cosine']:
         # Initialize the annotations as unmatched.
-        if spectrum_top.annotation is None:
-            spectrum_top.annotation = np.full_like(
-                spectrum_top.mz, None, object)
-        if spectrum_bottom.annotation is None:
-            spectrum_bottom.annotation = np.full_like(
-                spectrum_bottom.mz, None, object)
         for annotation in spectrum_top.annotation:
             if annotation is not None:
                 annotation.ion_type = 'unmatched'
@@ -463,6 +457,10 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) \
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
 
+    # Initialize empty peak annotation list.
+    if spectrum.annotation is None:
+        spectrum.annotation = np.full_like(spectrum.mz, None, object)
+    # Optionally set annotations.
     if kwargs['annotate_peaks']:
         if kwargs['annotate_peaks'] is True:
             kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
