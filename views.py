@@ -615,6 +615,11 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
         plotting_args['width'] = default_plotting_args['width']
     if plotting_args['height'] <= 0:
         plotting_args['height'] = default_plotting_args['height']
+    # Make sure that the mass range is valid.
+    if plotting_args['mz_min'] <= 0:
+        del plotting_args['mz_min']
+    if plotting_args['mz_max'] <= 0:
+        del plotting_args['mz_max']
     # Set maximum intensity based on the plot type.
     plotting_args['max_intensity'] = _get_max_intensity(
         plotting_args['max_intensity'], any(plotting_args['annotate_peaks']),
@@ -649,10 +654,13 @@ def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
         The maximum intensity.
     """
     if max_intensity is not None:
-        return float(max_intensity) / 100
-    # If the intensity is not specified, use a default value based on plot
-    # type.
-    elif annotate_peaks:
+        max_intensity = float(max_intensity) / 100
+        # Make sure that the intensity range is sensible.
+        if max_intensity > 0:
+            return max_intensity
+    # If the intensity is not specified or invalid, use a default value based
+    # on plot type.
+    if annotate_peaks:
         # Labeled (because peak annotations are provided) mirror or standard
         # plot.
         return (default_plotting_args['max_intensity_mirror_labeled'] if mirror
