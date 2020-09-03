@@ -230,12 +230,6 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
     # Determine cosine similarity and matching peaks.
     if kwargs['cosine']:
         # Initialize the annotations as unmatched.
-        if spectrum_top.annotation is None:
-            spectrum_top.annotation = np.full_like(
-                spectrum_top.mz, None, object)
-        if spectrum_bottom.annotation is None:
-            spectrum_bottom.annotation = np.full_like(
-                spectrum_bottom.mz, None, object)
         for annotation in spectrum_top.annotation:
             if annotation is not None:
                 annotation.ion_type = 'unmatched'
@@ -243,7 +237,7 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
             if annotation is not None:
                 annotation.ion_type = 'unmatched'
         # Assign the matching peak annotations.
-        similarity, peak_matches = cosine(
+        similarity, peak_matches = _cosine(
             spectrum_top, spectrum_bottom, kwargs['fragment_mz_tolerance'],
             kwargs['cosine'] == 'shifted')
         for top_i, bottom_i in peak_matches:
@@ -316,8 +310,8 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
     return buf
 
 
-def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
-           fragment_mz_tolerance: float, allow_shift: bool) \
+def _cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
+            fragment_mz_tolerance: float, allow_shift: bool) \
         -> Tuple[float, List[Tuple[int, int]]]:
     """
     Compute the cosine similarity between the given spectra.
@@ -345,12 +339,13 @@ def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
     spec_tup2 = SpectrumTuple(
         spectrum2.precursor_mz, spectrum2.precursor_charge, spectrum2.mz,
         np.copy(spectrum2.intensity) / np.linalg.norm(spectrum2.intensity))
-    return _cosine(spec_tup1, spec_tup2, fragment_mz_tolerance, allow_shift)
+    return _cosine_fast(spec_tup1, spec_tup2, fragment_mz_tolerance,
+                        allow_shift)
 
 
 @nb.njit
-def _cosine(spec: SpectrumTuple, spec_other: SpectrumTuple,
-            fragment_mz_tolerance: float, allow_shift: bool) \
+def _cosine_fast(spec: SpectrumTuple, spec_other: SpectrumTuple,
+                 fragment_mz_tolerance: float, allow_shift: bool) \
         -> Tuple[float, List[Tuple[int, int]]]:
     """
     Compute the cosine similarity between the given spectra.
@@ -463,14 +458,24 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) \
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
 
+    # Initialize empty peak annotation list.
+    if spectrum.annotation is None:
+        spectrum.annotation = np.full_like(spectrum.mz, None, object)
+    # Optionally set annotations.
     if kwargs['annotate_peaks']:
         if kwargs['annotate_peaks'] is True:
             kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
                 spectrum, kwargs['annotate_threshold'])]
+        annotate_peaks_valid = []
         for mz in kwargs['annotate_peaks']:
-            spectrum.annotate_mz_fragment(
-                mz, 0, kwargs['fragment_mz_tolerance'], 'Da',
-                text=f'{mz:.{kwargs["annotate_precision"]}f}')
+            try:
+                spectrum.annotate_mz_fragment(
+                    mz, 0, kwargs['fragment_mz_tolerance'], 'Da',
+                    text=f'{mz:.{kwargs["annotate_precision"]}f}')
+                annotate_peaks_valid.append(mz)
+            except ValueError:
+                pass
+        kwargs['annotate_peaks'] = annotate_peaks_valid
 
     return spectrum
 
@@ -612,6 +617,16 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
             'fragment_mz_tolerance',
             default_plotting_args['fragment_mz_tolerance'], type=float)
     }
+    # Make sure that the figure size is valid.
+    if plotting_args['width'] <= 0:
+        plotting_args['width'] = default_plotting_args['width']
+    if plotting_args['height'] <= 0:
+        plotting_args['height'] = default_plotting_args['height']
+    # Make sure that the mass range is valid.
+    if plotting_args['mz_min'] is not None and plotting_args['mz_min'] <= 0:
+        plotting_args['mz_min'] = None
+    if plotting_args['mz_max'] is not None and plotting_args['mz_max'] <= 0:
+        plotting_args['mz_max'] = None
     # Set maximum intensity based on the plot type.
     plotting_args['max_intensity'] = _get_max_intensity(
         plotting_args['max_intensity'], any(plotting_args['annotate_peaks']),
@@ -619,6 +634,14 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
     # Set annotate_peaks for standard plots.
     if not mirror:
         plotting_args['annotate_peaks'] = plotting_args['annotate_peaks'][0]
+    # Make sure that the annotation precision is valid.
+    if plotting_args['annotate_precision'] < 0:
+        plotting_args['annotate_precision'] = \
+            default_plotting_args['annotate_precision']
+    # Make sure that the fragment m/z tolerance is valid.
+    if plotting_args['fragment_mz_tolerance'] < 0:
+        plotting_args['fragment_mz_tolerance'] = \
+            default_plotting_args['fragment_mz_tolerance']
 
     return plotting_args
 
@@ -646,10 +669,13 @@ def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
         The maximum intensity.
     """
     if max_intensity is not None:
-        return float(max_intensity) / 100
-    # If the intensity is not specified, use a default value based on plot
-    # type.
-    elif annotate_peaks:
+        max_intensity = float(max_intensity) / 100
+        # Make sure that the intensity range is sensible.
+        if max_intensity > 0:
+            return max_intensity
+    # If the intensity is not specified or invalid, use a default value based
+    # on plot type.
+    if annotate_peaks:
         # Labeled (because peak annotations are provided) mirror or standard
         # plot.
         return (default_plotting_args['max_intensity_mirror_labeled'] if mirror
@@ -675,10 +701,13 @@ def peak_json():
 @blueprint.route('/api/proxi/v0.1/spectra')
 def peak_proxi_json():
     try:
-        spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+        usi = flask.request.args.get('usi')
+        spectrum, _ = parsing.parse_usi(usi)
         result_dict = {
-            'intensities': spectrum.intensity.tolist(),
+            'usi': usi,
+            'status': 'READABLE',
             'mzs': spectrum.mz.tolist(),
+            'intensities': spectrum.intensity.tolist(),
             'attributes': [
                 {
                     'accession': 'MS:1000744',
@@ -700,27 +729,25 @@ def peak_proxi_json():
 @blueprint.route('/csv/')
 def peak_csv():
     spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
-    csv_str = io.StringIO()
-    writer = csv.writer(csv_str)
-    writer.writerow(['mz', 'intensity'])
-    for mz, intensity in zip(spectrum.mz, spectrum.intensity):
-        writer.writerow([mz, intensity])
-    csv_bytes = io.BytesIO()
-    csv_bytes.write(csv_str.getvalue().encode('utf-8'))
-    csv_bytes.seek(0)
-    return flask.send_file(csv_bytes, mimetype='text/csv', as_attachment=True,
-                           attachment_filename=f'{spectrum.identifier}.csv')
+    with io.StringIO() as csv_str:
+        writer = csv.writer(csv_str)
+        writer.writerow(['mz', 'intensity'])
+        for mz, intensity in zip(spectrum.mz, spectrum.intensity):
+            writer.writerow([mz, intensity])
+        csv_bytes = io.BytesIO()
+        csv_bytes.write(csv_str.getvalue().encode('utf-8'))
+        csv_bytes.seek(0)
+        return flask.send_file(
+            csv_bytes, mimetype='text/csv', as_attachment=True,
+            attachment_filename=f'{spectrum.identifier}.csv')
 
 
 @blueprint.route('/qrcode/')
 def generate_qr():
     if flask.request.args.get('mirror') != 'true':
-        usi = flask.request.args.get('usi')
-        url = f'{USI_SERVER}spectrum/?usi={usi}'
+        url = flask.request.url.replace('/qrcode/', '/spectrum/')
     else:
-        usi1 = flask.request.args.get('usi1')
-        usi2 = flask.request.args.get('usi2')
-        url = f'{USI_SERVER}mirror/?usi1={usi1}&usi2={usi2}'
+        url = flask.request.url.replace('/qrcode/?mirror=true&', '/mirror/?')
     qr_image = qrcode.make(url, box_size=2)
     qr_bytes = io.BytesIO()
     qr_image.save(qr_bytes, format='png')
