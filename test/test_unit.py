@@ -263,3 +263,28 @@ def test_prepare_spectrum_annotate_peaks_specified_invalid():
             annotate_peaks=json.dumps([[1477.2525, 1654.3575]]))))
     assert all([annotation is None
                 for annotation in spectrum_processed.annotation])
+
+
+def test_prepare_mirror_spectra():
+    usi1 = 'mzspec:MOTIFDB::accession:171163'
+    usi2 = 'mzspec:MOTIFDB::accession:171164'
+    spectrum1, _ = parsing.parse_usi(usi1)
+    spectrum2, _ = parsing.parse_usi(usi2)
+    spectrum1_processed, spectrum2_processed = views._prepare_mirror_spectra(
+        spectrum1, spectrum2, views._get_plotting_args(_get_plotting_args(
+            mz_min=400, mz_max=700, annotate_peaks=json.dumps([[], []])),
+            mirror=True))
+    assert spectrum1 is not spectrum1_processed
+    assert spectrum2 is not spectrum2_processed
+    assert len(spectrum1.mz) == 49
+    assert len(spectrum2.mz) == 28
+    assert len(spectrum1_processed.mz) == 5
+    assert len(spectrum2_processed.mz) == 9
+    assert spectrum1_processed.intensity.max() == 1
+    assert spectrum2_processed.intensity.max() == 1
+    assert len(spectrum1_processed.mz) == len(spectrum1_processed.annotation)
+    assert len(spectrum2_processed.mz) == len(spectrum2_processed.annotation)
+    assert all([annotation is None
+                for annotation in spectrum1_processed.annotation])
+    assert all([annotation is None
+                for annotation in spectrum2_processed.annotation])
