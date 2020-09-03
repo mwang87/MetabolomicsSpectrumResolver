@@ -16,8 +16,8 @@ Supported USI Types:
 6. MetaboLights Dataset Spectra
 7. Metabolomics Workbench Dataset Spectra
 
-![](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/unittest/badge.svg)
-![](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/production-integration/badge.svg)
+![unittest](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/unittest/badge.svg)
+![loadtest](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/loadtest/badge.svg)
 
 > :warning: These identifiers are based on draft USI and draft Metabolomics USI identifiers. 
         Thus, they are subject to change, and so for the moment, they will be specified as `mzdraft` instead of `mzspec` in the first block. 
