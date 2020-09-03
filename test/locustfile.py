@@ -12,15 +12,17 @@ random.seed(42)
 @locust.events.quitting.add_listener
 def _(environment, **kw):
     max_failure_rate = 0.01
-    max_avg_response_time = 200
-    max_percentile_time = 0.95, 800
+    max_avg_response_time = 6000
+    max_percentile_time = 0.95, 10000
     if environment.stats.total.fail_ratio > max_failure_rate:
         logging.error(f'Test failed due to failure ratio > '
-                      f'{max_failure_rate:.0%}')
+                      f'{max_failure_rate:.0%}: '
+                      f'{environment.stats.total.fail_ratio:.0%}')
         environment.process_exit_code = 1
     elif environment.stats.total.avg_response_time > max_avg_response_time:
-        logging.error('Test failed due to average response time ratio > %d ms',
-                      max_avg_response_time)
+        logging.error('Test failed due to average response time ratio > %d ms:'
+                      ' %d ms', max_avg_response_time,
+                      environment.stats.total.avg_response_time)
         environment.process_exit_code = 1
     elif environment.stats.total.get_response_time_percentile(
             max_percentile_time[0]) > max_percentile_time[1]:
