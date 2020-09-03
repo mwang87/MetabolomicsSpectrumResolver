@@ -1,3 +1,4 @@
+import logging
 import random
 
 import locust
@@ -6,6 +7,28 @@ from usi_test_data import usis_to_test
 
 
 random.seed(42)
+
+
+@locust.events.quitting.add_listener
+def _(environment, **kw):
+    max_failure_rate = 0.01
+    max_avg_response_time = 200
+    max_percentile_time = 0.95, 800
+    if environment.stats.total.fail_ratio > max_failure_rate:
+        logging.error(f'Test failed due to failure ratio > '
+                      f'{max_failure_rate:.0%}')
+        environment.process_exit_code = 1
+    elif environment.stats.total.avg_response_time > max_avg_response_time:
+        logging.error('Test failed due to average response time ratio > %d ms',
+                      max_avg_response_time)
+        environment.process_exit_code = 1
+    elif environment.stats.total.get_response_time_percentile(
+            max_percentile_time[0]) > max_percentile_time[1]:
+        logging.error('Test failed due to %dth percentile response time > %d '
+                      'ms', max_percentile_time[0], max_percentile_time[1])
+        environment.process_exit_code = 1
+    else:
+        environment.process_exit_code = 0
 
 
 class UsiLoadTester(locust.HttpUser):
