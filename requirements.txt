@@ -1,4 +1,5 @@
 flask
+locust
 lxml
 matplotlib
 numba
