@@ -466,10 +466,16 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) \
         if kwargs['annotate_peaks'] is True:
             kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
                 spectrum, kwargs['annotate_threshold'])]
+        annotate_peaks_valid = []
         for mz in kwargs['annotate_peaks']:
-            spectrum.annotate_mz_fragment(
-                mz, 0, kwargs['fragment_mz_tolerance'], 'Da',
-                text=f'{mz:.{kwargs["annotate_precision"]}f}')
+            try:
+                spectrum.annotate_mz_fragment(
+                    mz, 0, kwargs['fragment_mz_tolerance'], 'Da',
+                    text=f'{mz:.{kwargs["annotate_precision"]}f}')
+                annotate_peaks_valid.append(mz)
+            except ValueError:
+                pass
+        kwargs['annotate_peaks'] = annotate_peaks_valid
 
     return spectrum
 
