@@ -217,6 +217,17 @@ def test_get_plotting_args_invalid_fragment_mz_tolerance():
             == views.default_plotting_args['fragment_mz_tolerance'])
 
 
+def test_get_plotting_args_title():
+    usi = 'mzspec:MOTIFDB::accession:171163'
+    plot_title = 'Custom title'
+    plotting_args = views._get_plotting_args(_get_plotting_args(
+        usi=usi))
+    assert plotting_args['plot_title'] == usi
+    plotting_args = views._get_plotting_args(_get_plotting_args(
+        usi=usi, plot_title=plot_title))
+    assert plotting_args['plot_title'] == plot_title
+
+
 def test_prepare_spectrum():
     usi = 'mzspec:MOTIFDB::accession:171163'
     spectrum, _ = parsing.parse_usi(usi)
