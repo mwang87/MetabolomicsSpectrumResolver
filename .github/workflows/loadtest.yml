@@ -37,4 +37,5 @@ jobs:
         export PATH="$HOME/miniconda/bin:$PATH"
         source ~/.bashrc
         python main.py &>/dev/null &
-        cd test && locust --headless -u 100 -r 10 -H http://0.0.0.0:5000/ -t 300s
+        sleep 5
+        locust -f test/locustfile.py --headless -u 100 -r 10 -H http://0.0.0.0:5000/ -t 300s
