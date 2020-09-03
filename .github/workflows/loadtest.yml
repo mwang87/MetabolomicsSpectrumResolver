@@ -1,0 +1,40 @@
+name: loadtest
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  unit-test:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7]
+
+### TODO: We probably should switch to using the Docker version.
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+        bash miniconda.sh -b -p $HOME/miniconda
+        export PATH="$HOME/miniconda/bin:$PATH"
+        conda config --set always_yes yes --set changeps1 no
+        conda update -q conda
+        conda create -n usi -c conda-forge -c bioconda -c defaults flake8 \
+          flask gunicorn locust lxml matplotlib numba numpy pillow pytest \
+          pyzbar qrcode rdkit requests requests-cache scipy spectrum_utils \
+          werkzeug zbar
+        echo "source activate usi" > ~/.bashrc
+    - name: Load testing with locust
+      run: |
+        export PATH="$HOME/miniconda/bin:$PATH"
+        source ~/.bashrc
+        python main.py &>/dev/null &
+        cd test && locust --headless -u 100 -r 10 -H http://0.0.0.0:5000/ -t 300s
