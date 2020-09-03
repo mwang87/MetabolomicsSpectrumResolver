@@ -43,3 +43,6 @@ attach:
 # Github Testing with Act
 test-actions-unit:
 	act -j unit-test -P ubuntu-latest=nektos/act-environments-ubuntu:18.04 -b
+
+test-actions-locust:
+	act -j load-test -P ubuntu-latest=nektos/act-environments-ubuntu:18.04 -b
