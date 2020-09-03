@@ -138,6 +138,7 @@ Mirror Match with Intensity Scaling
 - `mz_min`: Minimum m/z value.
 - `mz_max`: Maximum m/z value.
 - `annotate_peaks`: Defines which peaks in which spectrum (top or bottom) will be annotated. The parameters is a list of lists of m/z values of the peaks to be annotated. For a single spectrum plot it should be a single nested list (i.e. `[[m1, m2]]`), for a mirror plot it should be two nested lists for the top spectrum and the bottom spectrum (i.e. `[[s1m1,s1m2],[s2m1,s2m2]]`).
+- `plot_title`: Custom plot title, omit to use default
 
 ## URL Endpoints
 
