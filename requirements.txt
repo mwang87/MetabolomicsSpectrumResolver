@@ -1,10 +1,9 @@
 flask
-matplotlib
-numba
-numpy
-qrcode
-requests
-requests_cache
-scipy
 spectrum_utils
-werkzeug
+requests
+qrcode
+requests_cache
+numba
+matplotlib
+numpy
+scipy
