@@ -237,7 +237,7 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
             if annotation is not None:
                 annotation.ion_type = 'unmatched'
         # Assign the matching peak annotations.
-        similarity, peak_matches = cosine(
+        similarity, peak_matches = _cosine(
             spectrum_top, spectrum_bottom, kwargs['fragment_mz_tolerance'],
             kwargs['cosine'] == 'shifted')
         for top_i, bottom_i in peak_matches:
@@ -310,8 +310,8 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
     return buf
 
 
-def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
-           fragment_mz_tolerance: float, allow_shift: bool) \
+def _cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
+            fragment_mz_tolerance: float, allow_shift: bool) \
         -> Tuple[float, List[Tuple[int, int]]]:
     """
     Compute the cosine similarity between the given spectra.
@@ -339,12 +339,13 @@ def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
     spec_tup2 = SpectrumTuple(
         spectrum2.precursor_mz, spectrum2.precursor_charge, spectrum2.mz,
         np.copy(spectrum2.intensity) / np.linalg.norm(spectrum2.intensity))
-    return _cosine(spec_tup1, spec_tup2, fragment_mz_tolerance, allow_shift)
+    return _cosine_fast(spec_tup1, spec_tup2, fragment_mz_tolerance,
+                        allow_shift)
 
 
 @nb.njit
-def _cosine(spec: SpectrumTuple, spec_other: SpectrumTuple,
-            fragment_mz_tolerance: float, allow_shift: bool) \
+def _cosine_fast(spec: SpectrumTuple, spec_other: SpectrumTuple,
+                 fragment_mz_tolerance: float, allow_shift: bool) \
         -> Tuple[float, List[Tuple[int, int]]]:
     """
     Compute the cosine similarity between the given spectra.
