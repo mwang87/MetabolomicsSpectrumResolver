@@ -1,8 +1,8 @@
 name: loadtest
 
 on:
-  - push
-  - pull_request
+  schedule:
+   - cron:  '*/60 * * * *'
 
 jobs:
   load-test:

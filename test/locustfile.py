@@ -12,7 +12,7 @@ random.seed(42)
 @locust.events.quitting.add_listener
 def _(environment, **kw):
     max_failure_rate = 0.01
-    max_avg_response_time = 6000
+    max_avg_response_time = 7000
     max_percentile_time = 0.95, 10000
     if environment.stats.total.fail_ratio > max_failure_rate:
         logging.error(f'Test failed due to failure ratio > '
