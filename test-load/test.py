@@ -5,7 +5,7 @@ import grequests
 from tqdm import tqdm
 from urllib.parse import quote
 
-from usi_test_cases import test_usi_list
+import usi_test_cases
 
 
 PRODUCTION_URL = os.environ.get(
@@ -14,7 +14,7 @@ PRODUCTION_URL = os.environ.get(
 
 def test_img():
     all_urls = []
-    for usi in test_usi_list:
+    for usi in usi_test_cases.test_usi_list:
         all_urls.append(f'{PRODUCTION_URL}/svg/?usi={quote(usi)}')
         all_urls.append(f'{PRODUCTION_URL}/png/?usi={quote(usi)}')
 
