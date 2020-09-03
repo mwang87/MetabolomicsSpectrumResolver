@@ -48,12 +48,20 @@
                     </a>
                 </div>
                 <div class="col-2">
-                    <a class="btn btn-primary"
-                       id="download_png"
-                       href="/png/?usi=(( usi ))"
-                       download="(( usi )).png">
-                        Download as PNG
-                    </a>
+                    <div class="btn-group" >
+                        <a class="btn btn-primary"
+                            id="download_png"
+                            href="/png/?usi=(( usi ))"
+                            download="(( usi )).png">
+                                Download as PNG
+                        </a>
+                        <button class="btn btn-primary"
+                            id="url_png"
+                            data-clipboard-text="URL">
+                                URL
+                        </button>
+                    </div>
+                    
                 </div>
             </div>
         </div>
@@ -71,12 +79,17 @@
 </div>
 
 <script type="text/javascript">
+    new ClipboardJS('.btn');
+
     function updateFigure() {
         let svg_url = "/svg/?usi=(( usi ))";
         let draw_parameters = getDrawingControls();
         $("#render_spectrum")[0].src = svg_url + draw_parameters;
         $("#download_svg")[0].href = svg_url + draw_parameters;
         $("#download_png")[0].href = "/png/?usi=(( usi ))" + draw_parameters;
+        $("#url_png").attr('data-clipboard-text', "(( USI_SERVER ))/png/?usi=(( usi ))" + draw_parameters)
+        
+
         window.history.replaceState(
             {}, "", "/spectrum/?usi=(( usi ))" + draw_parameters);
     }
