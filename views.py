@@ -17,6 +17,8 @@ import werkzeug
 from spectrum_utils import plot as sup, spectrum as sus
 
 import parsing
+from error import UsiError
+
 
 matplotlib.use('Agg')
 
@@ -693,6 +695,8 @@ def peak_json():
             'peaks': _get_peaks(spectrum),
             'n_peaks': len(spectrum.mz),
             'precursor_mz': spectrum.precursor_mz}
+    except UsiError as e:
+        result_dict = {'error': {'code': e.error_code, 'message': str(e)}}
     except ValueError as e:
         result_dict = {'error': {'code': 404, 'message': str(e)}}
     return flask.jsonify(result_dict)
@@ -721,6 +725,8 @@ def peak_proxi_json():
                 }
             ]
         }
+    except UsiError as e:
+        result_dict = {'error': {'code': e.error_code, 'message': str(e)}}
     except ValueError as e:
         result_dict = {'error': {'code': 404, 'message': str(e)}}
     return flask.jsonify([result_dict])
@@ -756,5 +762,10 @@ def generate_qr():
 
 
 @blueprint.errorhandler(Exception)
-def internal_error(error):
-    return flask.render_template('500.html', error=error), 500
+def render_error(error):
+    if type(error) == UsiError:
+        error_code = error.error_code
+    else:
+        error_code = 500
+    return (flask.render_template('error.html', error=error.message),
+            error_code)
