@@ -38,4 +38,4 @@ jobs:
         source ~/.bashrc
         python main.py &
         sleep 15
-        locust -f test/locustfile.py --headless -u 500 -r 100 -H http://0.0.0.0:5000/ -t 120s
+        locust -f test/locustfile.py --headless -u 10 -r 10 -H http://0.0.0.0:5000/ -t 120s
