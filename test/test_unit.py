@@ -1,3 +1,4 @@
+import json
 import sys
 sys.path.insert(0, '..')
 
@@ -212,3 +213,53 @@ def test_get_plotting_args_invalid_fragment_mz_tolerance():
         fragment_mz_tolerance=-1), mirror=True)
     assert (plotting_args['fragment_mz_tolerance']
             == views.default_plotting_args['fragment_mz_tolerance'])
+
+
+def test_prepare_spectrum():
+    usi = 'mzspec:MOTIFDB::accession:171163'
+    spectrum, _ = parsing.parse_usi(usi)
+    spectrum_processed = views._prepare_spectrum(
+        spectrum, **views._get_plotting_args(_get_plotting_args(
+            mz_min=400, mz_max=700, annotate_peaks=json.dumps([[]]))))
+    assert spectrum is not spectrum_processed
+    assert len(spectrum.mz) == 49
+    assert len(spectrum_processed.mz) == 5
+    assert spectrum_processed.intensity.max() == 1
+    assert len(spectrum_processed.mz) == len(spectrum_processed.annotation)
+    assert all([annotation is None
+                for annotation in spectrum_processed.annotation])
+
+
+def test_prepare_spectrum_annotate_peaks_default():
+    usi = 'mzspec:MOTIFDB::accession:171163'
+    spectrum, _ = parsing.parse_usi(usi)
+    spectrum_processed = views._prepare_spectrum(
+        spectrum, **views._get_plotting_args(_get_plotting_args()))
+    assert not all([annotation is None
+                    for annotation in spectrum_processed.annotation])
+
+
+def test_prepare_spectrum_annotate_peaks_specified():
+    usi = 'mzspec:MOTIFDB::accession:171163'
+    spectrum, _ = parsing.parse_usi(usi)
+    spectrum_processed = views._prepare_spectrum(
+        spectrum, **views._get_plotting_args(_get_plotting_args(
+            mz_min=400, mz_max=700,
+            annotate_peaks=json.dumps([[477.2525, 654.3575]]))))
+    assert sum([annotation is not None
+                for annotation in spectrum_processed.annotation]) == 2
+    assert spectrum_processed.annotation[0] is None
+    assert spectrum_processed.annotation[1] is not None
+    assert spectrum_processed.annotation[2] is None
+    assert spectrum_processed.annotation[3] is None
+    assert spectrum_processed.annotation[4] is not None
+
+
+def test_prepare_spectrum_annotate_peaks_specified_invalid():
+    usi = 'mzspec:MOTIFDB::accession:171163'
+    spectrum, _ = parsing.parse_usi(usi)
+    spectrum_processed = views._prepare_spectrum(
+        spectrum, **views._get_plotting_args(_get_plotting_args(
+            annotate_peaks=json.dumps([[1477.2525, 1654.3575]]))))
+    assert all([annotation is None
+                for annotation in spectrum_processed.annotation])
