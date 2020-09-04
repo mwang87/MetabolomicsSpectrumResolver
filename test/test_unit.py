@@ -15,6 +15,11 @@ from error import UsiError
 from usi_test_data import usis_to_test
 
 
+@pytest.fixture(autouse=True)
+def clear_cache():
+    parsing.parse_usi.cache_clear()
+
+
 def test_parse_usi():
     # ValueError will be thrown if invalid USI.
     for usi in usis_to_test:
@@ -166,7 +171,7 @@ def test_parse_motifdb():
 
 def test_parse_timeout():
     with unittest.mock.patch(
-            'requests.get',
+            'parsing.requests.get',
             side_effect=UsiError('Timeout while retrieving the USI from an '
                                  'external resource', 504)) as _:
         with pytest.raises(UsiError) as exc_info:
