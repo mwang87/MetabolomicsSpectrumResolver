@@ -177,9 +177,10 @@ def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-    title = ax.text(0.5, 1.06, usi, horizontalalignment='center',
-                    verticalalignment='bottom', fontsize='x-large',
-                    fontweight='bold', transform=ax.transAxes)
+    title = ax.text(0.5, 1.06, kwargs['plot_title'],
+                    horizontalalignment='center', verticalalignment='bottom',
+                    fontsize='x-large', fontweight='bold',
+                    transform=ax.transAxes)
     title.set_url(f'{USI_SERVER}spectrum/?usi={usi}')
     subtitle = (f'Precursor $m$/$z$: '
                 f'{spectrum.precursor_mz:.{kwargs["annotate_precision"]}f} '
@@ -615,7 +616,8 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
             type=lambda cos: cos if cos != 'off' else False),
         'fragment_mz_tolerance': args.get(
             'fragment_mz_tolerance',
-            default_plotting_args['fragment_mz_tolerance'], type=float)
+            default_plotting_args['fragment_mz_tolerance'], type=float),
+        'plot_title': args.get('plot_title', args.get('usi'))
     }
     # Make sure that the figure size is valid.
     if plotting_args['width'] <= 0:
