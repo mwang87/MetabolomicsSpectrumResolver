@@ -1,5 +1,6 @@
 import json
 import sys
+import unittest.mock
 sys.path.insert(0, '..')
 
 import numpy as np
@@ -161,6 +162,17 @@ def test_parse_motifdb():
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':171163', ':this_index_does_not_exist'))
     assert exc_info.value.error_code == 404
+
+
+def test_parse_timeout():
+    with unittest.mock.patch(
+            'parsing.requests.get',
+            side_effect=UsiError('Timeout while retrieving the USI from an '
+                                 'external resource', 504)) as _:
+        with pytest.raises(UsiError) as exc_info:
+            usi = 'mzspec:MASSBANK::accession:SM858102'
+            parsing.parse_usi(usi)
+        assert exc_info.value.error_code == 504
 
 
 def _get_plotting_args(**kwargs):
