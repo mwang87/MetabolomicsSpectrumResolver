@@ -504,7 +504,7 @@ def test_render_error(client):
 
 def test_render_error_timeout(client):
     with unittest.mock.patch(
-            'parsing.requests.get',
+            'requests.get',
             side_effect=UsiError('Timeout while retrieving the USI from an '
                                  'external resource', 504)) as _:
         usi = 'mzspec:MASSBANK::accession:SM858102'

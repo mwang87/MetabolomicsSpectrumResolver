@@ -166,7 +166,7 @@ def test_parse_motifdb():
 
 def test_parse_timeout():
     with unittest.mock.patch(
-            'parsing.requests.get',
+            'requests.get',
             side_effect=UsiError('Timeout while retrieving the USI from an '
                                  'external resource', 504)) as _:
         with pytest.raises(UsiError) as exc_info:
