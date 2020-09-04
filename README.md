@@ -133,6 +133,9 @@ Vanilla Mirror Match
 Mirror Match with Intensity Scaling
 ![](https://metabolomics-usi.ucsd.edu/svg/mirror?usi1=mzspec:MASSBANK::accession:BSU00002&usi2=mzspec:MASSBANK::accession:BSU00002&max_intensity=150)
 
+Custom Title
+![](https://metabolomics-usi.ucsd.edu/svg/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943&plot_title=CUSTOMTITLE)
+
 ## Plotting Parameters
 
 - `mz_min`: Minimum m/z value.
