@@ -14,6 +14,7 @@ from PIL import Image
 from pyzbar import pyzbar
 
 import app
+import parsing
 from error import UsiError
 
 from usi_test_data import usis_to_test
@@ -36,6 +37,11 @@ def _get_custom_plotting_args_str():
             f'&annotation_rotation={annotation_rotation}'
             f'&cosine={cosine}'
             f'&fragment_mz_tolerance={fragment_mz_tolerance}')
+
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    parsing.parse_usi.cache_clear()
 
 
 @pytest.fixture
@@ -504,7 +510,7 @@ def test_render_error(client):
 
 def test_render_error_timeout(client):
     with unittest.mock.patch(
-            'requests.get',
+            'parsing.requests.get',
             side_effect=UsiError('Timeout while retrieving the USI from an '
                                  'external resource', 504)) as _:
         usi = 'mzspec:MASSBANK::accession:SM858102'
