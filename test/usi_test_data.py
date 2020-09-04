@@ -11,6 +11,7 @@ usis_to_test = [
     'mzspec:MOTIFDB::accession:171163',
     'mzspec:MSV000082791:(-)-epigallocatechin:scan:2',
     'mzspec:MSV000082680:iPSC-T1R1:scan:3',
+    'mzspec:MSV000085444:Hui_N3_fe:scan:500',
     # Legacy cases.
     'mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943',
     'mzspec:GNPSTASK-64b22841ab3548f987b3cfc18696a581:spectra/specs_ms.mgf:scan:1469',
