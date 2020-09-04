@@ -1,11 +1,11 @@
-name: unittest
+name: loadtest
 
 on:
-  - push
-  - pull_request
+  schedule:
+   - cron:  '*/60 * * * *'
 
 jobs:
-  unit-test:
+  load-test:
 
     runs-on: ubuntu-latest
     strategy:
@@ -32,17 +32,9 @@ jobs:
           pyzbar qrcode rdkit requests requests-cache scipy spectrum_utils \
           werkzeug zbar
         echo "source activate usi" > ~/.bashrc
-    - name: Lint with flake8
-      run: |
-        export PATH="$HOME/miniconda/bin:$PATH"
-        bash -c "source activate usi"
-        pip install flake8
-        # Stop the build if there are Python syntax errors or undefined names.
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide.
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
+    - name: Load testing with locust
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
         source ~/.bashrc
-        cd test	&& pytest -v
+        locust -f test/locustfile.py --headless -u 100 -r 10 \
+          -H https://metabolomics-usi.ucsd.edu/ -t 120s
