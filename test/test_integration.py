@@ -4,6 +4,7 @@ import io
 import itertools
 import json
 import sys
+import unittest.mock
 sys.path.insert(0, '..')
 
 import pytest
@@ -13,6 +14,7 @@ from PIL import Image
 from pyzbar import pyzbar
 
 import app
+from error import UsiError
 
 from usi_test_data import usis_to_test
 
@@ -498,6 +500,47 @@ def test_render_error(client):
         if usi is not None:
             response = client.get('/spectrum/', query_string=f'usi={usi}')
             assert response.status_code == status_code, usi
+
+
+def test_render_error_timeout(client):
+    with unittest.mock.patch(
+            'parsing.requests.get',
+            side_effect=UsiError('Timeout while retrieving the USI from an '
+                                 'external resource', 504)) as _:
+        usi = 'mzspec:MASSBANK::accession:SM858102'
+        response = client.get('/spectrum/', query_string=f'usi={usi}')
+        assert response.status_code == 504
+        response = client.get('/png/', query_string=f'usi={usi}')
+        assert response.status_code == 504
+        response = client.get('/svg/', query_string=f'usi={usi}')
+        assert response.status_code == 504
+        response = client.get('/mirror/',
+                              query_string=f'usi1={usi}&usi2={usi}')
+        assert response.status_code == 504
+        response = client.get('/png/mirror/',
+                              query_string=f'usi1={usi}&usi2={usi}')
+        assert response.status_code == 504
+        response = client.get('/svg/mirror/',
+                              query_string=f'usi1={usi}&usi2={usi}')
+        assert response.status_code == 504
+
+        response = client.get('/json/', query_string=f'usi={usi}')
+        assert response.status_code == 200
+        response_dict = json.loads(response.data)
+        assert 'error' in response_dict
+        assert response_dict['error']['code'] == 504
+        assert 'message' in response_dict['error']
+
+        response = client.get('/api/proxi/v0.1/spectra',
+                              query_string=f'usi={usi}')
+        assert response.status_code == 200
+        response_dict = json.loads(response.data)[0]
+        assert 'error' in response_dict
+        assert response_dict['error']['code'] == 504
+        assert 'message' in response_dict['error']
+
+        response = client.get('/csv/', query_string=f'usi={usi}')
+        assert response.status_code == 504
 
 
 def _get_invalid_usi_status_code():
