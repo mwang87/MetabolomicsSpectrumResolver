@@ -370,13 +370,14 @@ def test_peak_json(client):
 
 
 def test_peak_json_invalid(client):
-    usi = 'this:is:not:a:valid:usi'
-    response = client.get('/json/', query_string=f'usi={usi}')
-    assert response.status_code == 200
-    response_dict = json.loads(response.data)
-    assert 'error' in response_dict
-    assert response_dict['error']['code'] == 404
-    assert 'message' in response_dict['error']
+    for usi, status_code in zip(*_get_invalid_usi_status_code()):
+        if usi is not None:
+            response = client.get('/json/', query_string=f'usi={usi}')
+            assert response.status_code == 200
+            response_dict = json.loads(response.data)
+            assert 'error' in response_dict
+            assert response_dict['error']['code'] == status_code, usi
+            assert 'message' in response_dict['error']
 
 
 def test_peak_proxi_json(client):
@@ -405,13 +406,15 @@ def test_peak_proxi_json(client):
 
 
 def test_peak_proxi_json_invalid(client):
-    usi = 'this:is:not:a:valid:usi'
-    response = client.get('/api/proxi/v0.1/spectra', query_string=f'usi={usi}')
-    assert response.status_code == 200
-    response_dict = json.loads(response.data)[0]
-    assert 'error' in response_dict
-    assert response_dict['error']['code'] == 404
-    assert 'message' in response_dict['error']
+    for usi, status_code in zip(*_get_invalid_usi_status_code()):
+        if usi is not None:
+            response = client.get('/api/proxi/v0.1/spectra',
+                                  query_string=f'usi={usi}')
+            assert response.status_code == 200
+            response_dict = json.loads(response.data)[0]
+            assert 'error' in response_dict
+            assert response_dict['error']['code'] == status_code, usi
+            assert 'message' in response_dict['error']
 
 
 def test_peak_csv(client):
@@ -426,9 +429,10 @@ def test_peak_csv(client):
 
 
 def test_peak_csv_invalid(client):
-    usi = 'this:is:not:a:valid:usi'
-    response = client.get('/csv/', query_string=f'usi={usi}')
-    assert response.status_code == 500
+    for usi, status_code in zip(*_get_invalid_usi_status_code()):
+        if usi is not None:
+            response = client.get('/csv/', query_string=f'usi={usi}')
+            assert response.status_code == status_code, usi
 
 
 def test_generate_qr(client):
@@ -489,7 +493,54 @@ def test_generate_qr_mirror_drawing_controls(client):
                     f'/mirror/?usi1={usi1}&usi2={usi2}&{plotting_args}')
 
 
-def test_internal_error(client):
-    usi = 'this:is:not:a:valid:usi'
-    response = client.get('/spectrum/', query_string=f'usi={usi}')
-    assert response.status_code == 500
+def test_render_error(client):
+    for usi, status_code in zip(*_get_invalid_usi_status_code()):
+        if usi is not None:
+            response = client.get('/spectrum/', query_string=f'usi={usi}')
+            assert response.status_code == status_code, usi
+
+
+def _get_invalid_usi_status_code():
+    usis = [
+        # Invalid USI.
+        'this:is:not:a:valid:usi',
+        # Invalid preamble.
+        None,
+        # 'not_mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:
+        #  scan:17555',
+        # Invalid collection.
+        'mzspec:PXD000000000:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555',
+        'mzspec:RANDOM666:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555',
+        # Invalid index.
+        None,
+        # 'mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:
+        #  not_scan:17555',
+        # Missing index.
+        'mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:',
+        'mzspec:GNPS:TASK-666c95481f0c53d42e78a61bf899e9f9adb-spectra/'
+        'specs_ms.mgf:scan:1943',
+        'mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/'
+        'specs_ms.mgf:index:1943',
+        'mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/'
+        'nonexisting.mgf:scan:1943',
+        'mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/'
+        'specs_ms.mgf:scan:this_scan_does_not_exist',
+        'mzspec:GNPS:GNPS-LIBRARY:index:CCMSLIB00005436077',
+        'mzspec:GNPS:GNPS-LIBRARY:accession:this_accession_does_not_exist',
+        'mzspec:MASSBANK::index:SM858102',
+        'mzspec:MASSBANK::accession:this_accession_does_not_exist',
+        'mzspec:MS2LDA:TASK-bla190:accession:270684',
+        'mzspec:MS2LDA:TASK-190:index:270684',
+        'mzspec:MS2LDA:TASK-666666666:accession:270684',
+        'mzspec:MS2LDA:TASK-190:accession:this_document_does_not_exist',
+        'mzspec:MSV666666666:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555',
+        'mzspec:MSV000079514:this_filename_does_not_exist:scan:17555',
+        'mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:index:17555',
+        'mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:'
+        'this_scan_does_not_exist',
+        'mzspec:MOTIFDB::index:171163',
+        'mzspec:MOTIFDB::accession:this_index_does_not_exist'
+    ]
+    status_codes = [400, 400, 400, 400, 400, 400, 400, 400, 404, 404, 400, 404,
+                    400, 404, 400, 400, 404, 404, 404, 404, 400, 404, 400, 404]
+    return usis, status_codes
