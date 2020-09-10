@@ -243,22 +243,25 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
         similarity, peak_matches = _cosine(
             spectrum_top, spectrum_bottom, kwargs['fragment_mz_tolerance'],
             kwargs['cosine'] == 'shifted')
-        for top_i, bottom_i in peak_matches:
-            if spectrum_top.annotation[top_i] is None:
-                spectrum_top.annotation[top_i] = sus.FragmentAnnotation(
-                    0, spectrum_top.mz[top_i], '')
-            spectrum_top.annotation[top_i].ion_type = 'top'
-            if spectrum_bottom.annotation[bottom_i] is None:
-                spectrum_bottom.annotation[bottom_i] = sus.FragmentAnnotation(
-                    0, spectrum_bottom.mz[bottom_i], '')
-            spectrum_bottom.annotation[bottom_i].ion_type = 'bottom'
+        peak_matches = zip(*peak_matches)
     else:
         similarity = 0
+        # Make sure that top and bottom spectra are colored..
+        peak_matches = [np.arange(len(spectrum_top.annotation)),
+                        np.arange(len(spectrum_bottom.annotation))]
+    for peak_idx, spectrum, label in zip(
+            peak_matches, [spectrum_top, spectrum_bottom], ['top', 'bottom']):
+        for i in peak_idx:
+            if spectrum.annotation[i] is None:
+                spectrum.annotation[i] = sus.FragmentAnnotation(
+                    0, spectrum.mz[i], '')
+            spectrum.annotation[i].ion_type = label
 
     # Colors for mirror plot peaks (subject to change).
     sup.colors['top'] = '#212121'
     sup.colors['bottom'] = '#388E3C'
     sup.colors['unmatched'] = 'darkgray'
+    sup.colors[None] = 'darkgray'
 
     sup.mirror(spectrum_top, spectrum_bottom,
                {'annotate_ions': kwargs['annotate_peaks'],
