@@ -3,11 +3,16 @@
 (% block content %)
 
 <div class="container">
-    <div class="row">
-        <div class="col text-center">
-            <h2>Spectrum Values</h2>
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="">Spectrum USI</span>
+            </div>
+        <input type="text" class="form-control" id="usi-entry" placeholder="Enter Spectrum USI" aria-label="" value="((usi))">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="button" onclick=resolveNewUSI()>Resolve USI</button>
         </div>
     </div>
+    <hr>
     <div class="row h-100">
         <div class="col-11 my-auto">
             <div class="row">
@@ -83,6 +88,10 @@
 
     function resetFigure() {
         window.location.href = "/spectrum/?usi=(( usi ))";
+    }
+
+    function resolveNewUSI(){
+        window.location.href = `/spectrum/?usi=${$("#usi-entry")[0].value}`
     }
 </script>
 
