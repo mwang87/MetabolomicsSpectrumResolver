@@ -22,7 +22,6 @@ RUN apt-get install -y libxrender-dev
 RUN apt-get install -y git-core
 RUN git clone git://github.com/berlinguyinca/spectra-hash.git
 RUN /bin/bash -c "source activate usi && cd spectra-hash/python && python setup.py install"
-#RUN /bin/bash -c "source activate usi && pip install 'git+git://github.com/berlinguyinca/spectra-hash.git@#egg=splash&subdirectory=python'"
 
 COPY . /app
 WORKDIR /app
