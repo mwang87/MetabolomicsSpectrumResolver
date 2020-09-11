@@ -1,4 +1,5 @@
 flask
+flex
 locust
 lxml
 matplotlib
