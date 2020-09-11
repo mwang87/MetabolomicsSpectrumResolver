@@ -364,6 +364,7 @@ def test_peak_json(client):
         assert 'peaks' in response_dict
         assert 'n_peaks' in response_dict
         assert 'precursor_mz' in response_dict
+        assert 'splash' in response_dict
         assert response_dict['n_peaks'] == len(response_dict['peaks'])
         for peak in response_dict['peaks']:
             assert len(peak) == 2

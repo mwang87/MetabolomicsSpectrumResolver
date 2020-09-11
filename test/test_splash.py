@@ -41,8 +41,6 @@ def test_splash_complex():
     peaks = spectrum["peaks"]
     peaks = [(peak[0], peak[1]) for peak in peaks]
     
-    print(peaks)
-
     splash_spectrum = splash.Spectrum(peaks, splash.SpectrumType.MS)
     splash_key = splash.Splash().splash(splash_spectrum)
 
@@ -68,8 +66,6 @@ def test_splash_complex_cast_to_64():
     df = pd.DataFrame()
     df["mz"] = [peak[0] for peak in peaks]
     df["intensity"] = [peak[1] for peak in peaks]
-    
-    print(df.dtypes)
 
     splash_spectrum = splash.Spectrum(list(zip(df["mz"], df["intensity"])), splash.SpectrumType.MS)
     splash_key = splash.Splash().splash(splash_spectrum)
@@ -80,8 +76,6 @@ def test_splash_complex_cast_to_64():
 
 def test_splash_complex2():
     df = pd.read_csv("https://metabolomics-usi.ucsd.edu/csv/?usi=mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077")
-    print(df.dtypes)
-    print(df)
 
     splash_spectrum = splash.Spectrum(list(zip(df["mz"], df["intensity"])), splash.SpectrumType.MS)
     splash_key = splash.Splash().splash(splash_spectrum)
@@ -91,7 +85,6 @@ def test_splash_complex2():
 
 def test_splash_complex3():
     df = pd.read_csv("https://metabolomics-usi.ucsd.edu/csv/?usi=mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077")
-    print(df.dtypes)
     df["mz"] = df["mz"].astype("float32")
     df["intensity"] = df["intensity"].astype("float32")
 
