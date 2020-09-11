@@ -6,10 +6,12 @@ import json
 import sys
 sys.path.insert(0, '..')
 
+import flask
+import flex
+import PIL
 import pytest
 import urllib.parse
 from lxml import etree
-from PIL import Image
 from pyzbar import pyzbar
 
 import app
@@ -381,9 +383,10 @@ def test_peak_json_invalid(client):
 
 
 def test_peak_proxi_json(client):
+    schema = flex.core.load('https://raw.githubusercontent.com/HUPO-PSI/'
+                            'proxi-schemas/master/specs/swagger.yaml')
     for usi in usis_to_test:
-        response = client.get('/api/proxi/v0.1/spectra',
-                              query_string=f'usi={usi}')
+        response = client.get('/proxi/v0.1/spectra', query_string=f'usi={usi}')
         assert response.status_code == 200
         response_dict = json.loads(response.data)[0]
         assert 'usi' in response_dict
@@ -401,14 +404,15 @@ def test_peak_proxi_json(client):
                 assert attribute['name'] == 'selected ion m/z'
             elif attribute['accession'] == 'MS:1000041':
                 assert attribute['name'] == 'charge state'
-        # TODO: Validate using the PROXI swagger definition.
-        #   https://github.com/HUPO-PSI/proxi-schemas/blob/master/specs/swagger.yaml
+        # Validate that the response matches the PROXI Swagger API definition.
+        flex.core.validate_api_response(schema, raw_request=flask.request,
+                                        raw_response=response)
 
 
 def test_peak_proxi_json_invalid(client):
     for usi, status_code in zip(*_get_invalid_usi_status_code()):
         if usi is not None:
-            response = client.get('/api/proxi/v0.1/spectra',
+            response = client.get('/proxi/v0.1/spectra',
                                   query_string=f'usi={usi}')
             assert response.status_code == 200
             response_dict = json.loads(response.data)[0]
@@ -442,7 +446,7 @@ def test_generate_qr(client):
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
         with io.BytesIO(response.data) as image_bytes:
-            with Image.open(image_bytes) as image:
+            with PIL.Image.open(image_bytes) as image:
                 qr = pyzbar.decode(image)[0]
                 assert urllib.parse.unquote(qr.data.decode()).endswith(
                     f'/spectrum/?usi={usi}')
@@ -457,7 +461,7 @@ def test_generate_qr_drawing_controls(client):
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
         with io.BytesIO(response.data) as image_bytes:
-            with Image.open(image_bytes) as image:
+            with PIL.Image.open(image_bytes) as image:
                 qr = pyzbar.decode(image)[0]
                 assert urllib.parse.unquote(qr.data.decode()).endswith(
                     f'/spectrum/?usi={usi}&{plotting_args}')
@@ -471,7 +475,7 @@ def test_generate_qr_mirror(client):
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
         with io.BytesIO(response.data) as image_bytes:
-            with Image.open(image_bytes) as image:
+            with PIL.Image.open(image_bytes) as image:
                 qr = pyzbar.decode(image)[0]
                 assert urllib.parse.unquote(qr.data.decode()).endswith(
                     f'/mirror/?usi1={usi1}&usi2={usi2}')
@@ -487,7 +491,7 @@ def test_generate_qr_mirror_drawing_controls(client):
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
         with io.BytesIO(response.data) as image_bytes:
-            with Image.open(image_bytes) as image:
+            with PIL.Image.open(image_bytes) as image:
                 qr = pyzbar.decode(image)[0]
                 assert urllib.parse.unquote(qr.data.decode()).endswith(
                     f'/mirror/?usi1={usi1}&usi2={usi2}&{plotting_args}')
