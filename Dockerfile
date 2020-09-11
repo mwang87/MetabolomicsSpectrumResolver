@@ -16,6 +16,7 @@ RUN conda install -n usi -c conda-forge requests-cache
 RUN conda install -n usi -c anaconda scipy
 
 RUN apt-get install -y libxrender-dev
+RUN /bin/bash -c "source activate usi && pip install 'git+git://github.com/berlinguyinca/spectra-hash.git@#egg=splash&subdirectory=python'"
 
 RUN conda update -n usi -c anaconda openssl
 

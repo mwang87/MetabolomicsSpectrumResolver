@@ -31,6 +31,7 @@ jobs:
           flask gunicorn locust lxml matplotlib numba numpy pillow pytest \
           pyzbar qrcode rdkit requests requests-cache scipy spectrum_utils \
           werkzeug zbar
+        source activate usi && pip install 'git+git://github.com/berlinguyinca/spectra-hash.git@#egg=splash&subdirectory=python'
         echo "source activate usi" > ~/.bashrc
     - name: Lint with flake8
       run: |
