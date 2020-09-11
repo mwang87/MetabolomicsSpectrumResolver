@@ -14,11 +14,15 @@ RUN conda install -n usi -c conda-forge xmltodict
 RUN conda install -n usi -c conda-forge qrcode
 RUN conda install -n usi -c conda-forge requests-cache
 RUN conda install -n usi -c anaconda scipy
+RUN conda update -n usi -c anaconda openssl
 
 RUN apt-get install -y libxrender-dev
-RUN /bin/bash -c "source activate usi && pip install 'git+git://github.com/berlinguyinca/spectra-hash.git@#egg=splash&subdirectory=python'"
 
-RUN conda update -n usi -c anaconda openssl
+# Installing SPLASH Code
+RUN apt-get install -y git-core
+RUN git clone git://github.com/berlinguyinca/spectra-hash.git
+RUN /bin/bash -c "source activate usi && cd spectra-hash/python && python setup.py install"
+#RUN /bin/bash -c "source activate usi && pip install 'git+git://github.com/berlinguyinca/spectra-hash.git@#egg=splash&subdirectory=python'"
 
 COPY . /app
 WORKDIR /app
