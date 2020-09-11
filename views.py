@@ -701,7 +701,7 @@ def peak_json():
             'peaks': _get_peaks(spectrum),
             'n_peaks': len(spectrum.mz),
             'precursor_mz': spectrum.precursor_mz,
-            'splash_key': splash_key
+            'splash': splash_key
             }
 
     except UsiError as e:
