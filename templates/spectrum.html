@@ -11,56 +11,78 @@
     <div class="row h-100">
         <div class="col-11 my-auto">
             <div class="row">
-                <div class="col-4 font-weight-bold text-right">Universal Spectrum Identifier</div>
+                <div class="col-4 font-weight-bold text-right">
+                    Universal Spectrum Identifier
+                </div>
                 <div class="col-8">
-                    ((usi))
+                    (( usi ))
                     (% if source_link is not none %)
-                        &nbsp;<a href="((source_link))" target="_blank"><i class="fas fa-external-link-alt"></i></a>
+                        &nbsp;
+                        <a href="(( source_link ))" target="_blank">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
                     (% endif %)
                 </div>
             </div>
             <div class="row mt-2">
                 <div class="col-2 offset-2">
-                    <a class="btn btn-primary" id="download_json" href="/json/?usi=((usi))">
+                    <a class="btn btn-primary"
+                       id="download_json"
+                       href="/json/?usi=(( usi ))">
                         Download as JSON
                     </a>
                 </div>
                 <div class="col-2">
-                    <a class="btn btn-primary" id="download_csv" href="/csv/?usi=((usi))">
+                    <a class="btn btn-primary"
+                       id="download_csv"
+                       href="/csv/?usi=(( usi ))">
                         Download as CSV
                     </a>
                 </div>
                 <div class="col-2">
-                    <a class="btn btn-primary" id="download_svg" href="/svg/?usi=((usi))" download="((usi)).svg">
+                    <a class="btn btn-primary"
+                       id="download_svg"
+                       href="/svg/?usi=(( usi ))"
+                       download="(( usi )).svg">
                         Download as SVG
                     </a>
                 </div>
                 <div class="col-2">
-                    <a class="btn btn-primary" id="download_png" href="/png/?usi=((usi))" download="((usi)).png">
+                    <a class="btn btn-primary"
+                       id="download_png"
+                       href="/png/?usi=(( usi ))"
+                       download="(( usi )).png">
                         Download as PNG
                     </a>
                 </div>
             </div>
         </div>
         <div class="col-1 my-auto">
-            <img class="mx-auto" src="/qrcode/?usi=((usi))" alt="qr"/>
+            <img class="mx-auto" src="/qrcode/?usi=(( usi ))" alt="qr"/>
         </div>
     </div>
 
     <div class="row">
-        <img class="mx-auto" id="render_spectrum" src="/svg/?usi=((usi))" alt="((usi))">
+        <img class="mx-auto" id="render_spectrum" src="data:," alt="(( usi ))">
     </div>
 
     (% include 'drawing_controls.html' %)
+
 </div>
 
 <script type="text/javascript">
     function updateFigure() {
-        let svg_url = "/svg/?usi=((usi))";
+        let svg_url = "/svg/?usi=(( usi ))";
         let draw_parameters = getDrawingControls();
         $("#render_spectrum")[0].src = svg_url + draw_parameters;
         $("#download_svg")[0].href = svg_url + draw_parameters;
-        $("#download_png")[0].href = "/png/?usi=((usi))" + draw_parameters;
+        $("#download_png")[0].href = "/png/?usi=(( usi ))" + draw_parameters;
+        window.history.replaceState(
+            {}, "", "/spectrum/?usi=(( usi ))" + draw_parameters);
+    }
+
+    function resetFigure() {
+        window.location.href = "/spectrum/?usi=(( usi ))";
     }
 </script>
 

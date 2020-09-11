@@ -16,8 +16,7 @@ interactive: clean
 bash: clean
 	docker run -it -p 5087:5000 --name metabolomicsusi metabolomicsusi bash
 
-attach:
-	docker exec -i -t metabolomicsusi /bin/bash
+
 
 
 
@@ -37,3 +36,13 @@ server-compose-production-interactive:
 server-compose-production:
 	docker-compose build
 	docker-compose -f docker-compose.yml -f docker-compose-production.yml up -d
+
+attach:
+	docker exec -i -t metabolomicsusi-web /bin/bash
+
+# Github Testing with Act
+test-actions-unit:
+	act -j unit-test -P ubuntu-latest=nektos/act-environments-ubuntu:18.04 -b
+
+test-actions-locust:
+	act -j load-test -P ubuntu-latest=nektos/act-environments-ubuntu:18.04 -b

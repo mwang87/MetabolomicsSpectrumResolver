@@ -3,10 +3,13 @@
 
 <head>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
+    <link rel="stylesheet" href="../static/css/custom.css">
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <link rel="shortcut icon" href="/static/img/favicon-32x32.png">
+
 </head>
 
 <body>
@@ -32,7 +35,32 @@
         (% block content %)(% endblock %)
     </div>
 
+    <hr>
+
+    <div class="col-4 offset-4 text-center alert alert-warning" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> <b>Warning:</b>
+        These identifiers are based on draft USI and draft Metabolomics USI identifiers.
+        Thus, they are subject to change, and so for the moment, they will be specified as <span class="text-monospace">mzdraft</span> instead of <span class="text-monospace">mzspec</span> in the first block.
+        <br>Thank you for your patience and working with us!
+    </div>
+
+    <hr>
+
+    <div class="footer-copyright text-center py-3">
+        Metabolomics Spectrum Resolver - Release 6.8
+    </div>
+
 
 </body>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-8412213-8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-8412213-8');
+</script>
 
 </html>

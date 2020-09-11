@@ -11,41 +11,61 @@
     <div class="row h-100">
         <div class="col-11 my-auto">
             <div class="row">
-                <div class="col-4 font-weight-bold text-right">Universal Spectrum Identifier 1</div>
-                <div class="col-8">((usi1))
+                <div class="col-4 font-weight-bold text-right">
+                    Universal Spectrum Identifier 1
+                </div>
+                <div class="col-8">
+                    (( usi1 ))
                     (% if source_link1 is not none %)
-                        &nbsp;<a href="((source_link1))" target="_blank"><i class="fas fa-external-link-alt"></i></a>
+                        &nbsp;
+                        <a href="(( source_link1 ))" target="_blank">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
                     (% endif %)
                 </div>
             </div>
             <div class="row">
-                <div class="col-4 font-weight-bold text-right">Universal Spectrum Identifier 2</div>
-                <div class="col-8">((usi2))
+                <div class="col-4 font-weight-bold text-right">
+                    Universal Spectrum Identifier 2
+                </div>
+                <div class="col-8">
+                    (( usi2 ))
                     (% if source_link2 is not none %)
-                        &nbsp;<a href="((source_link2))" target="_blank"><i class="fas fa-external-link-alt"></i></a>
+                        &nbsp;
+                        <a href="(( source_link2 ))" target="_blank">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
                     (% endif %)
                 </div>
             </div>
             <div class="row mt-2">
                 <div class="col-2 offset-4">
-                    <a class="btn btn-primary" id="download_svg" href="/svg/mirror/?usi1=((usi1))&usi2=((usi2))" download="mirror.svg">
+                    <a class="btn btn-primary"
+                       id="download_svg"
+                       href="/svg/mirror/?usi1=(( usi1 ))&usi2=(( usi2 ))"
+                       download="mirror.svg">
                         Download as SVG
                     </a>
                 </div>
                 <div class="col-2">
-                    <a class="btn btn-primary" id="download_png" href="/png/mirror/?usi1=((usi1))&usi2=((usi2))" download="mirror.png">
+                    <a class="btn btn-primary"
+                       id="download_png"
+                       href="/png/mirror/?usi1=(( usi1 ))&usi2=(( usi2 ))"
+                       download="mirror.png">
                         Download as PNG
                     </a>
                 </div>
             </div>
         </div>
         <div class="col-1 my-auto">
-            <img class="mx-auto" src="/qrcode/?mirror=true&usi1=((usi1))&usi2=((usi2))" alt="qr"/>
+            <img class="mx-auto"
+                 src="/qrcode/?mirror=true&usi1=(( usi1 ))&usi2=(( usi2 ))"
+                 alt="qr"/>
         </div>
     </div>
 
     <div class="row">
-        <img class="mx-auto" id="render_spectrum" src="/svg/mirror?usi1=((usi1))&usi2=((usi2))"/>
+        <img class="mx-auto" id="render_spectrum" src="data:,"/>
     </div>
 
     (% include 'drawing_controls.html' %)
@@ -53,11 +73,19 @@
 
 <script type="text/javascript">
     function updateFigure() {
-        let svg_url = "/svg/mirror?usi1=((usi1))&usi2=((usi2))";
+        let svg_url = "/svg/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))";
         let draw_parameters = getDrawingControls();
         $("#render_spectrum")[0].src = svg_url + draw_parameters;
         $("#download_svg")[0].href = svg_url + draw_parameters;
-        $("#download_png")[0].href = "/png/mirror?usi1=((usi1))&usi2=((usi2))" + draw_parameters;
+        $("#download_png")[0].href = (
+            "/png/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))" + draw_parameters);
+        window.history.replaceState(
+            {}, "",
+            "/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))" + draw_parameters);
+    }
+
+    function resetFigure() {
+        window.location.href = "/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))";
     }
 </script>
 
