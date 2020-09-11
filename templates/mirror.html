@@ -3,11 +3,17 @@
 (% block content %)
 
 <div class="container">
-    <div class="row">
-        <div class="col text-center">
-            <h2>Spectrum Values</h2>
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="">Mirror USI</span>
+            </div>
+        <input type="text" class="form-control" id="usi1-entry" placeholder="Enter Spectrum USI" aria-label="" value="((usi1))">
+        <input type="text" class="form-control" id="usi2-entry" placeholder="Enter Spectrum USI" aria-label="" value="((usi2))">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="button" onclick=resolveNewUSI()>Resolve USIs</button>
         </div>
     </div>
+    <hr>
     <div class="row h-100">
         <div class="col-11 my-auto">
             <div class="row">
@@ -86,6 +92,10 @@
 
     function resetFigure() {
         window.location.href = "/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))";
+    }
+
+    function resolveNewUSI(){
+        window.location.href = `/mirror/?usi1=${$("#usi1-entry")[0].value}&usi2=${$("#usi2-entry")[0].value}`;
     }
 </script>
 
