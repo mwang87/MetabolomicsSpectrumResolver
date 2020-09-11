@@ -70,7 +70,7 @@ def render_heartbeat():
 def render_spectrum():
     usi = flask.request.args.get('usi')
     plotting_args = _get_plotting_args(flask.request.args)
-    spectrum, source_link = parsing.parse_usi(usi)
+    spectrum, source_link, splash_key = parsing.parse_usi(usi)
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     return flask.render_template(
         'spectrum.html',
@@ -87,8 +87,8 @@ def render_mirror_spectrum():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
     plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-    spectrum1, source1 = parsing.parse_usi(usi1)
-    spectrum2, source2 = parsing.parse_usi(usi2)
+    spectrum1, source1, splash_key = parsing.parse_usi(usi1)
+    spectrum2, source2, splash_key = parsing.parse_usi(usi2)
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                    plotting_args)
     return flask.render_template(
@@ -107,7 +107,7 @@ def render_mirror_spectrum():
 @blueprint.route('/png/')
 def generate_png():
     plotting_args = _get_plotting_args(flask.request.args)
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _, splash_key = parsing.parse_usi(flask.request.args.get('usi'))
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     buf = _generate_figure(spectrum, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
@@ -116,8 +116,8 @@ def generate_png():
 @blueprint.route('/png/mirror/')
 def generate_mirror_png():
     plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-    spectrum1, _ = parsing.parse_usi(flask.request.args.get('usi1'))
-    spectrum2, _ = parsing.parse_usi(flask.request.args.get('usi2'))
+    spectrum1, _, splash_key = parsing.parse_usi(flask.request.args.get('usi1'))
+    spectrum2, _, splash_key = parsing.parse_usi(flask.request.args.get('usi2'))
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                    plotting_args)
     buf = _generate_mirror_figure(spectrum1, spectrum2, 'png', **plotting_args)
@@ -127,7 +127,7 @@ def generate_mirror_png():
 @blueprint.route('/svg/')
 def generate_svg():
     plotting_args = _get_plotting_args(flask.request.args)
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _, splash_key = parsing.parse_usi(flask.request.args.get('usi'))
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     buf = _generate_figure(spectrum, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
@@ -136,8 +136,8 @@ def generate_svg():
 @blueprint.route('/svg/mirror/')
 def generate_mirror_svg():
     plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-    spectrum1, _ = parsing.parse_usi(flask.request.args.get('usi1'))
-    spectrum2, _ = parsing.parse_usi(flask.request.args.get('usi2'))
+    spectrum1, _, splash_key = parsing.parse_usi(flask.request.args.get('usi1'))
+    spectrum2, _, splash_key = parsing.parse_usi(flask.request.args.get('usi2'))
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                    plotting_args)
     buf = _generate_mirror_figure(spectrum1, spectrum2, 'svg', **plotting_args)
@@ -694,12 +694,8 @@ def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
 @blueprint.route('/json/')
 def peak_json():
     try:
-        spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+        spectrum, _, splash_key = parsing.parse_usi(flask.request.args.get('usi'))
         
-        #calculating splash
-        splash_spectrum = splash.Spectrum(list(zip(spectrum._mz, spectrum._intensity)), splash.SpectrumType.MS)
-        splash_key = splash.Splash().splash(splash_spectrum)
-
         result_dict = {
             'peaks': _get_peaks(spectrum),
             'n_peaks': len(spectrum.mz),
@@ -718,7 +714,7 @@ def peak_json():
 def peak_proxi_json():
     try:
         usi = flask.request.args.get('usi')
-        spectrum, _ = parsing.parse_usi(usi)
+        spectrum, _, splash_key = parsing.parse_usi(usi)
         result_dict = {
             'usi': usi,
             'status': 'READABLE',
@@ -746,7 +742,7 @@ def peak_proxi_json():
 
 @blueprint.route('/csv/')
 def peak_csv():
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _, splash_key = parsing.parse_usi(flask.request.args.get('usi'))
     with io.StringIO() as csv_str:
         writer = csv.writer(csv_str)
         writer.writerow(['mz', 'intensity'])
@@ -779,5 +775,13 @@ def render_error(error):
         error_code = error.error_code
     else:
         error_code = 500
-    return (flask.render_template('error.html', error=error.message),
+    
+    # Handling Run Time Errors
+    error_message = "RunTime Server Error"
+    try:
+        error_message = error.message
+    except:
+        raise
+
+    return (flask.render_template('error.html', error=error_message),
             error_code)
