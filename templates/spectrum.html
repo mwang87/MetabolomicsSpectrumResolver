@@ -23,6 +23,14 @@
                         </a>
                     (% endif %)
                 </div>
+                (% if splash_key is not none %)
+                    <div class="col-4 font-weight-bold text-right">
+                        SPLASH Hash Identifier
+                    </div>
+                    <div class="col-8">
+                        (( splash_key ))
+                    </div>
+                (% endif %)
             </div>
             <div class="row mt-2">
                 <div class="col-2 offset-2">
