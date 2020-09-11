@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:latest
+FROM continuumio/miniconda3:4.8.2
 MAINTAINER Mingxun Wang "mwang87@gmail.com"
 
 WORKDIR /app
@@ -17,6 +17,8 @@ RUN conda install -n usi -c anaconda scipy
 
 RUN apt-get install -y libxrender-dev
 RUN /bin/bash -c "source activate usi && pip install 'git+git://github.com/berlinguyinca/spectra-hash.git@#egg=splash&subdirectory=python'"
+
+RUN conda update -n usi -c anaconda openssl
 
 COPY . /app
 WORKDIR /app
