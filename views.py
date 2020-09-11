@@ -707,7 +707,7 @@ def peak_json():
     return flask.jsonify(result_dict)
 
 
-@blueprint.route('/api/proxi/v0.1/spectra')
+@blueprint.route('/proxi/v0.1/spectra')
 def peak_proxi_json():
     try:
         usi = flask.request.args.get('usi')
@@ -721,12 +721,12 @@ def peak_proxi_json():
                 {
                     'accession': 'MS:1000744',
                     'name': 'selected ion m/z',
-                    'value': float(spectrum.precursor_mz)
+                    'value': str(spectrum.precursor_mz)
                 },
                 {
                     'accession': 'MS:1000041',
                     'name': 'charge state',
-                    'value': int(spectrum.precursor_charge)
+                    'value': str(spectrum.precursor_charge)
                 }
             ]
         }
