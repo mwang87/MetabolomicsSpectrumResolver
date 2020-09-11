@@ -695,17 +695,18 @@ def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
 def peak_json():
     try:
         spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+        
         #calculating splash
         splash_spectrum = splash.Spectrum(list(zip(spectrum._mz, spectrum._intensity)), splash.SpectrumType.MS)
         splash_key = splash.Splash().splash(splash_spectrum)
-                  
+
         result_dict = {
             'peaks': _get_peaks(spectrum),
             'n_peaks': len(spectrum.mz),
-            'precursor_mz': spectrum.precursor_mz}
-                  
-        
-                  
+            'precursor_mz': spectrum.precursor_mz,
+            'splash_key': splash_key
+            }
+
     except UsiError as e:
         result_dict = {'error': {'code': e.error_code, 'message': str(e)}}
     except ValueError as e:
