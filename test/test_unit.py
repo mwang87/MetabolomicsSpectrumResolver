@@ -255,7 +255,7 @@ def test_get_plotting_args_title():
 
 def test_prepare_spectrum():
     usi = 'mzspec:MOTIFDB::accession:171163'
-    spectrum, _ = parsing.parse_usi(usi)
+    spectrum, _, splash = parsing.parse_usi(usi)
     spectrum_processed = views._prepare_spectrum(
         spectrum, **views._get_plotting_args(_get_plotting_args(
             mz_min=400, mz_max=700, annotate_peaks=json.dumps([[]]))))
@@ -270,7 +270,7 @@ def test_prepare_spectrum():
 
 def test_prepare_spectrum_annotate_peaks_default():
     usi = 'mzspec:MOTIFDB::accession:171163'
-    spectrum, _ = parsing.parse_usi(usi)
+    spectrum, _, splash = parsing.parse_usi(usi)
     spectrum_processed = views._prepare_spectrum(
         spectrum, **views._get_plotting_args(_get_plotting_args()))
     assert not all([annotation is None
@@ -279,7 +279,7 @@ def test_prepare_spectrum_annotate_peaks_default():
 
 def test_prepare_spectrum_annotate_peaks_specified():
     usi = 'mzspec:MOTIFDB::accession:171163'
-    spectrum, _ = parsing.parse_usi(usi)
+    spectrum, _, splash = parsing.parse_usi(usi)
     spectrum_processed = views._prepare_spectrum(
         spectrum, **views._get_plotting_args(_get_plotting_args(
             mz_min=400, mz_max=700,
@@ -295,7 +295,7 @@ def test_prepare_spectrum_annotate_peaks_specified():
 
 def test_prepare_spectrum_annotate_peaks_specified_invalid():
     usi = 'mzspec:MOTIFDB::accession:171163'
-    spectrum, _ = parsing.parse_usi(usi)
+    spectrum, _, splash = parsing.parse_usi(usi)
     spectrum_processed = views._prepare_spectrum(
         spectrum, **views._get_plotting_args(_get_plotting_args(
             annotate_peaks=json.dumps([[1477.2525, 1654.3575]]))))
@@ -306,8 +306,8 @@ def test_prepare_spectrum_annotate_peaks_specified_invalid():
 def test_prepare_mirror_spectra():
     usi1 = 'mzspec:MOTIFDB::accession:171163'
     usi2 = 'mzspec:MOTIFDB::accession:171164'
-    spectrum1, _ = parsing.parse_usi(usi1)
-    spectrum2, _ = parsing.parse_usi(usi2)
+    spectrum1, _, splash = parsing.parse_usi(usi1)
+    spectrum2, _, splash = parsing.parse_usi(usi2)
     spectrum1_processed, spectrum2_processed = views._prepare_mirror_spectra(
         spectrum1, spectrum2, views._get_plotting_args(_get_plotting_args(
             mz_min=400, mz_max=700, annotate_peaks=json.dumps([[], []])),
