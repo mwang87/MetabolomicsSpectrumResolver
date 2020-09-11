@@ -78,7 +78,8 @@ def render_spectrum():
         source_link=source_link,
         peaks=[_get_peaks(spectrum)],
         annotations=[spectrum.annotation.nonzero()[0].tolist()],
-        plotting_args=plotting_args
+        plotting_args=plotting_args,
+        splash_key=splash_key
     )
 
 
