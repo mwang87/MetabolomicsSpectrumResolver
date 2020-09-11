@@ -38,3 +38,5 @@ jobs:
         source ~/.bashrc
         locust -f test/locustfile.py --headless -u 100 -r 10 \
           -H https://metabolomics-usi.ucsd.edu/ -t 120s
+        
+
