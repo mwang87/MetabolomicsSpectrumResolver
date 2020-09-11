@@ -10,6 +10,8 @@ import parsing_legacy
 from error import UsiError
 
 
+timeout = 10     # seconds
+
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
 MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
@@ -76,26 +78,30 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             return parsing_legacy.parse_usi_legacy(usi)
         except ValueError:
             raise e
-    collection = match.group(1).lower()
-    # Send all proteomics USIs to MassIVE.
-    if (
-        collection.startswith('msv') or
-        collection.startswith('pxd') or
-        collection.startswith('pxl') or
-        collection.startswith('rpxd') or
-        collection == 'massivekb'
-    ):
-        return _parse_msv_pxd(usi)
-    elif collection == 'gnps':
-        return _parse_gnps(usi)
-    elif collection == 'massbank':
-        return _parse_massbank(usi)
-    elif collection == 'ms2lda':
-        return _parse_ms2lda(usi)
-    elif collection == 'motifdb':
-        return _parse_motifdb(usi)
-    else:
-        raise UsiError(f'Unknown USI collection: {match.group(1)}', 400)
+    try:
+        collection = match.group(1).lower()
+        # Send all proteomics USIs to MassIVE.
+        if (
+            collection.startswith('msv') or
+            collection.startswith('pxd') or
+            collection.startswith('pxl') or
+            collection.startswith('rpxd') or
+            collection == 'massivekb'
+        ):
+            return _parse_msv_pxd(usi)
+        elif collection == 'gnps':
+            return _parse_gnps(usi)
+        elif collection == 'massbank':
+            return _parse_massbank(usi)
+        elif collection == 'ms2lda':
+            return _parse_ms2lda(usi)
+        elif collection == 'motifdb':
+            return _parse_motifdb(usi)
+        else:
+            raise UsiError(f'Unknown USI collection: {match.group(1)}', 400)
+    except requests.exceptions.Timeout:
+        raise UsiError('Timeout while retrieving the USI from an external '
+                       'resource', 504)
 
 
 # Parse GNPS tasks or library spectra.
@@ -126,7 +132,7 @@ def _parse_gnps_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                        f'task={task}&invoke=annotatedSpectrumImageText&block=0'
                        f'&file=FILE->{filename}&scan={scan}&peptide=*..*&'
                        f'force=false&_=1561457932129&format=JSON')
-        lookup_request = requests.get(request_url)
+        lookup_request = requests.get(request_url, timeout=timeout)
         lookup_request.raise_for_status()
         spectrum_dict = lookup_request.json()
         mz, intensity = zip(*spectrum_dict['peaks'])
@@ -154,7 +160,7 @@ def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     try:
         request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/'
                        f'SpectrumCommentServlet?SpectrumID={index}')
-        lookup_request = requests.get(request_url)
+        lookup_request = requests.get(request_url, timeout=timeout)
         lookup_request.raise_for_status()
         spectrum_dict = lookup_request.json()
         if spectrum_dict['spectruminfo']['peaks_json'] == 'null':
@@ -184,7 +190,8 @@ def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             'Currently supported MassBank index flags: accession', 400)
     index = match.group(4)
     try:
-        lookup_request = requests.get(f'{MASSBANK_SERVER}{index}')
+        lookup_request = requests.get(f'{MASSBANK_SERVER}{index}',
+                                      timeout=timeout)
         lookup_request.raise_for_status()
         spectrum_dict = lookup_request.json()
         mz, intensity = [], []
@@ -220,7 +227,7 @@ def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     try:
         lookup_request = requests.get(
             f'{MS2LDA_SERVER}get_doc/?experiment_id={experiment_id}'
-            f'&document_id={index}')
+            f'&document_id={index}', timeout=timeout)
         lookup_request.raise_for_status()
         spectrum_dict = json.loads(lookup_request.text)
         if 'error' in spectrum_dict:
@@ -244,7 +251,7 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     try:
         lookup_url = (f'https://massive.ucsd.edu/ProteoSAFe/'
                       f'QuerySpectrum?id={usi}')
-        lookup_request = requests.get(lookup_url)
+        lookup_request = requests.get(lookup_url, timeout=timeout)
         lookup_request.raise_for_status()
         for spectrum_file in lookup_request.json()['row_data']:
             if any(spectrum_file['file_descriptor'].lower().endswith(extension)
@@ -257,7 +264,8 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                                f'&scan={scan}&peptide=*..*&force=false&'
                                f'format=JSON&uploadfile=True')
                 try:
-                    spectrum_request = requests.get(request_url)
+                    spectrum_request = requests.get(request_url,
+                                                    timeout=timeout)
                     spectrum_request.raise_for_status()
                     spectrum_dict = spectrum_request.json()
                 except (requests.exceptions.HTTPError,
@@ -294,7 +302,8 @@ def _parse_motifdb(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             'Currently supported MOTIFDB index flags: accession', 400)
     index = match.group(4)
     try:
-        lookup_request = requests.get(f'{MOTIFDB_SERVER}get_motif/{index}')
+        lookup_request = requests.get(f'{MOTIFDB_SERVER}get_motif/{index}',
+                                      timeout=timeout)
         lookup_request.raise_for_status()
         mz, intensity = zip(*json.loads(lookup_request.text))
         source_link = f'http://ms2lda.org/motifdb/motif/{index}/'
