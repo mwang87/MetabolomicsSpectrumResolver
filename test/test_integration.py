@@ -541,8 +541,7 @@ def test_render_error_timeout(client):
         assert response_dict['error']['code'] == 504
         assert 'message' in response_dict['error']
 
-        response = client.get('/api/proxi/v0.1/spectra',
-                              query_string=f'usi={usi}')
+        response = client.get('/proxi/v0.1/spectra', query_string=f'usi={usi}')
         assert response.status_code == 200
         response_dict = json.loads(response.data)[0]
         assert 'error' in response_dict
