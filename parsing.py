@@ -1,7 +1,7 @@
 import functools
 import json
 import re
-from typing import Tuple
+from typing import Iterable, Optional, Tuple
 
 import requests
 import spectrum_utils.spectrum as sus
@@ -57,12 +57,48 @@ gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$',
                                flags=re.IGNORECASE)
 ms2lda_task_pattern = re.compile('^TASK-(\d+)$', flags=re.IGNORECASE)
 
-def _calculate_splash(mz, intensity):
-    #calculating splash
-    splash_spectrum = splash.Spectrum(list(zip(mz, intensity)), splash.SpectrumType.MS)
-    splash_key = splash.Splash().splash(splash_spectrum)
+splash_builder = splash.Splash()
 
-    return splash_key
+
+def _create_spectrum_splash(usi: str, precursor_mz: float,
+                            precursor_charge: int, mz: Iterable[float],
+                            intensity: Iterable[float]) \
+        -> Tuple[sus.MsmsSpectrum, str]:
+    """
+    Create a spectrum object and compute its associated SPLASH.
+
+    Note: The SPLASH can't be computed from the `MsmsSpectrum` due to rounding
+    errors for `MsmsSpectrum`'s internal float32 representation of the m/z
+    values.
+
+    Parameters
+    ----------
+    usi : str
+        Spectrum USI.
+    precursor_mz : float
+        Precursor ion mass-to-charge ratio.
+    precursor_charge : int
+        Precursor ion charge.
+    mz : Iterable[float]
+        Mass-to-charge ratios of the fragment peaks. Note: these have to be
+        float64.
+    intensity : Iterable[float]
+        Intensities of the corresponding fragment peaks in `mz`.
+
+    Returns
+    -------
+    Tuple[sus.MsmsSpectrum, str]
+        An `MsmsSpectrum` and its associated SPLASH.
+        Note that because the SPLASH calculation requires float64 m/z values
+        whereas these are float32 in the `MsmsSpectrum`, this won't necessarily
+        match exactly.
+    """
+    spectrum = sus.MsmsSpectrum(
+        usi, precursor_mz, precursor_charge, mz, intensity)
+    splash_str = splash_builder.splash(splash.Spectrum(
+        list(zip(mz, intensity)), splash.SpectrumType.MS))
+    return spectrum, splash_str
+
 
 def _match_usi(usi: str):
     # First try matching as an official USI, then as a metabolomics draft USI.
@@ -75,24 +111,34 @@ def _match_usi(usi: str):
 
 
 @functools.lru_cache(100)
-def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, Optional[str]]:
+    """
+    Retrieve the spectrum associated with the given USI.
+
+    Parameters
+    ----------
+    usi : str
+        The USI of the spectrum to be retrieved from its resource.
+
+    Returns
+    -------
+    Tuple[sus.MsmsSpectrum, str, Optional[str]]
+        A tuple of the `MsmsSpectrum`, its source link, and its SPLASH.
+        FIXME: The SPLASH is not included for legacy USIs.
+    """
     try:
         match = _match_usi(usi)
     except UsiError as e:
         try:
-            sus, source_link = parsing_legacy.parse_usi_legacy(usi)
-            return sus, source_link, None
+            spectrum, source_link = parsing_legacy.parse_usi_legacy(usi)
+            return spectrum, source_link, None
         except ValueError:
             raise e
     collection = match.group(1).lower()
     # Send all proteomics USIs to MassIVE.
-    if (
-        collection.startswith('msv') or
-        collection.startswith('pxd') or
-        collection.startswith('pxl') or
-        collection.startswith('rpxd') or
-        collection == 'massivekb'
-    ):
+    if (collection.startswith('msv') or collection.startswith('pxd') or
+            collection.startswith('pxl') or collection.startswith('rpxd') or
+            collection == 'massivekb'):
         return _parse_msv_pxd(usi)
     elif collection == 'gnps':
         return _parse_gnps(usi)
@@ -107,7 +153,7 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
 
 
 # Parse GNPS tasks or library spectra.
-def _parse_gnps(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+def _parse_gnps(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     match = _match_usi(usi)
     ms_run = match.group(2)
     if ms_run.lower().startswith('task'):
@@ -117,7 +163,7 @@ def _parse_gnps(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
 
 
 # Parse GNPS clustered spectra in Molecular Networking.
-def _parse_gnps_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+def _parse_gnps_task(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     match = _match_usi(usi)
     gnps_task_match = gnps_task_pattern.match(match.group(2))
     if gnps_task_match is None:
@@ -146,16 +192,15 @@ def _parse_gnps_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         else:
             precursor_mz, charge = 0, 0
 
-        splash_key = _calculate_splash(mz, intensity)
-
-        return (sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity),
-                source_link, splash_key)
+        spectrum, splash_key = _create_spectrum_splash(
+            usi, precursor_mz, charge, mz, intensity)
+        return spectrum, source_link, splash_key
     except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
         raise UsiError('Unknown GNPS task USI', 404)
 
 
 # Parse GNPS library.
-def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag.lower() != 'accession':
@@ -174,23 +219,17 @@ def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             spectrum_dict['spectruminfo']['peaks_json']))
         source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/'
                        f'gnpslibraryspectrum.jsp?SpectrumID={index}')
-        spectrum = sus.MsmsSpectrum(
-            usi,
-            float(spectrum_dict['annotations'][0]['Precursor_MZ']),
-            int(spectrum_dict['annotations'][0]['Charge']),
-            mz,
-            intensity,
-        )
 
-        splash_key = _calculate_splash(mz, intensity)
-
+        spectrum, splash_key = _create_spectrum_splash(
+            usi, float(spectrum_dict['annotations'][0]['Precursor_MZ']),
+            int(spectrum_dict['annotations'][0]['Charge']), mz, intensity)
         return spectrum, source_link, splash_key
     except requests.exceptions.HTTPError:
         raise UsiError('Unknown GNPS library USI', 404)
 
 
 # Parse MassBank entry.
-def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag.lower() != 'accession':
@@ -214,8 +253,8 @@ def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         source_link = (f'https://massbank.eu/MassBank/'
                        f'RecordDisplay.jsp?id={index}')
 
-        splash_key = _calculate_splash(mz, intensity)
-        
+        spectrum, splash_key = _create_spectrum_splash(
+            usi, precursor_mz, 0, mz, intensity)
         return (sus.MsmsSpectrum(usi, precursor_mz, 0, mz, intensity),
                 source_link, splash_key)
     except requests.exceptions.HTTPError:
@@ -223,7 +262,7 @@ def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
 
 
 # Parse MS2LDA from ms2lda.org.
-def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     match = _match_usi(usi)
     ms2lda_task_match = ms2lda_task_pattern.match(match.group(2))
     if ms2lda_task_match is None:
@@ -245,16 +284,15 @@ def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         mz, intensity = zip(*spectrum_dict['peaks'])
         source_link = f'http://ms2lda.org/basicviz/show_doc/{index}/'
 
-        splash_key = _calculate_splash(mz, intensity)
-
-        return sus.MsmsSpectrum(usi, float(spectrum_dict['precursor_mz']), 0,
-                                mz, intensity), source_link, splash_key
+        spectrum, splash_key = _create_spectrum_splash(
+            usi, float(spectrum_dict['precursor_mz']), 0, mz, intensity)
+        return spectrum, source_link, splash_key
     except requests.exceptions.HTTPError:
         raise UsiError('Unknown MS2LDA USI', 404)
 
 
 # Parse MSV or PXD library.
-def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     match = _match_usi(usi)
     dataset_identifier = match.group(1)
     index_flag = match.group(3)
@@ -298,17 +336,16 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     source_link = (f'https://massive.ucsd.edu/ProteoSAFe/'
                                    f'QueryMSV?id={dataset_identifier}')
 
-                splash_key = _calculate_splash(mz, intensity)
-
-                return sus.MsmsSpectrum(usi, precursor_mz, charge, mz,
-                                        intensity), source_link, splash_key
+                spectrum, splash_key = _create_spectrum_splash(
+                    usi, precursor_mz, charge, mz, intensity)
+                return spectrum, source_link, splash_key
     except requests.exceptions.HTTPError:
         pass
     raise UsiError('Unsupported/unknown USI', 404)
 
 
 # Parse MOTIFDB from ms2lda.org.
-def _parse_motifdb(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+def _parse_motifdb(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag.lower() != 'accession':
@@ -321,8 +358,8 @@ def _parse_motifdb(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         mz, intensity = zip(*json.loads(lookup_request.text))
         source_link = f'http://ms2lda.org/motifdb/motif/{index}/'
 
-        splash_key = _calculate_splash(mz, intensity)
-
-        return sus.MsmsSpectrum(usi, 0, 0, mz, intensity), source_link, splash_key
+        spectrum, splash_key = _create_spectrum_splash(
+            usi, 0, 0, mz, intensity)
+        return spectrum, source_link, splash_key
     except requests.exceptions.HTTPError:
         raise UsiError('Unknown MOTIFDB USI', 404)
