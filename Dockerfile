@@ -9,7 +9,7 @@ RUN conda create -y -n usi -c conda-forge -c bioconda -c defaults flask \
         gunicorn matplotlib numba numpy openssl qrcode rdkit requests \
         requests-cache scipy spectrum_utils werkzeug
 RUN /bin/bash -c "source activate usi"
-RUN pip install -e "git+git://github.com/berlinguyinca/spectra-hash.git@#egg=splash&subdirectory=python"
+RUN pip install "git+git://github.com/berlinguyinca/spectra-hash.git@#egg=splash&subdirectory=python"
 RUN echo "source activate usi" > ~/.bashrc
 
 COPY . /app
