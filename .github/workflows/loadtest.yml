@@ -28,9 +28,9 @@ jobs:
         conda config --set always_yes yes --set changeps1 no
         conda update -q conda
         conda create -n usi -c conda-forge -c bioconda -c defaults flake8 \
-          flask gunicorn locust lxml matplotlib numba numpy pillow pytest \
-          pyzbar qrcode rdkit requests requests-cache scipy spectrum_utils \
-          werkzeug zbar
+          flask flex-swagger gunicorn locust lxml matplotlib numba numpy \
+          pillow pytest pyzbar qrcode rdkit requests requests-cache scipy \
+          spectrum_utils werkzeug zbar
         echo "source activate usi" > ~/.bashrc
     - name: Load testing with locust
       run: |
