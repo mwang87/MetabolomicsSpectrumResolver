@@ -732,14 +732,13 @@ def peak_proxi_json():
                     'accession': 'MS:1000041',
                     'name': 'charge state',
                     'value': int(spectrum.precursor_charge)
-                },
-                {
-                    'accession': 'MS:1002599',
-                    'name': 'splash key',
-                    'value': splash_key
                 }
             ]
         }
+        if splash_key is not None:
+            result_dict['attributes'].append({
+                'accession': 'MS:1002599', 'name': 'splash key',
+                'value': splash_key})
     except UsiError as e:
         result_dict = {'error': {'code': e.error_code, 'message': str(e)}}
     except ValueError as e:
