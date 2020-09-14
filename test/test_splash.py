@@ -1,94 +1,55 @@
-import splash
-import requests
-import pandas as pd
 import json
+
+import numpy as np
+import pandas as pd
+import requests
+import splash
+
+
+def _get_splash_remote(peaks):
+    payload = {'ions': [{'mass': str(peak[0]), 'intensity': str(peak[1])}
+                        for peak in peaks],
+               'type': 'MS'}
+    headers = {'Content-type': 'application/json; charset=UTF-8'}
+    r = requests.post('https://splash.fiehnlab.ucdavis.edu/splash/it',
+                      data=json.dumps(payload), headers=headers)
+    return r.text
 
 
 def test_splash_toy():
-    #calculating splash
-    peaks = [
-        (102, 3),
-        (100, 1),
-        (101, 2),
-    ]
-
-    splash_spectrum = splash.Spectrum(peaks, splash.SpectrumType.MS)
-    splash_key = splash.Splash().splash(splash_spectrum)
-
-    print("TOY LOCAL", splash_key)
-
-def test_splash_toy_api():
-    #calculating splash
-    peaks = [
-        (102, 3),
-        (100, 1),
-        (101, 2),
-    ]
-
-    splash_api_url = "https://splash.fiehnlab.ucdavis.edu/splash/it"
-    payload = {}
-    payload["ions"] = [{"mass": str(peak[0]), "intensity": str(peak[1])} for peak in peaks]
-    payload["type"] = "MS"
-    headers = {'Content-type': 'application/json; charset=UTF-8'}
-    r = requests.post(splash_api_url, data=json.dumps(payload), headers=headers)
-
-    print("TOY REMOTE", r.text)
+    peaks = [(102, 3), (100, 1), (101, 2)]
+    # Local SPLASH.
+    spectrum = splash.Spectrum(peaks, splash.SpectrumType.MS)
+    splash_local = splash.Splash().splash(spectrum)
+    # Reference remote SPLASH.
+    splash_remote = _get_splash_remote(peaks)
+    assert splash_local == splash_remote
 
 
-def test_splash_complex():
-    r = requests.get("https://metabolomics-usi.ucsd.edu/json/?usi=mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077")
-    spectrum = r.json()
-    peaks = spectrum["peaks"]
-    peaks = [(peak[0], peak[1]) for peak in peaks]
-    
-    splash_spectrum = splash.Spectrum(peaks, splash.SpectrumType.MS)
-    splash_key = splash.Splash().splash(splash_spectrum)
+def test_splash_match_api():
+    # Peaks from JSON.
+    r = requests.get('https://metabolomics-usi.ucsd.edu/json/?usi='
+                     'mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077')
+    peaks = r.json()['peaks']
+    splash_remote = _get_splash_remote(peaks)
+    # Direct m/z values.
+    spectrum = splash.Spectrum(list(map(tuple, peaks)), splash.SpectrumType.MS)
+    splash_local = splash.Splash().splash(spectrum)
+    assert splash_local == splash_remote
+    # m/z as explicit float64/float32.
+    mz, intensity = zip(*peaks)
+    for dtype in [np.float64, np.float32]:
+        spectrum = splash.Spectrum(list(zip(np.asarray(mz, dtype),
+                                            np.asarray(intensity, dtype))),
+                                   splash.SpectrumType.MS)
+        splash_local = splash.Splash().splash(spectrum)
+        assert splash_local == splash_remote
 
-    print("COMPLEX LOCAL", splash_key)
-
-    # Testing with Feihn API
-    splash_api_url = "https://splash.fiehnlab.ucdavis.edu/splash/it"
-    payload = {}
-    payload["ions"] = [{"mass": str(peak[0]), "intensity": str(peak[1])} for peak in spectrum["peaks"]]
-    payload["type"] = "MS"
-    import json
-    headers = {'Content-type': 'application/json; charset=UTF-8'}
-
-    r = requests.post(splash_api_url, data=json.dumps(payload), headers=headers)
-    print("COMPLEX REMOTE", r.text)
-    
-
-def test_splash_complex_cast_to_64():
-    r = requests.get("https://metabolomics-usi.ucsd.edu/json/?usi=mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077")
-    spectrum = r.json()
-    peaks = spectrum["peaks"]
-
-    df = pd.DataFrame()
-    df["mz"] = [peak[0] for peak in peaks]
-    df["intensity"] = [peak[1] for peak in peaks]
-
-    splash_spectrum = splash.Spectrum(list(zip(df["mz"], df["intensity"])), splash.SpectrumType.MS)
-    splash_key = splash.Splash().splash(splash_spectrum)
-
-    print("COMPLEX CAST TO 64 LOCAL", splash_key)
-
-
-
-def test_splash_complex2():
-    df = pd.read_csv("https://metabolomics-usi.ucsd.edu/csv/?usi=mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077")
-
-    splash_spectrum = splash.Spectrum(list(zip(df["mz"], df["intensity"])), splash.SpectrumType.MS)
-    splash_key = splash.Splash().splash(splash_spectrum)
-
-    print("COMPLEX CSV LOCAL", splash_key)
-
-
-def test_splash_complex3():
-    df = pd.read_csv("https://metabolomics-usi.ucsd.edu/csv/?usi=mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077")
-    df["mz"] = df["mz"].astype("float32")
-    df["intensity"] = df["intensity"].astype("float32")
-
-    splash_spectrum = splash.Spectrum(list(zip(df["mz"], df["intensity"])), splash.SpectrumType.MS)
-    splash_key = splash.Splash().splash(splash_spectrum)
-
-    print("COMPLEX CSV CAST to 32", splash_key)
+    # Peaks from CSV.
+    df = pd.read_csv('https://metabolomics-usi.ucsd.edu/csv/?usi='
+                     'mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077')
+    spectrum = splash.Spectrum(list(zip(df['mz'], df['intensity'])),
+                               splash.SpectrumType.MS)
+    splash_local = splash.Splash().splash(spectrum)
+    splash_remote = _get_splash_remote(zip(df['mz'], df['intensity']))
+    assert splash_local == splash_remote
