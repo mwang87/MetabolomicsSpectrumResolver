@@ -784,13 +784,10 @@ def render_error(error):
         error_code = error.error_code
     else:
         error_code = 500
-
-    # Handling Run Time Errors
-    error_message = "RunTime Server Error"
-    try:
+    if hasattr(error, 'message'):
         error_message = error.message
-    except:
-        raise
+    else:
+        error_message = 'RunTime Server Error'
 
     return (flask.render_template('error.html', error=error_message),
             error_code)
