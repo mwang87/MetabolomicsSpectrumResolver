@@ -23,6 +23,14 @@
                         </a>
                     (% endif %)
                 </div>
+                (% if splash_key1 is not none %)
+                    <div class="col-4 font-weight-bold text-right">
+                        SPLASH Identifier 1
+                    </div>
+                    <div class="col-8">
+                        (( splash_key1 ))
+                    </div>
+                (% endif %)
             </div>
             <div class="row">
                 <div class="col-4 font-weight-bold text-right">
@@ -37,6 +45,14 @@
                         </a>
                     (% endif %)
                 </div>
+                (% if splash_key2 is not none %)
+                    <div class="col-4 font-weight-bold text-right">
+                        SPLASH Identifier 2
+                    </div>
+                    <div class="col-8">
+                        (( splash_key2 ))
+                    </div>
+                (% endif %)
             </div>
             <div class="row mt-2">
                 <div class="col-2 offset-4">

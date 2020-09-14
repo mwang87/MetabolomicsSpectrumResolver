@@ -76,10 +76,10 @@ def render_spectrum():
         'spectrum.html',
         usi=usi,
         source_link=source_link,
+        splash_key=splash_key,
         peaks=[_get_peaks(spectrum)],
         annotations=[spectrum.annotation.nonzero()[0].tolist()],
-        plotting_args=plotting_args,
-        splash_key=splash_key
+        plotting_args=plotting_args
     )
 
 
@@ -88,8 +88,8 @@ def render_mirror_spectrum():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
     plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-    spectrum1, source1, splash_key = parsing.parse_usi(usi1)
-    spectrum2, source2, splash_key = parsing.parse_usi(usi2)
+    spectrum1, source1, splash_key1 = parsing.parse_usi(usi1)
+    spectrum2, source2, splash_key2 = parsing.parse_usi(usi2)
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                    plotting_args)
     return flask.render_template(
@@ -98,6 +98,8 @@ def render_mirror_spectrum():
         usi2=usi2,
         source_link1=source1,
         source_link2=source2,
+        splash_key1=splash_key1,
+        splash_key2=splash_key2,
         peaks=[_get_peaks(spectrum1), _get_peaks(spectrum2)],
         annotations=[spectrum1.annotation.nonzero()[0].tolist(),
                      spectrum2.annotation.nonzero()[0].tolist()],
@@ -696,7 +698,7 @@ def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
 def peak_json():
     try:
         spectrum, _, splash_key = parsing.parse_usi(flask.request.args.get('usi'))
-        
+
         result_dict = {
             'peaks': _get_peaks(spectrum),
             'n_peaks': len(spectrum.mz),
@@ -776,7 +778,7 @@ def render_error(error):
         error_code = error.error_code
     else:
         error_code = 500
-    
+
     # Handling Run Time Errors
     error_message = "RunTime Server Error"
     try:
