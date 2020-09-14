@@ -152,7 +152,7 @@ Custom Title
 1. /png/
 1. /svg/
 1. /json/
-1. /api/proxi/v0.1/spectra
+1. /proxi/v0.1/spectra
 1. /csv/
 1. /qrcode/
 1. /spectrum/
