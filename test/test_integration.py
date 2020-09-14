@@ -3,6 +3,7 @@ import imghdr
 import io
 import itertools
 import json
+import re
 import sys
 sys.path.insert(0, '..')
 
@@ -15,6 +16,9 @@ from pyzbar import pyzbar
 import app
 
 from usi_test_data import usis_to_test
+
+
+splash_pattern = re.compile('^splash10-\w{4}-\d{10}-\w{20}$')
 
 
 def _get_custom_plotting_args_str():
@@ -402,6 +406,9 @@ def test_peak_proxi_json(client):
                 assert attribute['name'] == 'selected ion m/z'
             elif attribute['accession'] == 'MS:1000041':
                 assert attribute['name'] == 'charge state'
+            elif attribute['accession'] == 'MS:1002599':
+                assert attribute['name'] == 'splash key'
+                assert splash_pattern.match(attribute['value']) is not None
         # TODO: Validate using the PROXI swagger definition.
         #   https://github.com/HUPO-PSI/proxi-schemas/blob/master/specs/swagger.yaml
 
