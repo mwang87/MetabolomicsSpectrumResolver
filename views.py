@@ -68,12 +68,13 @@ def render_heartbeat():
 def render_spectrum():
     usi = flask.request.args.get('usi')
     plotting_args = _get_plotting_args(flask.request.args)
-    spectrum, source_link = parsing.parse_usi(usi)
+    spectrum, source_link, splash_key = parsing.parse_usi(usi)
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     return flask.render_template(
         'spectrum.html',
         usi=usi,
         source_link=source_link,
+        splash_key=splash_key,
         peaks=[_get_peaks(spectrum)],
         annotations=[spectrum.annotation.nonzero()[0].tolist()],
         plotting_args=plotting_args
@@ -85,8 +86,8 @@ def render_mirror_spectrum():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
     plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-    spectrum1, source1 = parsing.parse_usi(usi1)
-    spectrum2, source2 = parsing.parse_usi(usi2)
+    spectrum1, source1, splash_key1 = parsing.parse_usi(usi1)
+    spectrum2, source2, splash_key2 = parsing.parse_usi(usi2)
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                    plotting_args)
     return flask.render_template(
@@ -95,6 +96,8 @@ def render_mirror_spectrum():
         usi2=usi2,
         source_link1=source1,
         source_link2=source2,
+        splash_key1=splash_key1,
+        splash_key2=splash_key2,
         peaks=[_get_peaks(spectrum1), _get_peaks(spectrum2)],
         annotations=[spectrum1.annotation.nonzero()[0].tolist(),
                      spectrum2.annotation.nonzero()[0].tolist()],
@@ -105,7 +108,7 @@ def render_mirror_spectrum():
 @blueprint.route('/png/')
 def generate_png():
     plotting_args = _get_plotting_args(flask.request.args)
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _, _ = parsing.parse_usi(flask.request.args.get('usi'))
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     buf = _generate_figure(spectrum, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
@@ -114,8 +117,8 @@ def generate_png():
 @blueprint.route('/png/mirror/')
 def generate_mirror_png():
     plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-    spectrum1, _ = parsing.parse_usi(flask.request.args.get('usi1'))
-    spectrum2, _ = parsing.parse_usi(flask.request.args.get('usi2'))
+    spectrum1, _, _ = parsing.parse_usi(flask.request.args.get('usi1'))
+    spectrum2, _, _ = parsing.parse_usi(flask.request.args.get('usi2'))
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                    plotting_args)
     buf = _generate_mirror_figure(spectrum1, spectrum2, 'png', **plotting_args)
@@ -125,7 +128,7 @@ def generate_mirror_png():
 @blueprint.route('/svg/')
 def generate_svg():
     plotting_args = _get_plotting_args(flask.request.args)
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _, _ = parsing.parse_usi(flask.request.args.get('usi'))
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     buf = _generate_figure(spectrum, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
@@ -134,8 +137,8 @@ def generate_svg():
 @blueprint.route('/svg/mirror/')
 def generate_mirror_svg():
     plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-    spectrum1, _ = parsing.parse_usi(flask.request.args.get('usi1'))
-    spectrum2, _ = parsing.parse_usi(flask.request.args.get('usi2'))
+    spectrum1, _, _ = parsing.parse_usi(flask.request.args.get('usi1'))
+    spectrum2, _, _ = parsing.parse_usi(flask.request.args.get('usi2'))
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                    plotting_args)
     buf = _generate_mirror_figure(spectrum1, spectrum2, 'svg', **plotting_args)
@@ -695,11 +698,16 @@ def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
 @blueprint.route('/json/')
 def peak_json():
     try:
-        spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+        spectrum, _, splash_key = parsing.parse_usi(
+            flask.request.args.get('usi'))
+
         result_dict = {
             'peaks': _get_peaks(spectrum),
             'n_peaks': len(spectrum.mz),
-            'precursor_mz': spectrum.precursor_mz}
+            'precursor_mz': spectrum.precursor_mz,
+            'splash': splash_key
+        }
+
     except UsiError as e:
         result_dict = {'error': {'code': e.error_code, 'message': str(e)}}
     except ValueError as e:
@@ -711,7 +719,7 @@ def peak_json():
 def peak_proxi_json():
     try:
         usi = flask.request.args.get('usi')
-        spectrum, _ = parsing.parse_usi(usi)
+        spectrum, _, splash_key = parsing.parse_usi(usi)
         result_dict = {
             'usi': usi,
             'status': 'READABLE',
@@ -730,6 +738,10 @@ def peak_proxi_json():
                 }
             ]
         }
+        if splash_key is not None:
+            result_dict['attributes'].append({
+                'accession': 'MS:1002599', 'name': 'splash key',
+                'value': splash_key})
     except UsiError as e:
         result_dict = {'error': {'code': e.error_code, 'message': str(e)}}
     except ValueError as e:
@@ -739,7 +751,7 @@ def peak_proxi_json():
 
 @blueprint.route('/csv/')
 def peak_csv():
-    spectrum, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _, _ = parsing.parse_usi(flask.request.args.get('usi'))
     with io.StringIO() as csv_str:
         writer = csv.writer(csv_str)
         writer.writerow(['mz', 'intensity'])
@@ -772,5 +784,10 @@ def render_error(error):
         error_code = error.error_code
     else:
         error_code = 500
-    return (flask.render_template('error.html', error=error.message),
+    if hasattr(error, 'message'):
+        error_message = error.message
+    else:
+        error_message = 'RunTime Server Error'
+
+    return (flask.render_template('error.html', error=error_message),
             error_code)
