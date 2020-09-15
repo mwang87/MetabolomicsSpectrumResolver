@@ -1,3 +1,4 @@
+import functools
 import json
 import sys
 import unittest.mock
@@ -5,6 +6,7 @@ sys.path.insert(0, '..')
 
 import numpy as np
 import pytest
+import requests
 import werkzeug.datastructures
 from spectrum_utils import spectrum as sus
 
@@ -20,13 +22,29 @@ def clear_cache():
     parsing.parse_usi.cache_clear()
 
 
+@functools.lru_cache(None)
+def _get_splash_remote(spectrum):
+    payload = {'ions': [{'mass': float(mz), 'intensity': float(intensity)}
+                        for mz, intensity in zip(spectrum.mz,
+                                                 spectrum.intensity)],
+               'type': 'MS'}
+    headers = {'Content-type': 'application/json; charset=UTF-8'}
+    splash_response = requests.post(
+        'https://splash.fiehnlab.ucdavis.edu/splash/it',
+        data=json.dumps(payload), headers=headers)
+    return splash_response.text
+
+
 def test_parse_usi():
     # ValueError will be thrown if invalid USI.
     for usi in usis_to_test:
-        parsing.parse_usi(usi)
+        spectrum, _, splash_key = parsing.parse_usi(usi)
+        assert splash_key == _get_splash_remote(spectrum)
         if any(collection in usi for collection in
                ['MASSIVEKB', 'GNPS', 'MASSBANK', 'MS2LDA', 'MOTIFDB']):
-            parsing.parse_usi(usi.replace('mzspec', 'mzdraft'))
+            spectrum, _, splash_key = parsing.parse_usi(
+                usi.replace('mzspec', 'mzdraft'))
+            assert splash_key == _get_splash_remote(spectrum)
 
 
 def test_parse_usi_invalid():
@@ -65,7 +83,8 @@ def test_parse_usi_invalid():
 def test_parse_gnps_task():
     usi = ('mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/'
            'specs_ms.mgf:scan:1943')
-    parsing.parse_usi(usi)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid task pattern.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':TASK-', ':TASK-666'))
@@ -86,7 +105,8 @@ def test_parse_gnps_task():
 
 def test_parse_gnps_library():
     usi = 'mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077'
-    parsing.parse_usi(usi)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid index flag.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':accession:', ':index:'))
@@ -100,7 +120,8 @@ def test_parse_gnps_library():
 
 def test_parse_massbank():
     usi = 'mzspec:MASSBANK::accession:SM858102'
-    parsing.parse_usi(usi)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid index flag.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':accession:', ':index:'))
@@ -114,7 +135,8 @@ def test_parse_massbank():
 
 def test_parse_ms2lda():
     usi = 'mzspec:MS2LDA:TASK-190:accession:270684'
-    parsing.parse_usi(usi)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid task pattern.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':TASK-', ':TASK-bla'))
@@ -136,7 +158,8 @@ def test_parse_ms2lda():
 
 def test_parse_msv_pxd():
     usi = 'mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555'
-    parsing.parse_usi(usi)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid collection.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':MSV000079514:', ':MSV666666666:'))
@@ -158,7 +181,8 @@ def test_parse_msv_pxd():
 
 def test_parse_motifdb():
     usi = 'mzspec:MOTIFDB::accession:171163'
-    parsing.parse_usi(usi)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid index flag.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':accession:', ':index:'))
@@ -272,7 +296,7 @@ def test_get_plotting_args_title():
 
 def test_prepare_spectrum():
     usi = 'mzspec:MOTIFDB::accession:171163'
-    spectrum, _ = parsing.parse_usi(usi)
+    spectrum, _, _ = parsing.parse_usi(usi)
     spectrum_processed = views._prepare_spectrum(
         spectrum, **views._get_plotting_args(_get_plotting_args(
             mz_min=400, mz_max=700, annotate_peaks=json.dumps([[]]))))
@@ -287,7 +311,7 @@ def test_prepare_spectrum():
 
 def test_prepare_spectrum_annotate_peaks_default():
     usi = 'mzspec:MOTIFDB::accession:171163'
-    spectrum, _ = parsing.parse_usi(usi)
+    spectrum, _, _ = parsing.parse_usi(usi)
     spectrum_processed = views._prepare_spectrum(
         spectrum, **views._get_plotting_args(_get_plotting_args()))
     assert not all([annotation is None
@@ -296,7 +320,7 @@ def test_prepare_spectrum_annotate_peaks_default():
 
 def test_prepare_spectrum_annotate_peaks_specified():
     usi = 'mzspec:MOTIFDB::accession:171163'
-    spectrum, _ = parsing.parse_usi(usi)
+    spectrum, _, _ = parsing.parse_usi(usi)
     spectrum_processed = views._prepare_spectrum(
         spectrum, **views._get_plotting_args(_get_plotting_args(
             mz_min=400, mz_max=700,
@@ -312,7 +336,7 @@ def test_prepare_spectrum_annotate_peaks_specified():
 
 def test_prepare_spectrum_annotate_peaks_specified_invalid():
     usi = 'mzspec:MOTIFDB::accession:171163'
-    spectrum, _ = parsing.parse_usi(usi)
+    spectrum, _, _ = parsing.parse_usi(usi)
     spectrum_processed = views._prepare_spectrum(
         spectrum, **views._get_plotting_args(_get_plotting_args(
             annotate_peaks=json.dumps([[1477.2525, 1654.3575]]))))
@@ -323,8 +347,8 @@ def test_prepare_spectrum_annotate_peaks_specified_invalid():
 def test_prepare_mirror_spectra():
     usi1 = 'mzspec:MOTIFDB::accession:171163'
     usi2 = 'mzspec:MOTIFDB::accession:171164'
-    spectrum1, _ = parsing.parse_usi(usi1)
-    spectrum2, _ = parsing.parse_usi(usi2)
+    spectrum1, _, _ = parsing.parse_usi(usi1)
+    spectrum2, _, _ = parsing.parse_usi(usi2)
     spectrum1_processed, spectrum2_processed = views._prepare_mirror_spectra(
         spectrum1, spectrum2, views._get_plotting_args(_get_plotting_args(
             mz_min=400, mz_max=700, annotate_peaks=json.dumps([[], []])),

@@ -23,7 +23,7 @@ jobs:
     - name: Install dependencies
       run: |
         wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-        bash miniconda.sh -b -p $HOME/miniconda
+        bash miniconda.sh -b -p $HOME/miniconda || true
         export PATH="$HOME/miniconda/bin:$PATH"
         conda config --set always_yes yes --set changeps1 no
         conda update -q conda
@@ -31,6 +31,9 @@ jobs:
           flask flex-swagger gunicorn locust lxml matplotlib numba numpy \
           pillow pytest pyzbar qrcode rdkit requests requests-cache scipy \
           spectrum_utils werkzeug zbar
+        apt-get update -y && apt-get install -y git-core
+        source activate usi
+        pip install "git+git://github.com/berlinguyinca/spectra-hash.git#egg=splash&subdirectory=python"
         echo "source activate usi" > ~/.bashrc
     - name: Lint with flake8
       run: |
