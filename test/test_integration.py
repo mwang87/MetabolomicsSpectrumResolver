@@ -1,9 +1,9 @@
 import csv
+import functools
 import imghdr
 import io
 import itertools
 import json
-import re
 import sys
 import unittest.mock
 sys.path.insert(0, '..')
@@ -12,6 +12,8 @@ import flask
 import flex
 import PIL
 import pytest
+import requests
+import spectrum_utils.spectrum as sus
 import urllib.parse
 from lxml import etree
 from pyzbar import pyzbar
@@ -23,7 +25,17 @@ from error import UsiError
 from usi_test_data import usis_to_test
 
 
-splash_pattern = re.compile('^splash10-\w{4}-\d{10}-\w{20}$')
+@functools.lru_cache(None)
+def _get_splash_remote(spectrum):
+    payload = {'ions': [{'mass': float(mz), 'intensity': float(intensity)}
+                        for mz, intensity in zip(spectrum.mz,
+                                                 spectrum.intensity)],
+               'type': 'MS'}
+    headers = {'Content-type': 'application/json; charset=UTF-8'}
+    splash_response = requests.post(
+        'https://splash.fiehnlab.ucdavis.edu/splash/it',
+        data=json.dumps(payload), headers=headers)
+    return splash_response.text
 
 
 def _get_custom_plotting_args_str():
@@ -382,6 +394,9 @@ def test_peak_json(client):
         assert response_dict['n_peaks'] == len(response_dict['peaks'])
         for peak in response_dict['peaks']:
             assert len(peak) == 2
+        mz, intensity = zip(*response_dict['peaks'])
+        assert response_dict['splash'] == _get_splash_remote(
+            sus.MsmsSpectrum(usi, 0, 0, mz, intensity))
 
 
 def test_peak_json_invalid(client):
@@ -419,7 +434,10 @@ def test_peak_proxi_json(client):
                 assert attribute['name'] == 'charge state'
             elif attribute['accession'] == 'MS:1002599':
                 assert attribute['name'] == 'splash key'
-                assert splash_pattern.match(attribute['value']) is not None
+                assert attribute['value'] == _get_splash_remote(
+                    sus.MsmsSpectrum(usi, 0, 0, response_dict['mzs'],
+                                     response_dict['intensities']))
+
         # Validate that the response matches the PROXI Swagger API definition.
         flex.core.validate_api_response(schema, raw_request=flask.request,
                                         raw_response=response)

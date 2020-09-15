@@ -7,7 +7,6 @@ sys.path.insert(0, '..')
 import numpy as np
 import pytest
 import requests
-import splash
 import werkzeug.datastructures
 from spectrum_utils import spectrum as sus
 
@@ -18,19 +17,13 @@ from error import UsiError
 from usi_test_data import usis_to_test
 
 
-splash_builder = splash.Splash()
-
-
 @pytest.fixture(autouse=True)
 def clear_cache():
     parsing.parse_usi.cache_clear()
 
 
 @functools.lru_cache(None)
-def assert_splash_matches(spectrum):
-    splash_local = splash_builder.splash(splash.Spectrum(
-        list(zip(spectrum.mz, spectrum.intensity)), splash.SpectrumType.MS))
-
+def _get_splash_remote(spectrum):
     payload = {'ions': [{'mass': float(mz), 'intensity': float(intensity)}
                         for mz, intensity in zip(spectrum.mz,
                                                  spectrum.intensity)],
@@ -39,19 +32,19 @@ def assert_splash_matches(spectrum):
     splash_response = requests.post(
         'https://splash.fiehnlab.ucdavis.edu/splash/it',
         data=json.dumps(payload), headers=headers)
-    splash_remote = splash_response.text
-
-    assert splash_local == splash_remote
+    return splash_response.text
 
 
 def test_parse_usi():
     # ValueError will be thrown if invalid USI.
     for usi in usis_to_test:
-        spectrum, _, _ = parsing.parse_usi(usi)
-        assert_splash_matches(spectrum)
+        spectrum, _, splash_key = parsing.parse_usi(usi)
+        assert splash_key == _get_splash_remote(spectrum)
         if any(collection in usi for collection in
                ['MASSIVEKB', 'GNPS', 'MASSBANK', 'MS2LDA', 'MOTIFDB']):
-            parsing.parse_usi(usi.replace('mzspec', 'mzdraft'))
+            spectrum, _, splash_key = parsing.parse_usi(
+                usi.replace('mzspec', 'mzdraft'))
+            assert splash_key == _get_splash_remote(spectrum)
 
 
 def test_parse_usi_invalid():
@@ -90,8 +83,8 @@ def test_parse_usi_invalid():
 def test_parse_gnps_task():
     usi = ('mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/'
            'specs_ms.mgf:scan:1943')
-    spectrum, _, _ = parsing.parse_usi(usi)
-    assert_splash_matches(spectrum)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid task pattern.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':TASK-', ':TASK-666'))
@@ -112,8 +105,8 @@ def test_parse_gnps_task():
 
 def test_parse_gnps_library():
     usi = 'mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077'
-    spectrum, _, _ = parsing.parse_usi(usi)
-    assert_splash_matches(spectrum)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid index flag.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':accession:', ':index:'))
@@ -127,8 +120,8 @@ def test_parse_gnps_library():
 
 def test_parse_massbank():
     usi = 'mzspec:MASSBANK::accession:SM858102'
-    spectrum, _, _ = parsing.parse_usi(usi)
-    assert_splash_matches(spectrum)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid index flag.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':accession:', ':index:'))
@@ -142,8 +135,8 @@ def test_parse_massbank():
 
 def test_parse_ms2lda():
     usi = 'mzspec:MS2LDA:TASK-190:accession:270684'
-    spectrum, _, _ = parsing.parse_usi(usi)
-    assert_splash_matches(spectrum)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid task pattern.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':TASK-', ':TASK-bla'))
@@ -165,8 +158,8 @@ def test_parse_ms2lda():
 
 def test_parse_msv_pxd():
     usi = 'mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555'
-    spectrum, _, _ = parsing.parse_usi(usi)
-    assert_splash_matches(spectrum)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid collection.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':MSV000079514:', ':MSV666666666:'))
@@ -188,8 +181,8 @@ def test_parse_msv_pxd():
 
 def test_parse_motifdb():
     usi = 'mzspec:MOTIFDB::accession:171163'
-    spectrum, _, _ = parsing.parse_usi(usi)
-    assert_splash_matches(spectrum)
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
     # Invalid index flag.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(usi.replace(':accession:', ':index:'))
