@@ -18,6 +18,8 @@ Supported USI Types:
 
 ![unittest](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/unittest/badge.svg)
 ![loadtest](https://github.com/mwang87/MetabolomicsSpectrumResolver/workflows/loadtest/badge.svg)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4033442.svg)](https://doi.org/10.5281/zenodo.4033442)
+
 
 > :warning: These identifiers are based on draft USI and draft Metabolomics USI identifiers. 
         Thus, they are subject to change, and so for the moment, they will be specified as `mzdraft` instead of `mzspec` in the first block. 
