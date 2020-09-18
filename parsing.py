@@ -267,8 +267,9 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     dataset_identifier = match.group(1)
     index_flag = match.group(3)
-    if index_flag.lower() != 'scan':
-        raise UsiError('Currently supported MassIVE index flags: scan', 400)
+    supported_index_flags = ['scan', 'nativeid']
+    if not index_flag.lower() in supported_index_flags:
+        raise UsiError('Currently supported MassIVE index flags: {}'.format(", ".join(supported_index_flags)), 400)
     scan = match.group(4)
     try:
         lookup_url = (f'https://massive.ucsd.edu/ProteoSAFe/'
@@ -278,13 +279,27 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         for spectrum_file in lookup_request.json()['row_data']:
             if any(spectrum_file['file_descriptor'].lower().endswith(extension)
                    for extension in ['mzml', 'mzxml', 'mgf']):
-                request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/'
-                               f'DownloadResultFile?'
-                               f'task=4f2ac74ea114401787a7e96e143bb4a1&'
-                               f'invoke=annotatedSpectrumImageText&block=0&'
-                               f'file=FILE->{spectrum_file["file_descriptor"]}'
-                               f'&scan={scan}&peptide=*..*&force=false&'
-                               f'format=JSON&uploadfile=True')
+                
+                if index_flag.lower() == "scan":
+                    request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/'
+                                f'DownloadResultFile?'
+                                f'task=4f2ac74ea114401787a7e96e143bb4a1&'
+                                f'invoke=annotatedSpectrumImageText&block=0&'
+                                f'file=FILE->{spectrum_file["file_descriptor"]}'
+                                f'&scan={scan}&peptide=*..*&force=false&'
+                                f'format=JSON&uploadfile=True')
+                elif index_flag.lower() == "nativeid":
+                    request_url = (f'https://massive.ucsd.edu/ProteoSAFe/'
+                                f'DownloadResultFile?'
+                                f'task=4f2ac74ea114401787a7e96e143bb4a1&'
+                                f'invoke=annotatedSpectrumImageText&block=0&'
+                                f'file=FILE->{spectrum_file["file_descriptor"]}'
+                                f'&nativeid={scan}&peptide=*..*&force=false&'
+                                f'format=JSON&uploadfile=True')
+                
+                import sys
+                print(request_url, file=sys.stderr)
+
                 try:
                     spectrum_request = requests.get(request_url,
                                                     timeout=timeout)
