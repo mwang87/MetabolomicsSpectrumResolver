@@ -2,6 +2,7 @@ usis_to_test = [
     # Real USIs.
     'mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555',
     'mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555',
+    'mzspec:MSV000082718:S00016788_Rat.mzXML:scan:1023',
     # FIXME: RPXD not resolved by MassIVE.
     # 'mzspec:RPXD006668:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555',
     'mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943',
