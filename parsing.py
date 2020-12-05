@@ -293,6 +293,8 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                 except (requests.exceptions.HTTPError,
                         json.decoder.JSONDecodeError):
                     continue
+                if len(spectrum_dict['peaks']) == 0:
+                    continue
                 mz, intensity = zip(*spectrum_dict['peaks'])
                 if 'precursor' in spectrum_dict:
                     precursor_mz = float(
