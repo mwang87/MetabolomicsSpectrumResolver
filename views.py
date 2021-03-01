@@ -714,7 +714,7 @@ def peak_json():
         result_dict = {'error': {'code': 404, 'message': str(e)}}
     return flask.jsonify(result_dict)
 
-@blueprint.route('/mirrorjson/')
+@blueprint.route('/json/mirror/')
 def mirror_json():
     try:
         usi1 = flask.request.args.get('usi1')
