@@ -724,9 +724,10 @@ def mirror_json():
         spectrum1, source1, splash_key1 = parsing.parse_usi(usi1)
         spectrum2, source2, splash_key2 = parsing.parse_usi(usi2)
         spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
-                                                    plotting_args)
-
-        result_dict = {}
+                                                       plotting_args)
+        similarity, peak_matches = _cosine(
+            spectrum1, spectrum2, plotting_args['fragment_mz_tolerance'],
+            plotting_args['cosine'] == 'shifted')
 
         spectrum1_dict = {
             'peaks': _get_peaks(spectrum1),
@@ -740,16 +741,11 @@ def mirror_json():
             'precursor_mz': spectrum2.precursor_mz,
             'splash': splash_key2
         }
-        result_dict["spectrum1"] = spectrum1_dict
-        result_dict["spectrum2"] = spectrum2_dict
-
-        similarity, peak_matches = _cosine(
-            spectrum1, spectrum2, plotting_args['fragment_mz_tolerance'],
-            plotting_args['cosine'] == 'shifted')
-
-        result_dict["cosine"] = similarity
-        result_dict["peak_matches_count"] = len(peak_matches)
-        result_dict["peak_matches"] = peak_matches
+        result_dict = {'spectrum1': spectrum1_dict,
+                       'spectrum2': spectrum2_dict,
+                       'cosine': similarity,
+                       'peak_matches_count': len(peak_matches),
+                       'peak_matches': peak_matches}
         
     except UsiError as e:
         result_dict = {'error': {'code': e.error_code, 'message': str(e)}}
