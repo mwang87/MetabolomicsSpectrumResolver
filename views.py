@@ -714,6 +714,7 @@ def peak_json():
         result_dict = {'error': {'code': 404, 'message': str(e)}}
     return flask.jsonify(result_dict)
 
+
 @blueprint.route('/json/mirror/')
 def mirror_json():
     try:
@@ -746,7 +747,7 @@ def mirror_json():
                        'cosine': similarity,
                        'peak_matches_count': len(peak_matches),
                        'peak_matches': peak_matches}
-        
+
     except UsiError as e:
         result_dict = {'error': {'code': e.error_code, 'message': str(e)}}
     except ValueError as e:
