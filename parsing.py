@@ -20,44 +20,44 @@ MASSBANK_SERVER = 'https://massbank.us/rest/spectra/'
 # USI specification: http://www.psidev.info/usi
 usi_pattern = re.compile(
     # mzspec preamble
-    '^mzspec'
+    r'^mzspec'
     # collection identifier
     # Proteomics collection identifiers: PXDnnnnnn, MSVnnnnnnnnn, RPXDnnnnnn,
     #                                    PXLnnnnnn
     # Unofficial: MASSIVEKB
     # https://github.com/HUPO-PSI/usi/blob/master/CollectionIdentifiers.md
-    ':(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6})'
+    r':(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6})'
     # msRun identifier
-    ':(.*)'
+    r':(.*)'
     # index flag
-    ':(scan|index|nativeId|trace)'
+    r':(scan|index|nativeId|trace)'
     # index number
-    ':(.+)'
+    r':(.+)'
     # optional spectrum interpretation
-    '(:.+)?$',
+    r'(:.+)?$',
     flags=re.IGNORECASE
 )
 # OR: Metabolomics USIs.
 usi_pattern_draft = re.compile(
     # mzdraft preamble
-    '^(?:mzspec|mzdraft)'
+    r'^(?:mzspec|mzdraft)'
     # collection identifier
     # Unofficial proteomics spectral library identifier: MASSIVEKB
     # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB
-    ':(MASSIVEKB|GNPS|MASSBANK|MS2LDA|MOTIFDB)'
+    r':(MASSIVEKB|GNPS|MASSBANK|MS2LDA|MOTIFDB)'
     # msRun identifier
-    ':(.*)'
+    r':(.*)'
     # index flag
-    ':(scan|index|nativeId|trace|accession)'
+    r':(scan|index|nativeId|trace|accession)'
     # index number
-    ':(.+)'
+    r':(.+)'
     # optional spectrum interpretation
-    '(:.+)?$',
+    r'(:.+)?$',
     flags=re.IGNORECASE
 )
-gnps_task_pattern = re.compile('^TASK-([a-z0-9]{32})-(.+)$',
+gnps_task_pattern = re.compile(r'^TASK-([a-z0-9]{32})-(.+)$',
                                flags=re.IGNORECASE)
-ms2lda_task_pattern = re.compile('^TASK-(\d+)$', flags=re.IGNORECASE)
+ms2lda_task_pattern = re.compile(r'^TASK-(\d+)$', flags=re.IGNORECASE)
 
 splash_builder = splash.Splash()
 

@@ -715,6 +715,46 @@ def peak_json():
     return flask.jsonify(result_dict)
 
 
+@blueprint.route('/json/mirror/')
+def mirror_json():
+    try:
+        usi1 = flask.request.args.get('usi1')
+        usi2 = flask.request.args.get('usi2')
+
+        plotting_args = _get_plotting_args(flask.request.args, mirror=True)
+        spectrum1, source1, splash_key1 = parsing.parse_usi(usi1)
+        spectrum2, source2, splash_key2 = parsing.parse_usi(usi2)
+        _spectrum1, _spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
+                                                         plotting_args)
+        similarity, peak_matches = _cosine(
+            _spectrum1, _spectrum2, plotting_args['fragment_mz_tolerance'],
+            plotting_args['cosine'] == 'shifted')
+
+        spectrum1_dict = {
+            'peaks': _get_peaks(spectrum1),
+            'n_peaks': len(spectrum1.mz),
+            'precursor_mz': spectrum1.precursor_mz,
+            'splash': splash_key1
+        }
+        spectrum2_dict = {
+            'peaks': _get_peaks(spectrum2),
+            'n_peaks': len(spectrum2.mz),
+            'precursor_mz': spectrum2.precursor_mz,
+            'splash': splash_key2
+        }
+        result_dict = {'spectrum1': spectrum1_dict,
+                       'spectrum2': spectrum2_dict,
+                       'cosine': similarity,
+                       'n_peak_matches': len(peak_matches),
+                       'peak_matches': peak_matches}
+
+    except UsiError as e:
+        result_dict = {'error': {'code': e.error_code, 'message': str(e)}}
+    except ValueError as e:
+        result_dict = {'error': {'code': 404, 'message': str(e)}}
+    return flask.jsonify(result_dict)
+
+
 @blueprint.route('/proxi/v0.1/spectra')
 def peak_proxi_json():
     try:
