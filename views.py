@@ -724,10 +724,10 @@ def mirror_json():
         plotting_args = _get_plotting_args(flask.request.args, mirror=True)
         spectrum1, source1, splash_key1 = parsing.parse_usi(usi1)
         spectrum2, source2, splash_key2 = parsing.parse_usi(usi2)
-        spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
+        _spectrum1, _spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                        plotting_args)
         similarity, peak_matches = _cosine(
-            spectrum1, spectrum2, plotting_args['fragment_mz_tolerance'],
+            _spectrum1, _spectrum2, plotting_args['fragment_mz_tolerance'],
             plotting_args['cosine'] == 'shifted')
 
         spectrum1_dict = {
@@ -745,7 +745,7 @@ def mirror_json():
         result_dict = {'spectrum1': spectrum1_dict,
                        'spectrum2': spectrum2_dict,
                        'cosine': similarity,
-                       'peak_matches_count': len(peak_matches),
+                       'n_peak_matches': len(peak_matches),
                        'peak_matches': peak_matches}
 
     except UsiError as e:
