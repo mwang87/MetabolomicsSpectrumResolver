@@ -725,7 +725,7 @@ def mirror_json():
         spectrum1, source1, splash_key1 = parsing.parse_usi(usi1)
         spectrum2, source2, splash_key2 = parsing.parse_usi(usi2)
         _spectrum1, _spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
-                                                       plotting_args)
+                                                         plotting_args)
         similarity, peak_matches = _cosine(
             _spectrum1, _spectrum2, plotting_args['fragment_mz_tolerance'],
             plotting_args['cosine'] == 'shifted')
