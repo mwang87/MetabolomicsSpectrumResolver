@@ -484,9 +484,9 @@ def test_mirror_json(client):
         assert 'spectrum1' in response_dict
         assert 'spectrum2' in response_dict
         assert 'cosine' in response_dict
-        assert 'peak_matches_count' in response_dict
+        assert 'n_peak_matches' in response_dict
         assert 'peak_matches' in response_dict
-        assert (response_dict['peak_matches_count']
+        assert (response_dict['n_peak_matches']
                 == len(response_dict['peak_matches']))
         for peak_match in response_dict['peak_matches']:
             assert len(peak_match) == 2
