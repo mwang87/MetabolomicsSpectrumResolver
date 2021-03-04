@@ -35,6 +35,8 @@ def _get_splash_remote(spectrum):
     splash_response = requests.post(
         'https://splash.fiehnlab.ucdavis.edu/splash/it',
         data=json.dumps(payload), headers=headers)
+    if splash_response.status_code != 200:
+        pytest.skip('external SPLASH unavailable')
     return splash_response.text
 
 
@@ -471,6 +473,28 @@ def test_peak_csv_invalid(client):
         if usi is not None:
             response = client.get('/csv/', query_string=f'usi={usi}')
             assert response.status_code == status_code, usi
+
+
+def test_mirror_json(client):
+    for usi1, usi2 in pairwise(usis_to_test):
+        response = client.get('/json/mirror/',
+                              query_string=f'usi1={usi1}&usi2={usi2}')
+        assert response.status_code == 200
+        response_dict = json.loads(response.data)
+        assert 'spectrum1' in response_dict
+        assert 'spectrum2' in response_dict
+        assert 'cosine' in response_dict
+        assert 'n_peak_matches' in response_dict
+        assert 'peak_matches' in response_dict
+        assert (response_dict['n_peak_matches']
+                == len(response_dict['peak_matches']))
+        for peak_match in response_dict['peak_matches']:
+            assert len(peak_match) == 2
+        for i, usi in enumerate((usi1, usi2), 1):
+            mz, intensity = zip(*response_dict[f'spectrum{i}']['peaks'])
+            assert (response_dict[f'spectrum{i}']['splash']
+                    == _get_splash_remote(sus.MsmsSpectrum(usi, 0, 0, mz,
+                                                           intensity)))
 
 
 def test_generate_qr(client):

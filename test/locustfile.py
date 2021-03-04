@@ -73,3 +73,10 @@ class UsiLoadTester(locust.HttpUser):
         usi2 = random.choice(usis_to_test)
         self.client.get(f'/svg/mirror/?usi1={usi1}&usi2={usi2}',
                         name='/svg/mirror/')
+
+    @locust.task
+    def generate_mirror_json(self):
+        usi1 = random.choice(usis_to_test)
+        usi2 = random.choice(usis_to_test)
+        self.client.get(f'/json/mirror/?usi1={usi1}&usi2={usi2}',
+                        name='/json/mirror/')

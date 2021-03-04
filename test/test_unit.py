@@ -32,6 +32,8 @@ def _get_splash_remote(spectrum):
     splash_response = requests.post(
         'https://splash.fiehnlab.ucdavis.edu/splash/it',
         data=json.dumps(payload), headers=headers)
+    if splash_response.status_code != 200:
+        pytest.skip('external SPLASH unavailable')
     return splash_response.text
 
 
