@@ -26,13 +26,13 @@ usi_pattern = re.compile(
     #                                    PXLnnnnnn
     # Unofficial: MASSIVEKB
     # https://github.com/HUPO-PSI/usi/blob/master/CollectionIdentifiers.md
-    r':(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6})'
+    r':(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6}|MassIVE)'
     # msRun identifier
     r':(.*)'
     # index flag
     r':(scan|index|nativeId|trace)'
     # index number
-    r':(.+)'
+    r':([^:]+)'
     # optional spectrum interpretation
     r'(:.+)?$',
     flags=re.IGNORECASE
@@ -104,7 +104,7 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         # Send all proteomics USIs to MassIVE.
         if (collection.startswith('msv') or collection.startswith('pxd') or
                 collection.startswith('pxl') or collection.startswith('rpxd')
-                or collection == 'massivekb'):
+                or collection == 'massivekb' or collection == 'massive'):
             spectrum, source_link = _parse_msv_pxd(usi)
         elif collection == 'gnps':
             spectrum, source_link = _parse_gnps(usi)
@@ -278,7 +278,7 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         for spectrum_file in lookup_request.json()['row_data']:
             if any(spectrum_file['file_descriptor'].lower().endswith(extension)
                    for extension in ['mzml', 'mzxml', 'mgf']):
-                request_url = (f'https://gnps.ucsd.edu/ProteoSAFe/'
+                request_url = (f'https://massive.ucsd.edu/ProteoSAFe/'
                                f'DownloadResultFile?'
                                f'task=4f2ac74ea114401787a7e96e143bb4a1&'
                                f'invoke=annotatedSpectrumImageText&block=0&'
