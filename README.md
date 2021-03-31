@@ -35,9 +35,21 @@ Supported USI Types:
 
 [mzspec:MOTIFDB::accession:171163](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MOTIFDB::accession:171163)
 
-### GNPS Molecular Networking Spectra
+### GNPS Task Spectra for file
 
 [mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943)
+
+### GNPS Task Spectra for collection
+
+[mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra:scan:1943](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra:scan:1943)
+
+### MassIVE Task Spectra for file
+
+[mzspec:MassIVE:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MassIVE:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/specs_ms.mgf:scan:1943)
+
+### MassIVE Task Spectra for collection
+
+[mzspec:MassIVE:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra:scan:1943](https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MassIVE:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra:scan:1943)
 
 ### GNPS Library Spectra
 
