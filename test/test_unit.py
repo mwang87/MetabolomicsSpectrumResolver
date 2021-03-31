@@ -104,6 +104,11 @@ def test_parse_gnps_task():
         parsing.parse_usi(usi.replace(':1943', ':this_scan_does_not_exist'))
     assert exc_info.value.error_code == 404
 
+def test_parse_massive_task():
+    usi = ('mzspec:MassIVE:TASK-f4b86b150a164ee4a440b661e97a7193-'
+           'spectra:scan:471429:TSMGGTQQQFVEGVR/2')
+    spectrum, _, splash_key = parsing.parse_usi(usi)
+    assert splash_key == _get_splash_remote(spectrum)
 
 def test_parse_gnps_library():
     usi = 'mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077'
