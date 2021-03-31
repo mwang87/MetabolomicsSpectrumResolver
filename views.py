@@ -468,23 +468,26 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) \
     spectrum.scale_intensity(max_intensity=1)
 
     # Initialize empty peak annotation list.
-    if spectrum.annotation is None:
-        spectrum.annotation = np.full_like(spectrum.mz, None, object)
-    # Optionally set annotations.
-    if kwargs['annotate_peaks']:
-        if kwargs['annotate_peaks'] is True:
-            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
-                spectrum, kwargs['annotate_threshold'])]
-        annotate_peaks_valid = []
-        for mz in kwargs['annotate_peaks']:
-            try:
-                spectrum.annotate_mz_fragment(
-                    mz, 0, kwargs['fragment_mz_tolerance'], 'Da',
-                    text=f'{mz:.{kwargs["annotate_precision"]}f}')
-                annotate_peaks_valid.append(mz)
-            except ValueError:
-                pass
-        kwargs['annotate_peaks'] = annotate_peaks_valid
+    # if spectrum.annotation is None:
+    #     spectrum.annotation = np.full_like(spectrum.mz, None, object)
+    # # Optionally set annotations.
+    # if kwargs['annotate_peaks']:
+    #     if kwargs['annotate_peaks'] is True:
+    #         kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
+    #             spectrum, kwargs['annotate_threshold'])]
+    #     annotate_peaks_valid = []
+    #     for mz in kwargs['annotate_peaks']:
+    #         try:
+    #             spectrum.annotate_mz_fragment(
+    #                 mz, 0, kwargs['fragment_mz_tolerance'], 'Da',
+    #                 text=f'{mz:.{kwargs["annotate_precision"]}f}')
+    #             annotate_peaks_valid.append(mz)
+    #         except ValueError:
+    #             pass
+    #     kwargs['annotate_peaks'] = annotate_peaks_valid
+
+    # Annotating peptide if possible
+    spectrum = spectrum.annotate_peptide_fragments(0.5, 'Da', ion_types='aby')
 
     return spectrum
 

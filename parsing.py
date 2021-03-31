@@ -34,7 +34,7 @@ usi_pattern = re.compile(
     # index number
     r':(.+)'
     # optional spectrum interpretation
-    r'(:.+)?$',
+    r'(:.+)',
     flags=re.IGNORECASE
 )
 # OR: Metabolomics USIs.
@@ -310,8 +310,19 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     source_link = (f'https://massive.ucsd.edu/ProteoSAFe/'
                                    f'QueryMSV?id={dataset_identifier}')
 
-                spectrum = sus.MsmsSpectrum(
-                    usi, precursor_mz, charge, mz, intensity)
+                # Checking if we have peptide string
+                peptide_portion = None
+                try:
+                    import sys
+                    print(usi.split(":"), file=sys.stderr, flush=True)
+                    peptide_portion = usi.split(":")[5]
+                    print(peptide_portion, file=sys.stderr, flush=True)
+                    spectrum = sus.MsmsSpectrum(
+                        usi, precursor_mz, charge, mz, intensity, peptide=peptide_portion)
+                except:
+                    spectrum = sus.MsmsSpectrum(
+                        usi, precursor_mz, charge, mz, intensity)
+
                 return spectrum, source_link
     except requests.exceptions.HTTPError:
         pass
