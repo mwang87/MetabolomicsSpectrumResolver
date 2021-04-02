@@ -7,6 +7,7 @@ import json
 from typing import Any, Dict, List, Optional, Tuple
 
 import flask
+import urllib.parse
 import matplotlib
 import matplotlib.pyplot as plt
 import numba as nb
@@ -67,12 +68,14 @@ def render_heartbeat():
 @blueprint.route('/spectrum/', methods=['GET'])
 def render_spectrum():
     usi = flask.request.args.get('usi')
+
     plotting_args = _get_plotting_args(flask.request.args)
     spectrum, source_link, splash_key = parsing.parse_usi(usi)
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     return flask.render_template(
         'spectrum.html',
         usi=usi,
+        usi_encoded=urllib.parse.quote_plus(usi),
         source_link=source_link,
         splash_key=splash_key,
         peaks=[_get_peaks(spectrum)],
@@ -94,6 +97,8 @@ def render_mirror_spectrum():
         'mirror.html',
         usi1=usi1,
         usi2=usi2,
+        usi1_encoded=urllib.parse.quote_plus(usi1),
+        usi2_encoded=urllib.parse.quote_plus(usi2),
         source_link1=source1,
         source_link2=source2,
         splash_key1=splash_key1,
@@ -497,6 +502,9 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) \
     else:
         # Here we have a peptide, and so we annotated it
         spectrum = spectrum.annotate_peptide_fragments(float(kwargs['fragment_mz_tolerance']), 'Da', ion_types='aby', max_ion_charge=spectrum.precursor_charge)
+
+    import sys
+    print(spectrum.peptide, file=sys.stderr, flush=True)
 
     return spectrum
 

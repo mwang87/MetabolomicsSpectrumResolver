@@ -166,13 +166,13 @@
 
 <script>
     function resolveIdentifier() {
-        remote_url = "/spectrum?usi=" + $("#identifier").val();
+        remote_url = "/spectrum?usi=" + encodeURIComponent($("#identifier").val());
         window.location.assign(remote_url);
     }
 
     function resolveMirrorIdentifiers() {
-        usi1 = $("#identifier1").val();
-        usi2 = $("#identifier2").val();
+        usi1 = encodeURIComponent($("#identifier1").val());
+        usi2 = encodeURIComponent($("#identifier2").val());
         remote_url = `/mirror?usi1=${usi1}&usi2=${usi2}`;
         window.location.assign(remote_url);
     }

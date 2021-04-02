@@ -4,6 +4,7 @@ import re
 from typing import Tuple
 
 import requests
+import urllib.parse
 import spectrum_utils.spectrum as sus
 import splash
 
@@ -272,7 +273,7 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     scan = match.group(4)
     try:
         lookup_url = (f'https://massive.ucsd.edu/ProteoSAFe/'
-                      f'QuerySpectrum?id={usi}')
+                      f'QuerySpectrum?id={urllib.parse.quote_plus(usi)}')
         lookup_request = requests.get(lookup_url, timeout=timeout)
         lookup_request.raise_for_status()
         for spectrum_file in lookup_request.json()['row_data']:
@@ -312,17 +313,25 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
 
                 # Parsing out peptide if available
                 try:
-                    annotation_portion = match.group(5)[1:]
-                    peptide_portion = annotation_portion.split("/")[0]
-                    charge_portion = int(annotation_portion.split("/")[1])
-                    conversion_url = "http://massive.ucsd.edu/ProteoSAFe/ProteomicsServlet?function=convertproforma&sequence={}".format(peptide_portion)
-                    r = requests.get(conversion_url)
-                    r.raise_for_status()
-
+                    # Getting peptide information from resolution, this dereferences proforma
+                    clean_peptide = lookup_request.json()["usi_components"]["peptide"]
+                    peptide = lookup_request.json()["usi_components"]["variant"]
+                    charge = int(lookup_request.json()["usi_components"]["charge"])
+                    
                     # Parsing out modifications
+                    mod_pattern = re.compile("[-+][0-9.]*")
+                    modifications_dict = {}
+                    previous_mod_length = 0
+                    
+                    for match in mod_pattern.finditer(peptide):
+                        found_position = match.start()
+                        found_length = len(match.group())
+                        peptide_index = found_position - previous_mod_length
+                        modifications_dict[peptide_index] = float(match.group())
+                        previous_mod_length += found_length
 
                     spectrum = sus.MsmsSpectrum(
-                        usi, precursor_mz, charge_portion, mz, intensity, peptide=r.text)
+                        usi, precursor_mz, charge, mz, intensity, peptide=clean_peptide, modifications=modifications_dict)
                 except:
                     spectrum = sus.MsmsSpectrum(
                         usi, precursor_mz, charge, mz, intensity)
