@@ -310,8 +310,23 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     source_link = (f'https://massive.ucsd.edu/ProteoSAFe/'
                                    f'QueryMSV?id={dataset_identifier}')
 
-                spectrum = sus.MsmsSpectrum(
-                    usi, precursor_mz, charge, mz, intensity)
+                # Parsing out peptide if available
+                try:
+                    annotation_portion = match.group(5)[1:]
+                    peptide_portion = annotation_portion.split("/")[0]
+                    charge_portion = int(annotation_portion.split("/")[1])
+                    conversion_url = "http://massive.ucsd.edu/ProteoSAFe/ProteomicsServlet?function=convertproforma&sequence={}".format(peptide_portion)
+                    r = requests.get(conversion_url)
+                    r.raise_for_status()
+
+                    # Parsing out modifications
+
+                    spectrum = sus.MsmsSpectrum(
+                        usi, precursor_mz, charge_portion, mz, intensity, peptide=r.text)
+                except:
+                    spectrum = sus.MsmsSpectrum(
+                        usi, precursor_mz, charge, mz, intensity)
+
                 return spectrum, source_link
     except requests.exceptions.HTTPError:
         pass
