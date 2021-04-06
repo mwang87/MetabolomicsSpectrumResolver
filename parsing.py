@@ -317,6 +317,22 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     clean_peptide = lookup_request.json()["usi_components"]["peptide"]
                     peptide = lookup_request.json()["usi_components"]["variant"]
                     charge = int(lookup_request.json()["usi_components"]["charge"])
+
+                    # Parsing out gapped sequence (e.g. X+129.04259), faking it with Glycine as the base residue and adding more mods to it
+                    gapmod_pattern = re.compile("X[+][0-9.]*")
+                    transformed_peptide = peptide
+                    for match in gapmod_pattern.finditer(peptide):
+                        gap_mass = float(match.group().replace("X", ""))
+                        # Faking it with glycine
+                        offset_mass = gap_mass - 57.021463735
+                        if offset_mass > 0:
+                            substitution_mass = "G+{}".format(offset_mass)
+                        else:
+                            substitution_mass = "G{}".format(offset_mass)
+                        transformed_peptide = transformed_peptide.replace(match.group(), substitution_mass)
+                        
+                    clean_peptide = clean_peptide.replace("X", "G")
+                    peptide = transformed_peptide
                     
                     # Parsing out modifications
                     mod_pattern = re.compile("[-+][0-9.]*")
@@ -326,10 +342,10 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     for match in mod_pattern.finditer(peptide):
                         found_position = match.start()
                         found_length = len(match.group())
-                        peptide_index = found_position - previous_mod_length
+                        peptide_index = max(0, found_position - previous_mod_length - 1)
                         modifications_dict[peptide_index] = float(match.group())
                         previous_mod_length += found_length
-
+                    
                     spectrum = sus.MsmsSpectrum(
                         usi, precursor_mz, charge, mz, intensity, peptide=clean_peptide, modifications=modifications_dict)
                 except:
