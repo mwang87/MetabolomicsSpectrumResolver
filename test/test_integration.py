@@ -89,7 +89,7 @@ def test_render_heartbeat(client):
 
 def test_render_spectrum(client):
     for usi in usis_to_test:
-        response = client.get('/spectrum/', query_string=f'usi={usi}')
+        response = client.get('/spectrum/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 200
         assert usi.encode() in response.data
 
@@ -253,7 +253,7 @@ def pairwise(iterable):
 def test_render_mirror(client):
     for usi1, usi2 in pairwise(usis_to_test):
         response = client.get('/mirror/',
-                              query_string=f'usi1={usi1}&usi2={usi2}')
+                              query_string=f'usi1={urllib.parse.quote_plus(usi1)}&usi2={urllib.parse.quote_plus(usi2)}')
         assert response.status_code == 200
         assert usi1.encode() in response.data
         assert usi2.encode() in response.data
