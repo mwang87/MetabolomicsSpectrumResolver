@@ -503,7 +503,7 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) \
     else:
         # Here we have a peptide, and so we annotate it.
         spectrum = spectrum.annotate_peptide_fragments(
-            float(kwargs['fragment_mz_tolerance']), 'Da', ion_types='aby',
+            kwargs['fragment_mz_tolerance'], 'Da', ion_types='aby',
             max_ion_charge=spectrum.precursor_charge)
 
     return spectrum
