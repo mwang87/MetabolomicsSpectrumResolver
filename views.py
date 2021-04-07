@@ -260,8 +260,9 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
             if annotation is not None:
                 annotation.ion_type = 'unmatched'
 
-        for peak_idx, spectrum, label in zip(
-                peak_matches, [spectrum_top, spectrum_bottom], ['top', 'bottom']):
+        for peak_idx, spectrum, label in zip(peak_matches,
+                                             [spectrum_top, spectrum_bottom],
+                                             ['top', 'bottom']):
             for i in peak_idx:
                 if spectrum.annotation[i] is None:
                     spectrum.annotation[i] = sus.FragmentAnnotation(
@@ -275,14 +276,14 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
         sup.colors[None] = 'darkgray'
 
         sup.mirror(spectrum_top, spectrum_bottom,
-                {'annotate_ions': kwargs['annotate_peaks'],
+                   {'annotate_ions': kwargs['annotate_peaks'],
                     'annot_kws': {'rotation': kwargs['annotation_rotation'],
-                                'clip_on': True},
+                                  'clip_on': True},
                     'grid': kwargs['grid']}, ax=ax)
     else:
         sup.mirror(spectrum_top, spectrum_bottom,
-                {'annot_kws': {'rotation': kwargs['annotation_rotation'],
-                                'clip_on': True},
+                   {'annot_kws': {'rotation': kwargs['annotation_rotation'],
+                                  'clip_on': True},
                     'grid': kwargs['grid']}, ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
@@ -500,11 +501,10 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) \
                     pass
             kwargs['annotate_peaks'] = annotate_peaks_valid
     else:
-        # Here we have a peptide, and so we annotated it
-        spectrum = spectrum.annotate_peptide_fragments(float(kwargs['fragment_mz_tolerance']), 'Da', ion_types='aby', max_ion_charge=spectrum.precursor_charge)
-
-    import sys
-    print(spectrum.peptide, file=sys.stderr, flush=True)
+        # Here we have a peptide, and so we annotate it.
+        spectrum = spectrum.annotate_peptide_fragments(
+            float(kwargs['fragment_mz_tolerance']), 'Da', ion_types='aby',
+            max_ion_charge=spectrum.precursor_charge)
 
     return spectrum
 
