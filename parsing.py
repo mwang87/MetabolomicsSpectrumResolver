@@ -11,7 +11,7 @@ import parsing_legacy
 from error import UsiError
 
 
-timeout = 10     # seconds
+timeout = 20     # seconds
 
 MS2LDA_SERVER = 'http://ms2lda.org/basicviz/'
 MOTIFDB_SERVER = 'http://ms2lda.org/motifdb/'
