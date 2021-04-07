@@ -346,7 +346,7 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     spectrum = sus.MsmsSpectrum(
                         usi, precursor_mz, charge, mz, intensity,
                         peptide=peptide_clean, modifications=modifications)
-                except KeyError:
+                except (TypeError, KeyError):
                     spectrum = sus.MsmsSpectrum(
                         usi, precursor_mz, charge, mz, intensity)
 
