@@ -71,14 +71,14 @@
                 <div class="col-2 offset-4">
                     <a class="btn btn-primary"
                        id="download_json"
-                       href="/json/mirror/?usi1=(( usi1 ))&usi2=(( usi2 ))">
+                       href="/json/mirror/?usi1=(( usi1_encoded ))&usi2=(( usi2_encoded ))">
                         Download as JSON
                     </a>
                 </div>
                 <div class="col-2">
                     <a class="btn btn-primary"
                        id="download_svg"
-                       href="/svg/mirror/?usi1=(( usi1 ))&usi2=(( usi2 ))"
+                       href="/svg/mirror/?usi1=(( usi1_encoded ))&usi2=(( usi2_encoded ))"
                        download="mirror.svg">
                         Download as SVG
                     </a>
@@ -86,7 +86,7 @@
                 <div class="col-2">
                     <a class="btn btn-primary"
                        id="download_png"
-                       href="/png/mirror/?usi1=(( usi1 ))&usi2=(( usi2 ))"
+                       href="/png/mirror/?usi1=(( usi1_encoded ))&usi2=(( usi2_encoded ))"
                        download="mirror.png">
                         Download as PNG
                     </a>
@@ -95,7 +95,7 @@
         </div>
         <div class="col-1 my-auto">
             <img class="mx-auto"
-                 src="/qrcode/?mirror=true&usi1=(( usi1 ))&usi2=(( usi2 ))"
+                 src="/qrcode/?mirror=true&usi1=(( usi1_encoded ))&usi2=(( usi2_encoded ))"
                  alt="qr"/>
         </div>
     </div>
@@ -109,23 +109,23 @@
 
 <script type="text/javascript">
     function updateFigure() {
-        let svg_url = "/svg/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))";
+        let svg_url = "/svg/mirror?usi1=(( usi1_encoded ))&usi2=(( usi2_encoded ))";
         let draw_parameters = getDrawingControls();
         $("#render_spectrum")[0].src = svg_url + draw_parameters;
         $("#download_svg")[0].href = svg_url + draw_parameters;
         $("#download_png")[0].href = (
-            "/png/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))" + draw_parameters);
+            "/png/mirror?usi1=(( usi1_encoded ))&usi2=(( usi2_encoded ))" + draw_parameters);
         window.history.replaceState(
             {}, "",
-            "/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))" + draw_parameters);
+            "/mirror?usi1=(( usi1_encoded ))&usi2=(( usi2_encoded ))" + draw_parameters);
     }
 
     function resetFigure() {
-        window.location.href = "/mirror?usi1=(( usi1 ))&usi2=(( usi2 ))";
+        window.location.href = "/mirror?usi1=(( usi1_encoded ))&usi2=(( usi2_encoded ))";
     }
 
     function resolveNewUSI(){
-        window.location.href = `/mirror/?usi1=${$("#usi1-entry")[0].value}&usi2=${$("#usi2-entry")[0].value}`;
+        window.location.href = `/mirror/?usi1=${encodeURIComponent($("#usi1-entry")[0].value)}&usi2=${encodeURIComponent($("#usi2-entry")[0].value)}`;
     }
 </script>
 

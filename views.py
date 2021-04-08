@@ -7,6 +7,7 @@ import json
 from typing import Any, Dict, List, Optional, Tuple
 
 import flask
+import urllib.parse
 import matplotlib
 import matplotlib.pyplot as plt
 import numba as nb
@@ -67,12 +68,14 @@ def render_heartbeat():
 @blueprint.route('/spectrum/', methods=['GET'])
 def render_spectrum():
     usi = flask.request.args.get('usi')
+
     plotting_args = _get_plotting_args(flask.request.args)
     spectrum, source_link, splash_key = parsing.parse_usi(usi)
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     return flask.render_template(
         'spectrum.html',
         usi=usi,
+        usi_encoded=urllib.parse.quote_plus(usi),
         source_link=source_link,
         splash_key=splash_key,
         peaks=[_get_peaks(spectrum)],
@@ -94,6 +97,8 @@ def render_mirror_spectrum():
         'mirror.html',
         usi1=usi1,
         usi2=usi2,
+        usi1_encoded=urllib.parse.quote_plus(usi1),
+        usi2_encoded=urllib.parse.quote_plus(usi2),
         source_link1=source1,
         source_link2=source2,
         splash_key1=splash_key1,
@@ -235,13 +240,6 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
 
     # Determine cosine similarity and matching peaks.
     if kwargs['cosine']:
-        # Initialize the annotations as unmatched.
-        for annotation in spectrum_top.annotation:
-            if annotation is not None:
-                annotation.ion_type = 'unmatched'
-        for annotation in spectrum_bottom.annotation:
-            if annotation is not None:
-                annotation.ion_type = 'unmatched'
         # Assign the matching peak annotations.
         similarity, peak_matches = _cosine(
             spectrum_top, spectrum_bottom, kwargs['fragment_mz_tolerance'],
@@ -252,25 +250,41 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
         # Make sure that top and bottom spectra are colored..
         peak_matches = [np.arange(len(spectrum_top.annotation)),
                         np.arange(len(spectrum_bottom.annotation))]
-    for peak_idx, spectrum, label in zip(
-            peak_matches, [spectrum_top, spectrum_bottom], ['top', 'bottom']):
-        for i in peak_idx:
-            if spectrum.annotation[i] is None:
-                spectrum.annotation[i] = sus.FragmentAnnotation(
-                    0, spectrum.mz[i], '')
-            spectrum.annotation[i].ion_type = label
 
-    # Colors for mirror plot peaks (subject to change).
-    sup.colors['top'] = '#212121'
-    sup.colors['bottom'] = '#388E3C'
-    sup.colors['unmatched'] = 'darkgray'
-    sup.colors[None] = 'darkgray'
+    if spectrum_top.peptide is None:
+        # Initialize the annotations as unmatched.
+        for annotation in spectrum_top.annotation:
+            if annotation is not None:
+                annotation.ion_type = 'unmatched'
+        for annotation in spectrum_bottom.annotation:
+            if annotation is not None:
+                annotation.ion_type = 'unmatched'
 
-    sup.mirror(spectrum_top, spectrum_bottom,
-               {'annotate_ions': kwargs['annotate_peaks'],
-                'annot_kws': {'rotation': kwargs['annotation_rotation'],
-                              'clip_on': True},
-                'grid': kwargs['grid']}, ax=ax)
+        for peak_idx, spectrum, label in zip(peak_matches,
+                                             [spectrum_top, spectrum_bottom],
+                                             ['top', 'bottom']):
+            for i in peak_idx:
+                if spectrum.annotation[i] is None:
+                    spectrum.annotation[i] = sus.FragmentAnnotation(
+                        0, spectrum.mz[i], '')
+                spectrum.annotation[i].ion_type = label
+
+        # Colors for mirror plot peaks (subject to change).
+        sup.colors['top'] = '#212121'
+        sup.colors['bottom'] = '#388E3C'
+        sup.colors['unmatched'] = 'darkgray'
+        sup.colors[None] = 'darkgray'
+
+        sup.mirror(spectrum_top, spectrum_bottom,
+                   {'annotate_ions': kwargs['annotate_peaks'],
+                    'annot_kws': {'rotation': kwargs['annotation_rotation'],
+                                  'clip_on': True},
+                    'grid': kwargs['grid']}, ax=ax)
+    else:
+        sup.mirror(spectrum_top, spectrum_bottom,
+                   {'annot_kws': {'rotation': kwargs['annotation_rotation'],
+                                  'clip_on': True},
+                    'grid': kwargs['grid']}, ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
     ax.set_ylim(-kwargs['max_intensity'], kwargs['max_intensity'])
@@ -467,24 +481,30 @@ def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) \
     spectrum.set_mz_range(kwargs['mz_min'], kwargs['mz_max'])
     spectrum.scale_intensity(max_intensity=1)
 
-    # Initialize empty peak annotation list.
-    if spectrum.annotation is None:
-        spectrum.annotation = np.full_like(spectrum.mz, None, object)
-    # Optionally set annotations.
-    if kwargs['annotate_peaks']:
-        if kwargs['annotate_peaks'] is True:
-            kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
-                spectrum, kwargs['annotate_threshold'])]
-        annotate_peaks_valid = []
-        for mz in kwargs['annotate_peaks']:
-            try:
-                spectrum.annotate_mz_fragment(
-                    mz, 0, kwargs['fragment_mz_tolerance'], 'Da',
-                    text=f'{mz:.{kwargs["annotate_precision"]}f}')
-                annotate_peaks_valid.append(mz)
-            except ValueError:
-                pass
-        kwargs['annotate_peaks'] = annotate_peaks_valid
+    if spectrum.peptide is None:
+        # Initialize empty peak annotation list.
+        if spectrum.annotation is None:
+            spectrum.annotation = np.full_like(spectrum.mz, None, object)
+        # Optionally set annotations.
+        if kwargs['annotate_peaks']:
+            if kwargs['annotate_peaks'] is True:
+                kwargs['annotate_peaks'] = spectrum.mz[_generate_labels(
+                    spectrum, kwargs['annotate_threshold'])]
+            annotate_peaks_valid = []
+            for mz in kwargs['annotate_peaks']:
+                try:
+                    spectrum.annotate_mz_fragment(
+                        mz, 0, kwargs['fragment_mz_tolerance'], 'Da',
+                        text=f'{mz:.{kwargs["annotate_precision"]}f}')
+                    annotate_peaks_valid.append(mz)
+                except ValueError:
+                    pass
+            kwargs['annotate_peaks'] = annotate_peaks_valid
+    else:
+        # Here we have a peptide, and so we annotate it.
+        spectrum = spectrum.annotate_peptide_fragments(
+            kwargs['fragment_mz_tolerance'], 'Da', ion_types='aby',
+            max_ion_charge=spectrum.precursor_charge)
 
     return spectrum
 

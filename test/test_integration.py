@@ -89,7 +89,8 @@ def test_render_heartbeat(client):
 
 def test_render_spectrum(client):
     for usi in usis_to_test:
-        response = client.get('/spectrum/', query_string=f'usi={usi}')
+        response = client.get(
+            '/spectrum/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 200
         assert usi.encode() in response.data
 
@@ -99,8 +100,9 @@ def test_render_spectrum_drawing_controls_width_height(client):
     width, height = 20.0, 10.0
     plotting_args = f'width={width}&height={height}'
     for usi in usis_to_test:
-        response = client.get('/spectrum/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/spectrum/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         # Test whether the plotting arguments are reflected in the drawing
         # controls.
@@ -114,8 +116,9 @@ def test_render_spectrum_drawing_controls_mz_min_mz_max(client):
     mz_min, mz_max = 50.0, 500.0
     plotting_args = f'mz_min={mz_min}&mz_max={mz_max}'
     for usi in usis_to_test:
-        response = client.get('/spectrum/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/spectrum/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         # Test whether the plotting arguments are reflected in the drawing
         # controls.
@@ -129,8 +132,9 @@ def test_render_spectrum_drawing_controls_max_intensity(client):
     max_intensity = 150.0
     plotting_args = f'max_intensity={max_intensity}'
     for usi in usis_to_test:
-        response = client.get('/spectrum/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/spectrum/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         # Test whether the plotting arguments are reflected in the drawing
         # controls.
@@ -144,8 +148,9 @@ def test_render_spectrum_drawing_controls_grid_on(client):
     grid = 'true'
     plotting_args = f'grid={grid}'
     for usi in usis_to_test:
-        response = client.get('/spectrum/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/spectrum/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         # Test whether the plotting arguments are reflected in the drawing
         # controls.
@@ -158,8 +163,9 @@ def test_render_spectrum_drawing_controls_grid_off(client):
     grid = 'false'
     plotting_args = f'grid={grid}'
     for usi in usis_to_test:
-        response = client.get('/spectrum/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/spectrum/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         # Test whether the plotting arguments are reflected in the drawing
         # controls.
@@ -171,8 +177,9 @@ def test_render_spectrum_drawing_controls_annotate_peaks(client):
     usi = 'mzspec:MS2LDA:TASK-190:accession:270684'
     for annotate_peaks in ['[[]]', '[[75.0225,93.0575,128.0275,139.0075]]']:
         plotting_args = f'annotate_peaks={annotate_peaks}'
-        response = client.get('/spectrum/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/spectrum/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
 
 
@@ -181,8 +188,9 @@ def test_render_spectrum_drawing_controls_annotate_precision(client):
     annotate_precision = 2
     plotting_args = f'annotate_precision={annotate_precision}'
     for usi in usis_to_test:
-        response = client.get('/spectrum/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/spectrum/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         # Test whether the plotting arguments are reflected in the drawing
         # controls.
@@ -196,8 +204,9 @@ def test_render_spectrum_drawing_controls_annotation_rotation(client):
     annotation_rotation = 45
     plotting_args = f'annotation_rotation={annotation_rotation}'
     for usi in usis_to_test:
-        response = client.get('/spectrum/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/spectrum/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         # Test whether the plotting arguments are reflected in the drawing
         # controls.
@@ -212,8 +221,10 @@ def test_render_spectrum_drawing_controls_cosine(client):
     for cosine in ['off', 'standard', 'shifted']:
         plotting_args = f'cosine={cosine}'
         for usi in usis_to_test:
-            response = client.get('/spectrum/',
-                                  query_string=f'usi={usi}&{plotting_args}')
+            response = client.get(
+                '/spectrum/',
+                query_string=f'usi={urllib.parse.quote_plus(usi)}'
+                             f'&{plotting_args}')
             assert response.status_code == 200
             # Test whether the plotting arguments are reflected in the drawing
             # controls.
@@ -231,8 +242,9 @@ def test_render_spectrum_drawing_controls_fragment_mz_tolerance(client):
     fragment_mz_tolerance = 0.5
     plotting_args = f'fragment_mz_tolerance={fragment_mz_tolerance}'
     for usi in usis_to_test:
-        response = client.get('/spectrum/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/spectrum/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         # Test whether the plotting arguments are reflected in the drawing
         # controls.
@@ -252,8 +264,9 @@ def pairwise(iterable):
 
 def test_render_mirror(client):
     for usi1, usi2 in pairwise(usis_to_test):
-        response = client.get('/mirror/',
-                              query_string=f'usi1={usi1}&usi2={usi2}')
+        response = client.get(
+            '/mirror/', query_string=f'usi1={urllib.parse.quote_plus(usi1)}&'
+                                     f'usi2={urllib.parse.quote_plus(usi2)}')
         assert response.status_code == 200
         assert usi1.encode() in response.data
         assert usi2.encode() in response.data
@@ -279,8 +292,9 @@ def test_render_mirror_drawing_controls(client):
                      f'&fragment_mz_tolerance={fragment_mz_tolerance}')
     for usi1, usi2 in pairwise(usis_to_test):
         response = client.get(
-            '/mirror/',
-            query_string=f'usi1={usi1}&usi2={usi2}&{plotting_args}')
+            '/mirror/', query_string=f'usi1={urllib.parse.quote_plus(usi1)}&'
+                                     f'usi2={urllib.parse.quote_plus(usi2)}&'
+                                     f'{plotting_args}')
         assert response.status_code == 200
         # Test whether the plotting arguments are reflected in the drawing
         # controls.
@@ -310,7 +324,8 @@ def test_render_mirror_drawing_controls(client):
 
 def test_generate_png(client):
     for usi in usis_to_test:
-        response = client.get('/png/', query_string=f'usi={usi}')
+        response = client.get(
+            '/png/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
@@ -319,8 +334,9 @@ def test_generate_png(client):
 def test_generate_png_drawing_controls(client):
     plotting_args = _get_custom_plotting_args_str()
     for usi in usis_to_test:
-        response = client.get('/png/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/png/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
@@ -328,8 +344,10 @@ def test_generate_png_drawing_controls(client):
 
 def test_generate_png_mirror(client):
     for usi1, usi2 in pairwise(usis_to_test):
-        response = client.get('/png/mirror/',
-                              query_string=f'usi1={usi1}&usi2={usi2}')
+        response = client.get(
+            '/png/mirror/',
+            query_string=f'usi1={urllib.parse.quote_plus(usi1)}&'
+                         f'usi2={urllib.parse.quote_plus(usi2)}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
@@ -340,7 +358,9 @@ def test_generate_png_mirror_drawing_controls(client):
     for usi1, usi2 in pairwise(usis_to_test):
         response = client.get(
             '/png/mirror/',
-            query_string=f'usi1={usi1}&usi2={usi2}&{plotting_args}')
+            query_string=f'usi1={urllib.parse.quote_plus(usi1)}&'
+                         f'usi2={urllib.parse.quote_plus(usi2)}&'
+                         f'{plotting_args}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
@@ -348,7 +368,8 @@ def test_generate_png_mirror_drawing_controls(client):
 
 def test_generate_svg(client):
     for usi in usis_to_test:
-        response = client.get('/svg/', query_string=f'usi={usi}')
+        response = client.get(
+            '/svg/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert b'<!DOCTYPE svg' in response.data
@@ -357,8 +378,9 @@ def test_generate_svg(client):
 def test_generate_svg_drawing_controls(client):
     plotting_args = _get_custom_plotting_args_str()
     for usi in usis_to_test:
-        response = client.get('/svg/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/svg/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert b'<!DOCTYPE svg' in response.data
@@ -366,8 +388,10 @@ def test_generate_svg_drawing_controls(client):
 
 def test_generate_svg_mirror(client):
     for usi1, usi2 in pairwise(usis_to_test):
-        response = client.get('/svg/mirror/',
-                              query_string=f'usi1={usi1}&usi2={usi2}')
+        response = client.get(
+            '/svg/mirror/',
+            query_string=f'usi1={urllib.parse.quote_plus(usi1)}&'
+                         f'usi2={urllib.parse.quote_plus(usi2)}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert b'<!DOCTYPE svg' in response.data
@@ -378,7 +402,9 @@ def test_generate_svg_mirror_drawing_controls(client):
     for usi1, usi2 in pairwise(usis_to_test):
         response = client.get(
             '/svg/mirror/',
-            query_string=f'usi1={usi1}&usi2={usi2}&{plotting_args}')
+            query_string=f'usi1={urllib.parse.quote_plus(usi1)}&'
+                         f'usi2={urllib.parse.quote_plus(usi2)}&'
+                         f'{plotting_args}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert b'<!DOCTYPE svg' in response.data
@@ -386,7 +412,8 @@ def test_generate_svg_mirror_drawing_controls(client):
 
 def test_peak_json(client):
     for usi in usis_to_test:
-        response = client.get('/json/', query_string=f'usi={usi}')
+        response = client.get(
+            '/json/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 200
         response_dict = json.loads(response.data)
         assert 'peaks' in response_dict
@@ -404,7 +431,8 @@ def test_peak_json(client):
 def test_peak_json_invalid(client):
     for usi, status_code in zip(*_get_invalid_usi_status_code()):
         if usi is not None:
-            response = client.get('/json/', query_string=f'usi={usi}')
+            response = client.get(
+                '/json/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
             assert response.status_code == 200
             response_dict = json.loads(response.data)
             assert 'error' in response_dict
@@ -416,7 +444,9 @@ def test_peak_proxi_json(client):
     schema = flex.core.load('https://raw.githubusercontent.com/HUPO-PSI/'
                             'proxi-schemas/master/specs/swagger.yaml')
     for usi in usis_to_test:
-        response = client.get('/proxi/v0.1/spectra', query_string=f'usi={usi}')
+        response = client.get(
+            '/proxi/v0.1/spectra',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 200
         response_dict = json.loads(response.data)[0]
         assert 'usi' in response_dict
@@ -448,8 +478,9 @@ def test_peak_proxi_json(client):
 def test_peak_proxi_json_invalid(client):
     for usi, status_code in zip(*_get_invalid_usi_status_code()):
         if usi is not None:
-            response = client.get('/proxi/v0.1/spectra',
-                                  query_string=f'usi={usi}')
+            response = client.get(
+                '/proxi/v0.1/spectra',
+                query_string=f'usi={urllib.parse.quote_plus(usi)}')
             assert response.status_code == 200
             response_dict = json.loads(response.data)[0]
             assert 'error' in response_dict
@@ -459,7 +490,8 @@ def test_peak_proxi_json_invalid(client):
 
 def test_peak_csv(client):
     for usi in usis_to_test:
-        response = client.get('/csv/', query_string=f'usi={usi}')
+        response = client.get(
+            '/csv/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 200
         with io.StringIO(response.data.decode()) as response_csv:
             csv_reader = csv.reader(response_csv)
@@ -471,14 +503,17 @@ def test_peak_csv(client):
 def test_peak_csv_invalid(client):
     for usi, status_code in zip(*_get_invalid_usi_status_code()):
         if usi is not None:
-            response = client.get('/csv/', query_string=f'usi={usi}')
+            response = client.get(
+                '/csv/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
             assert response.status_code == status_code, usi
 
 
 def test_mirror_json(client):
     for usi1, usi2 in pairwise(usis_to_test):
-        response = client.get('/json/mirror/',
-                              query_string=f'usi1={usi1}&usi2={usi2}')
+        response = client.get(
+            '/json/mirror/',
+            query_string=f'usi1={urllib.parse.quote_plus(usi1)}&'
+                         f'usi2={urllib.parse.quote_plus(usi2)}')
         assert response.status_code == 200
         response_dict = json.loads(response.data)
         assert 'spectrum1' in response_dict
@@ -499,7 +534,8 @@ def test_mirror_json(client):
 
 def test_generate_qr(client):
     for usi in usis_to_test:
-        response = client.get('/qrcode/', query_string=f'usi={usi}')
+        response = client.get(
+            '/qrcode/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
@@ -513,8 +549,9 @@ def test_generate_qr(client):
 def test_generate_qr_drawing_controls(client):
     plotting_args = _get_custom_plotting_args_str()
     for usi in usis_to_test:
-        response = client.get('/qrcode/',
-                              query_string=f'usi={usi}&{plotting_args}')
+        response = client.get(
+            '/qrcode/',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}&{plotting_args}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
@@ -528,7 +565,9 @@ def test_generate_qr_drawing_controls(client):
 def test_generate_qr_mirror(client):
     for usi1, usi2 in pairwise(usis_to_test):
         response = client.get(
-            '/qrcode/', query_string=f'mirror=true&usi1={usi1}&usi2={usi2}')
+            '/qrcode/',
+            query_string=f'mirror=true&usi1={urllib.parse.quote_plus(usi1)}&'
+                         f'usi2={urllib.parse.quote_plus(usi2)}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
@@ -542,9 +581,11 @@ def test_generate_qr_mirror(client):
 def test_generate_qr_mirror_drawing_controls(client):
     plotting_args = _get_custom_plotting_args_str()
     for usi1, usi2 in pairwise(usis_to_test):
-        response = client.get('/qrcode/',
-                              query_string=f'mirror=true&usi1={usi1}'
-                                           f'&usi2={usi2}&{plotting_args}')
+        response = client.get(
+            '/qrcode/',
+            query_string=f'mirror=true&usi1={urllib.parse.quote_plus(usi1)}'
+                         f'&usi2={urllib.parse.quote_plus(usi2)}&'
+                         f'{plotting_args}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
@@ -558,7 +599,9 @@ def test_generate_qr_mirror_drawing_controls(client):
 def test_render_error(client):
     for usi, status_code in zip(*_get_invalid_usi_status_code()):
         if usi is not None:
-            response = client.get('/spectrum/', query_string=f'usi={usi}')
+            response = client.get(
+                '/spectrum/',
+                query_string=f'usi={urllib.parse.quote_plus(usi)}')
             assert response.status_code == status_code, usi
 
 
@@ -568,37 +611,49 @@ def test_render_error_timeout(client):
             side_effect=UsiError('Timeout while retrieving the USI from an '
                                  'external resource', 504)) as _:
         usi = 'mzspec:MASSBANK::accession:SM858102'
-        response = client.get('/spectrum/', query_string=f'usi={usi}')
+        response = client.get(
+            '/spectrum/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 504
-        response = client.get('/png/', query_string=f'usi={usi}')
+        response = client.get(
+            '/png/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 504
-        response = client.get('/svg/', query_string=f'usi={usi}')
+        response = client.get(
+            '/svg/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 504
-        response = client.get('/mirror/',
-                              query_string=f'usi1={usi}&usi2={usi}')
+        response = client.get(
+            '/mirror/', query_string=f'usi1={urllib.parse.quote_plus(usi)}&'
+                                     f'usi2={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 504
-        response = client.get('/png/mirror/',
-                              query_string=f'usi1={usi}&usi2={usi}')
+        response = client.get(
+            '/png/mirror/',
+            query_string=f'usi1={urllib.parse.quote_plus(usi)}&'
+                         f'usi2={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 504
-        response = client.get('/svg/mirror/',
-                              query_string=f'usi1={usi}&usi2={usi}')
+        response = client.get(
+            '/svg/mirror/',
+            query_string=f'usi1={urllib.parse.quote_plus(usi)}&'
+                         f'usi2={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 504
 
-        response = client.get('/json/', query_string=f'usi={usi}')
+        response = client.get(
+            '/json/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 200
         response_dict = json.loads(response.data)
         assert 'error' in response_dict
         assert response_dict['error']['code'] == 504
         assert 'message' in response_dict['error']
 
-        response = client.get('/proxi/v0.1/spectra', query_string=f'usi={usi}')
+        response = client.get(
+            '/proxi/v0.1/spectra',
+            query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 200
         response_dict = json.loads(response.data)[0]
         assert 'error' in response_dict
         assert response_dict['error']['code'] == 504
         assert 'message' in response_dict['error']
 
-        response = client.get('/csv/', query_string=f'usi={usi}')
+        response = client.get(
+            '/csv/', query_string=f'usi={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 504
 
 
