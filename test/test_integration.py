@@ -543,7 +543,7 @@ def test_generate_qr(client):
             with PIL.Image.open(image_bytes) as image:
                 qr = pyzbar.decode(image)[0]
                 assert urllib.parse.unquote(qr.data.decode()).endswith(
-                    f'/spectrum/?usi={urllib.parse.quote_plus(usi)}')
+                    f'/spectrum/?usi={usi}')
 
 
 def test_generate_qr_drawing_controls(client):
@@ -559,8 +559,7 @@ def test_generate_qr_drawing_controls(client):
             with PIL.Image.open(image_bytes) as image:
                 qr = pyzbar.decode(image)[0]
                 assert urllib.parse.unquote(qr.data.decode()).endswith(
-                    f'/spectrum/?usi={urllib.parse.quote_plus(usi)}&'
-                    f'{plotting_args}')
+                    f'/spectrum/?usi={usi}&{plotting_args}')
 
 
 def test_generate_qr_mirror(client):
@@ -576,8 +575,7 @@ def test_generate_qr_mirror(client):
             with PIL.Image.open(image_bytes) as image:
                 qr = pyzbar.decode(image)[0]
                 assert urllib.parse.unquote(qr.data.decode()).endswith(
-                    f'/mirror/?usi1={urllib.parse.quote_plus(usi1)}&'
-                    f'usi2={urllib.parse.quote_plus(usi2)}')
+                    f'/mirror/?usi1={usi1}&usi2={usi2}')
 
 
 def test_generate_qr_mirror_drawing_controls(client):
@@ -595,8 +593,7 @@ def test_generate_qr_mirror_drawing_controls(client):
             with PIL.Image.open(image_bytes) as image:
                 qr = pyzbar.decode(image)[0]
                 assert urllib.parse.unquote(qr.data.decode()).endswith(
-                    f'/mirror/?usi1={urllib.parse.quote_plus(usi1)}&'
-                    f'usi2={urllib.parse.quote_plus(usi2)}&{plotting_args}')
+                    f'/mirror/?usi1={usi1}&usi2={usi2}&{plotting_args}')
 
 
 def test_render_error(client):
