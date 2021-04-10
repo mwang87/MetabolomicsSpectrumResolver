@@ -54,6 +54,117 @@ DATASELECTION_CARD = [
             ),
             html.Hr(),
             html.H4("Drawing Controls"),
+            dbc.Row([
+                dbc.Col(
+                    "Figure Size"
+                ),
+                dbc.Col([
+                    dbc.Input(
+                        id="width",
+                        type="number",
+                        placeholder="input number",
+                        value=6
+                    ),
+                    "X",
+                    dbc.Input(
+                        id="height",
+                        type="number",
+                        placeholder="input number",
+                        value=10
+                    )
+                ]),
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col(
+                    "Mass Range"
+                ),
+                dbc.Col([
+                    dbc.Input(
+                        id="mz_min",
+                        type="number",
+                        placeholder="input number",
+                    ),
+                    "-",
+                    dbc.Input(
+                        id="mz_max",
+                        type="number",
+                        placeholder="input number",
+                    )
+                ]),
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col(
+                    "Maximum Intensity"
+                ),
+                dbc.Col([
+                    dbc.Input(
+                        id="max_intensity",
+                        type="number",
+                        placeholder="input number",
+                        value=125.0
+                    )
+                ]),
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col(
+                    "Label Precision"
+                ),
+                dbc.Col([
+                    dbc.Input(
+                        id="annotate_precision",
+                        type="number",
+                        placeholder="input number",
+                        value=4
+                    )
+                ]),
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col(
+                    "Label Rotation"
+                ),
+                dbc.Col([
+                    dbc.Input(
+                        id="annotation_rotation",
+                        type="number",
+                        placeholder="input number",
+                        value=90.0
+                    )
+                ]),
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col(
+                    "Cosine"
+                ),
+                dbc.Col([
+                    dbc.Select(
+                        id="cosine",
+                        options=[
+                            {"label": "Standard", "value": "standard"},
+                            {"label": "Shifted", "value": "shifted"},
+                        ],
+                        value="standard"
+                    )
+                ])
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col(
+                    "Fragment tolerance"
+                ),
+                dbc.Col([
+                    dbc.Input(
+                        id="fragment_mz_tolerance",
+                        type="number",
+                        placeholder="input number",
+                        value=0.02
+                    )
+                ]),
+            ]),
         ]
     )
 ]
