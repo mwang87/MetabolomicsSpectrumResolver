@@ -88,8 +88,8 @@ CONTRIBUTORS_DASHBOARD = [
             html.Br(),
             html.Br(),
             html.H5("Citation"),
-            html.A('Mingxun Wang, Jeremy J. Carver, Vanessa V. Phelan, Laura M. Sanchez, Neha Garg, Yao Peng, Don Duy Nguyen et al. "Sharing and community curation of mass spectrometry data with Global Natural Products Social Molecular Networking." Nature biotechnology 34, no. 8 (2016): 828. PMID: 27504778', 
-                    href="https://www.nature.com/articles/nbt.3597")
+            html.A('Bittremieux, Wout, Christopher Chen, Pieter C. Dorrestein, Emma L. Schymanski, Tobias Schulze, Steffen Neumann, Rene Meier, Simon Rogers, and Mingxun Wang. "Universal MS/MS Visualization and Retrieval with the Metabolomics Spectrum Resolver Web Service." bioRxiv (2020).', 
+                    href="https://www.biorxiv.org/content/10.1101/2020.05.09.086066v1")
         ]
     )
 ]
