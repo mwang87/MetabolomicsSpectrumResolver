@@ -21,7 +21,7 @@ NAVBAR = dbc.Navbar(
         ),
         dbc.Nav(
             [
-                dbc.NavItem(dbc.NavLink("Metabolomics USI - Version 0.1", href="#")),
+                dbc.NavItem(dbc.NavLink("Metabolomics USI - Dash Interface", href="#")),
             ],
         navbar=True)
     ],
@@ -157,6 +157,9 @@ def determine_task(search):
               [
                   Input('usi1', 'value'),
                   Input('usi2', 'value'),
+              ],
+              [
+                  
               ])
 def draw_figure(usi1, usi2):
     if len(usi1) > 0 and len(usi2) > 0:
@@ -166,13 +169,37 @@ def draw_figure(usi1, usi2):
 
         image_obj = html.Img(src=mirror_url)
 
-        return [[image_obj]]
+        json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/mirror?usi1={}&usi2={}".format(usi1, usi2))
+        png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/mirror?usi1={}&usi2={}".format(usi1, usi2), download="mirror.png")
+        svg_button = html.A(dbc.Button("Download as SVG", color="primary", className="mr-1"), href=mirror_url, download="mirror.svg")
+        download_div = html.Div([
+            json_button,
+            png_button,
+            svg_button,
+        ])
+        
+
+        return [[image_obj, html.Br(), download_div]]
     else:
         usi1_url = "/svg/?usi={}".format(usi1)
         local_url = "http://localhost:5000{}".format(usi1_url)
         r = requests.get(local_url)
 
         image_obj = html.Img(src=usi1_url)
+
+        json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/?usi1={}".format(usi1))
+        csv_button = html.A(dbc.Button("Download as CSV", color="primary", className="mr-1"), href="/csv/?usi1={}".format(usi1))
+        png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/?usi1={}".format(usi1), download="spectrum.png")
+        svg_button = html.A(dbc.Button("Download as SVG", color="primary", className="mr-1"), href=usi1_url, download="spectrum.svg")
+        download_div = html.Div([
+            json_button,
+            csv_button,
+            png_button,
+            svg_button,
+        ])
+        
+
+        return [[image_obj, html.Br(), download_div]]
 
         return [[image_obj]]
 
