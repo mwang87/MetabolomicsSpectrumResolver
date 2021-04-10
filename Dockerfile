@@ -10,6 +10,8 @@ RUN conda create -y -n usi -c conda-forge -c bioconda -c defaults flask \
         requests-cache scipy spectrum_utils werkzeug
 RUN /bin/bash -c 'source activate usi && pip install "git+git://github.com/berlinguyinca/spectra-hash.git#egg=splash&subdirectory=python"'
 RUN /bin/bash -c 'source activate usi && pip install dash'
+RUN /bin/bash -c 'source activate usi && pip install dash-bootstrap-components==0.9.2'
+
 RUN echo "source activate usi" > ~/.bashrc
 
 COPY . /app
