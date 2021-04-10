@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 
 import werkzeug
 import requests
+from urllib.parse import urlencode, quote
 
 from app import app
 from views import _get_peaks, _prepare_spectrum, _get_plotting_args
@@ -59,19 +60,23 @@ DATASELECTION_CARD = [
                     "Figure Size"
                 ),
                 dbc.Col([
-                    dbc.Input(
-                        id="width",
-                        type="number",
-                        placeholder="input number",
-                        value=6
-                    ),
-                    "X",
-                    dbc.Input(
-                        id="height",
-                        type="number",
-                        placeholder="input number",
-                        value=10
-                    )
+                    dbc.InputGroup([
+                        dbc.Input(
+                            id="width",
+                            type="number",
+                            placeholder="input number",
+                            value=6
+                        ),
+                        dbc.InputGroupAddon("\"", addon_type="append"),
+                        html.Span(" X ", className="col-form-label"),
+                        dbc.Input(
+                            id="height",
+                            type="number",
+                            placeholder="input number",
+                            value=10
+                        ),
+                        dbc.InputGroupAddon("\"", addon_type="append"),
+                    ])
                 ]),
             ]),
             html.Br(),
@@ -80,17 +85,21 @@ DATASELECTION_CARD = [
                     "Mass Range"
                 ),
                 dbc.Col([
-                    dbc.Input(
-                        id="mz_min",
-                        type="number",
-                        placeholder="input number",
-                    ),
-                    "-",
-                    dbc.Input(
-                        id="mz_max",
-                        type="number",
-                        placeholder="input number",
-                    )
+                    dbc.InputGroup([
+                        dbc.Input(
+                            id="mz_min",
+                            type="number",
+                            placeholder="input number"
+                        ),
+                        dbc.InputGroupAddon("m/z", addon_type="append"),
+                        html.Span(" - ", className="col-form-label"),
+                        dbc.Input(
+                            id="mz_max",
+                            type="number",
+                            placeholder="input number"
+                        ),
+                        dbc.InputGroupAddon("m/z", addon_type="append"),
+                    ])
                 ]),
             ]),
             html.Br(),
@@ -99,12 +108,15 @@ DATASELECTION_CARD = [
                     "Maximum Intensity"
                 ),
                 dbc.Col([
-                    dbc.Input(
-                        id="max_intensity",
-                        type="number",
-                        placeholder="input number",
-                        value=125.0
-                    )
+                    dbc.InputGroup([
+                        dbc.Input(
+                            id="max_intensity",
+                            type="number",
+                            placeholder="input number",
+                            value=125
+                        ),
+                        dbc.InputGroupAddon("%", addon_type="append"),
+                    ])
                 ]),
             ]),
             html.Br(),
@@ -127,12 +139,15 @@ DATASELECTION_CARD = [
                     "Label Rotation"
                 ),
                 dbc.Col([
-                    dbc.Input(
-                        id="annotation_rotation",
-                        type="number",
-                        placeholder="input number",
-                        value=90.0
-                    )
+                    dbc.InputGroup([
+                        dbc.Input(
+                            id="annotation_rotation",
+                            type="number",
+                            placeholder="input number",
+                            value=90.0
+                        ),
+                        dbc.InputGroupAddon("°", addon_type="append"),
+                    ])
                 ]),
             ]),
             html.Br(),
@@ -157,12 +172,15 @@ DATASELECTION_CARD = [
                     "Fragment tolerance"
                 ),
                 dbc.Col([
-                    dbc.Input(
-                        id="fragment_mz_tolerance",
-                        type="number",
-                        placeholder="input number",
-                        value=0.02
-                    )
+                    dbc.InputGroup([
+                        dbc.Input(
+                            id="fragment_mz_tolerance",
+                            type="number",
+                            placeholder="input number",
+                            value=0.02
+                        ),
+                        dbc.InputGroupAddon("m/z", addon_type="append"),
+                    ])
                 ]),
             ]),
         ]
@@ -273,7 +291,7 @@ def _process_single_usi(usi, plotting_args):
     spectrum, source_link, splash_key = parsing.parse_usi(usi)
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
 
-    usi1_url = "/svg/?usi={}".format(usi)
+    usi1_url = "/svg/?{}".format(urlencode(plotting_args, quote_via=quote))
     local_url = "http://localhost:5000{}".format(usi1_url)
     r = requests.get(local_url)
 
@@ -294,7 +312,7 @@ def _process_single_usi(usi, plotting_args):
     peak_annotations = spectrum.annotation.nonzero()[0].tolist()
     peaks_list = _get_peaks(spectrum)
 
-    return [[image_obj, html.Br(), download_div, str(peak_annotations)]]
+    return [[image_obj, html.Br(), download_div, str(plotting_args)]]
 
 
 @dash_app.callback([
@@ -303,11 +321,29 @@ def _process_single_usi(usi, plotting_args):
               [
                   Input('usi1', 'value'),
                   Input('usi2', 'value'),
+                  Input('width', 'value'),
+                  Input('height', 'value'),
+                  Input('mz_min', 'value'),
+                  Input('mz_max', 'value'),
+                  Input('max_intensity', 'value'),
+                  Input('annotate_precision', 'value'),
+                  Input('annotation_rotation', 'value'),
+                  Input('cosine', 'value'),
+                  Input('fragment_mz_tolerance', 'value'),
               ],
               [
                   
               ])
-def draw_figure(usi1, usi2):
+def draw_figure(usi1, usi2,
+                width,
+                height,
+                mz_min, 
+                mz_max,
+                max_intensity,
+                annotate_precision, 
+                annotation_rotation,
+                cosine,
+                fragment_mz_tolerance):
     if len(usi1) > 0 and len(usi2) > 0:
         mirror_url = "/svg/mirror/?usi1={}&usi2={}".format(usi1, usi2)
         local_url = "http://localhost:5000{}".format(mirror_url)
@@ -323,11 +359,47 @@ def draw_figure(usi1, usi2):
             png_button,
             svg_button,
         ])
-        
 
         return [[image_obj, html.Br(), download_div]]
     else:
-        plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict())
+        plotting_args = {}
+        plotting_args["width"] = width
+        plotting_args["height"] = height
+
+        try:
+            plotting_args["mz_min"] = float(mz_min)
+        except:
+            pass
+
+        try:
+            plotting_args["mz_max"] = float(mz_max)
+        except:
+            pass
+
+        try:
+            plotting_args["max_intensity"] = float(max_intensity)
+        except:
+            pass
+
+        try:
+            plotting_args["annotate_precision"] = int(annotate_precision)
+        except:
+            pass
+
+        try:
+            plotting_args["annotation_rotation"] = float(annotation_rotation)
+        except:
+            pass
+
+        try:
+            plotting_args["fragment_mz_tolerance"] = int(fragment_mz_tolerance)
+        except:
+            pass
+        
+        plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict(plotting_args))
+        plotting_args["max_intensity"] = plotting_args["max_intensity"] * 100
+        #plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict())
+        plotting_args["usi"] = usi1
         return _process_single_usi(usi1, plotting_args)
 
 
