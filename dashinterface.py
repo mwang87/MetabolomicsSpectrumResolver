@@ -65,7 +65,7 @@ DATASELECTION_CARD = [
                             id="width",
                             type="number",
                             placeholder="input number",
-                            value=6
+                            value=10
                         ),
                         dbc.InputGroupAddon("\"", addon_type="append"),
                         html.Span(" X ", className="col-form-label"),
@@ -73,7 +73,7 @@ DATASELECTION_CARD = [
                             id="height",
                             type="number",
                             placeholder="input number",
-                            value=10
+                            value=6
                         ),
                         dbc.InputGroupAddon("\"", addon_type="append"),
                     ])
@@ -289,7 +289,9 @@ def determine_task(search):
 
 def _process_single_usi(usi, plotting_args):
     spectrum, source_link, splash_key = parsing.parse_usi(usi)
-    spectrum = _prepare_spectrum(spectrum, **plotting_args)
+
+    cleaned_plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict(plotting_args))
+    spectrum = _prepare_spectrum(spectrum, **cleaned_plotting_args)
 
     usi1_url = "/svg/?{}".format(urlencode(plotting_args, quote_via=quote))
     local_url = "http://localhost:5000{}".format(usi1_url)
@@ -299,7 +301,7 @@ def _process_single_usi(usi, plotting_args):
 
     json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/?usi1={}".format(usi))
     csv_button = html.A(dbc.Button("Download as CSV", color="primary", className="mr-1"), href="/csv/?usi1={}".format(usi))
-    png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/?usi1={}".format(usi), download="spectrum.png")
+    png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/{}".format(urlencode(plotting_args, quote_via=quote)), download="spectrum.png")
     svg_button = html.A(dbc.Button("Download as SVG", color="primary", className="mr-1"), href=usi1_url, download="spectrum.svg")
     download_div = html.Div([
         json_button,
@@ -396,9 +398,6 @@ def draw_figure(usi1, usi2,
         except:
             pass
         
-        plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict(plotting_args))
-        plotting_args["max_intensity"] = plotting_args["max_intensity"] * 100
-        #plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict())
         plotting_args["usi"] = usi1
         return _process_single_usi(usi1, plotting_args)
 
