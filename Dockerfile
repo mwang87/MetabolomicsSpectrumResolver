@@ -10,6 +10,7 @@ RUN conda create -y -n usi -c conda-forge -c bioconda -c defaults flask \
         requests-cache scipy spectrum_utils werkzeug
 RUN /bin/bash -c 'source activate usi && pip install "git+git://github.com/berlinguyinca/spectra-hash.git#egg=splash&subdirectory=python"'
 RUN /bin/bash -c 'source activate usi && pip install celery'
+RUN /bin/bash -c 'source activate usi && pip install celery-once'
 RUN echo "source activate usi" > ~/.bashrc
 
 COPY . /app
