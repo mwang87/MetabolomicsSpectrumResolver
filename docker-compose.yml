@@ -15,4 +15,36 @@ services:
     restart: on-failure
     command: /app/run_dev_server.sh
 
+  metabolomicsusi-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: metabolomicsusi-worker
+    volumes:
+      - ./logs:/app/logs:rw
+    command: /app/run_worker.sh
+    restart: unless-stopped
+    depends_on: 
+      - metabolomicsusi-redis
+      - metabolomicsusi-rabbitmq
+    networks:
+      - default
+      - nginx-net
+
+  metabolomicsusi-rabbitmq:
+    container_name: metabolomicsusi-rabbitmq
+    image: rabbitmq
+    networks:
+      - default
+
+  metabolomicsusi-redis:
+    container_name: metabolomicsusi-redis
+    image: redis
+    networks:
+      - default
+  
+networks:
+  nginx-net:
+    external:
+      name: nginx-net
 
