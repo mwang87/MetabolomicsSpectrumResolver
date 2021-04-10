@@ -5,9 +5,12 @@ from dash.dependencies import Input, Output, State
 
 import dash_bootstrap_components as dbc
 
+import werkzeug
 import requests
 
 from app import app
+from views import _get_peaks, _prepare_spectrum, _get_plotting_args
+import parsing
 
 dash_app = dash.Dash(name='dashinterface', 
                 server=app, url_base_pathname='/dashinterface/',
@@ -49,6 +52,8 @@ DATASELECTION_CARD = [
                 ],
                 className="mb-3",
             ),
+            html.Hr(),
+            html.H4("Drawing Controls"),
         ]
     )
 ]
@@ -84,7 +89,7 @@ CONTRIBUTORS_DASHBOARD = [
             html.Br(),
             "Christopher Chen - UC San Diego",
             html.Br(),
-            "Simon Rogers - Glasgow",
+            "Simon Rogers PhD - Glasgow",
             html.Br(),
             html.Br(),
             html.H5("Citation"),
@@ -147,9 +152,39 @@ def determine_task(search):
         query_dict = {}
 
     usi1 = _get_url_param(query_dict, "usi1", 'mzspec:MSV000082796:KP_108_Positive:scan:1974')
-    usi2 = _get_url_param(query_dict, "usi2", 'mzspec:MSV000082796:KP_108_Positive:scan:1977')
+    #usi2 = _get_url_param(query_dict, "usi2", 'mzspec:MSV000082796:KP_108_Positive:scan:1977')
+    usi2 = _get_url_param(query_dict, "usi2", '')
 
     return [usi1, usi2]
+
+
+def _process_single_usi(usi, plotting_args):
+    spectrum, source_link, splash_key = parsing.parse_usi(usi)
+    spectrum = _prepare_spectrum(spectrum, **plotting_args)
+
+    usi1_url = "/svg/?usi={}".format(usi)
+    local_url = "http://localhost:5000{}".format(usi1_url)
+    r = requests.get(local_url)
+
+    image_obj = html.Img(src=usi1_url)
+
+    json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/?usi1={}".format(usi))
+    csv_button = html.A(dbc.Button("Download as CSV", color="primary", className="mr-1"), href="/csv/?usi1={}".format(usi))
+    png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/?usi1={}".format(usi), download="spectrum.png")
+    svg_button = html.A(dbc.Button("Download as SVG", color="primary", className="mr-1"), href=usi1_url, download="spectrum.svg")
+    download_div = html.Div([
+        json_button,
+        csv_button,
+        png_button,
+        svg_button,
+    ])
+
+
+    peak_annotations = spectrum.annotation.nonzero()[0].tolist()
+    peaks_list = _get_peaks(spectrum)
+
+    return [[image_obj, html.Br(), download_div, str(peak_annotations)]]
+
 
 @dash_app.callback([
                 Output('output', 'children')
@@ -181,27 +216,9 @@ def draw_figure(usi1, usi2):
 
         return [[image_obj, html.Br(), download_div]]
     else:
-        usi1_url = "/svg/?usi={}".format(usi1)
-        local_url = "http://localhost:5000{}".format(usi1_url)
-        r = requests.get(local_url)
+        plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict())
+        return _process_single_usi(usi1, plotting_args)
 
-        image_obj = html.Img(src=usi1_url)
-
-        json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/?usi1={}".format(usi1))
-        csv_button = html.A(dbc.Button("Download as CSV", color="primary", className="mr-1"), href="/csv/?usi1={}".format(usi1))
-        png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/?usi1={}".format(usi1), download="spectrum.png")
-        svg_button = html.A(dbc.Button("Download as SVG", color="primary", className="mr-1"), href=usi1_url, download="spectrum.svg")
-        download_div = html.Div([
-            json_button,
-            csv_button,
-            png_button,
-            svg_button,
-        ])
-        
-
-        return [[image_obj, html.Br(), download_div]]
-
-        return [[image_obj]]
 
 
 
