@@ -1,4 +1,4 @@
 #!/bin/bash
 source activate usi
 
-gunicorn -w 2 --threads=1 -b 0.0.0.0:5000 main:app --access-logfile /app/logs/access.log --timeout 90 --max-requests 100 --max-requests-jitter 20
+gunicorn -w 4 --threads=4 -b 0.0.0.0:5000 main:app --access-logfile /app/logs/access.log --timeout 90 --max-requests 100 --max-requests-jitter 20
