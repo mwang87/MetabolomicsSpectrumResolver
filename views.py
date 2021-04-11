@@ -13,17 +13,15 @@ import matplotlib.pyplot as plt
 import numba as nb
 import numpy as np
 import qrcode
-import requests_cache
 import werkzeug
 from spectrum_utils import plot as sup, spectrum as sus
 
 import parsing
 from error import UsiError
 
+import tasks
 
 matplotlib.use('Agg')
-
-requests_cache.install_cache('demo_cache', expire_after=300)
 
 USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
 
@@ -89,8 +87,8 @@ def render_mirror_spectrum():
     usi1 = flask.request.args.get('usi1')
     usi2 = flask.request.args.get('usi2')
     plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-    spectrum1, source1, splash_key1 = parsing.parse_usi(usi1)
-    spectrum2, source2, splash_key2 = parsing.parse_usi(usi2)
+    spectrum1, source1, splash_key1 = _parse_usi(usi1)
+    spectrum2, source2, splash_key2 = _parse_usi(usi2)
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                    plotting_args)
     return flask.render_template(
@@ -113,7 +111,7 @@ def render_mirror_spectrum():
 @blueprint.route('/png/')
 def generate_png():
     plotting_args = _get_plotting_args(flask.request.args)
-    spectrum, _, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _, _ = _parse_usi(flask.request.args.get('usi'))
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     buf = _generate_figure(spectrum, 'png', **plotting_args)
     return flask.send_file(buf, mimetype='image/png')
@@ -122,8 +120,8 @@ def generate_png():
 @blueprint.route('/png/mirror/')
 def generate_mirror_png():
     plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-    spectrum1, _, _ = parsing.parse_usi(flask.request.args.get('usi1'))
-    spectrum2, _, _ = parsing.parse_usi(flask.request.args.get('usi2'))
+    spectrum1, _, _ = _parse_usi(flask.request.args.get('usi1'))
+    spectrum2, _, _ = _parse_usi(flask.request.args.get('usi2'))
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                    plotting_args)
     buf = _generate_mirror_figure(spectrum1, spectrum2, 'png', **plotting_args)
@@ -133,7 +131,7 @@ def generate_mirror_png():
 @blueprint.route('/svg/')
 def generate_svg():
     plotting_args = _get_plotting_args(flask.request.args)
-    spectrum, _, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _, _ = _parse_usi(flask.request.args.get('usi'))
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     buf = _generate_figure(spectrum, 'svg', **plotting_args)
     return flask.send_file(buf, mimetype='image/svg+xml')
@@ -142,8 +140,8 @@ def generate_svg():
 @blueprint.route('/svg/mirror/')
 def generate_mirror_svg():
     plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-    spectrum1, _, _ = parsing.parse_usi(flask.request.args.get('usi1'))
-    spectrum2, _, _ = parsing.parse_usi(flask.request.args.get('usi2'))
+    spectrum1, _, _ = _parse_usi(flask.request.args.get('usi1'))
+    spectrum2, _, _ = _parse_usi(flask.request.args.get('usi2'))
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                    plotting_args)
     buf = _generate_mirror_figure(spectrum1, spectrum2, 'svg', **plotting_args)
@@ -687,7 +685,14 @@ def _parse_usi(usi: str) \
         str : the splash key
     """
 
-    spectrum, source, splash_key = parsing.parse_usi(usi)
+    # First attempt to schedule with celery
+    try:
+        result = tasks.task_parse_usi.apply_async(args=[usi], serializer="pickle")
+        spectrum, source, splash_key = result.get()
+    except:
+        # This is mostly for testing
+        raise
+        spectrum, source, splash_key = parsing.parse_usi(usi)
 
 
     return spectrum, source, splash_key
@@ -735,7 +740,7 @@ def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
 @blueprint.route('/json/')
 def peak_json():
     try:
-        spectrum, _, splash_key = parsing.parse_usi(
+        spectrum, _, splash_key = _parse_usi(
             flask.request.args.get('usi'))
 
         result_dict = {
@@ -759,8 +764,8 @@ def mirror_json():
         usi2 = flask.request.args.get('usi2')
 
         plotting_args = _get_plotting_args(flask.request.args, mirror=True)
-        spectrum1, source1, splash_key1 = parsing.parse_usi(usi1)
-        spectrum2, source2, splash_key2 = parsing.parse_usi(usi2)
+        spectrum1, source1, splash_key1 = _parse_usi(usi1)
+        spectrum2, source2, splash_key2 = _parse_usi(usi2)
         _spectrum1, _spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                          plotting_args)
         similarity, peak_matches = _cosine(
@@ -796,7 +801,7 @@ def mirror_json():
 def peak_proxi_json():
     try:
         usi = flask.request.args.get('usi')
-        spectrum, _, splash_key = parsing.parse_usi(usi)
+        spectrum, _, splash_key = _parse_usi(usi)
         result_dict = {
             'usi': usi,
             'status': 'READABLE',
@@ -828,7 +833,7 @@ def peak_proxi_json():
 
 @blueprint.route('/csv/')
 def peak_csv():
-    spectrum, _, _ = parsing.parse_usi(flask.request.args.get('usi'))
+    spectrum, _, _ = _parse_usi(flask.request.args.get('usi'))
     with io.StringIO() as csv_str:
         writer = csv.writer(csv_str)
         writer.writerow(['mz', 'intensity'])
@@ -855,16 +860,16 @@ def generate_qr():
     return flask.send_file(qr_bytes, 'image/png')
 
 
-@blueprint.errorhandler(Exception)
-def render_error(error):
-    if type(error) == UsiError:
-        error_code = error.error_code
-    else:
-        error_code = 500
-    if hasattr(error, 'message'):
-        error_message = error.message
-    else:
-        error_message = 'RunTime Server Error'
+# @blueprint.errorhandler(Exception)
+# def render_error(error):
+#     if type(error) == UsiError:
+#         error_code = error.error_code
+#     else:
+#         error_code = 500
+#     if hasattr(error, 'message'):
+#         error_message = error.message
+#     else:
+#         error_message = 'RunTime Server Error'
 
-    return (flask.render_template('error.html', error=error_message),
-            error_code)
+#     return (flask.render_template('error.html', error=error_message),
+#             error_code)
