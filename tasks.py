@@ -3,7 +3,7 @@ from celery_once import QueueOnce
 import sys
 
 celery_instance = Celery('tasks', backend='redis://metabolomicsusi-redis', broker='pyamqp://guest@metabolomicsusi-rabbitmq//')
-celery.conf.ONCE = {
+celery_instance.conf.ONCE = {
   'backend': 'celery_once.backends.Redis',
   'settings': {
     'url': 'redis://metabolomicsusi-redis:6379/0',
