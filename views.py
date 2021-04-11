@@ -70,7 +70,7 @@ def render_spectrum():
     usi = flask.request.args.get('usi')
 
     plotting_args = _get_plotting_args(flask.request.args)
-    spectrum, source_link, splash_key = parsing.parse_usi(usi)
+    spectrum, source_link, splash_key = _parse_usi(usi)
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
     return flask.render_template(
         'spectrum.html',
@@ -675,6 +675,23 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
 
     return plotting_args
 
+
+def _parse_usi(usi: str) \
+        -> Tuple[sus.MsmsSpectrum, str, str]:
+    """
+    Parses the USI by invoking directly or going through a task
+
+    Returns:
+        sus.MsmsSpectrum : spectrum object
+        str : the source link
+        str : the splash key
+    """
+
+    spectrum, source, splash_key = parsing.parse_usi(usi)
+
+
+    return spectrum, source, splash_key
+    
 
 def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
                        mirror: bool) -> float:

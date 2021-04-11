@@ -9,7 +9,7 @@ services:
     - "5087:5000"
     volumes:
         - ./output:/output:rw
-        - ./logs/:/app/logs
+        - ./logs/:/app/logs:rw
     networks:
       - default
     restart: on-failure
