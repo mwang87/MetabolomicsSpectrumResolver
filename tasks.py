@@ -2,6 +2,7 @@ from celery import Celery
 from celery_once import QueueOnce
 import sys
 import parsing
+import drawing
 
 celery_instance = Celery('tasks', 
   backend='redis://metabolomicsusi-redis', 
@@ -29,6 +30,10 @@ def task_parse_usi(usi):
     spectrum, source, splash_key = parsing.parse_usi(usi)
     return spectrum, source, splash_key
 
+@celery_instance.task(time_limit=60, base=QueueOnce)
+def task_generate_figure(spectrum, extension, kwargs):
+    return drawing.generate_figure(spectrum, extension, **kwargs)
+
 @celery_instance.task(time_limit=60)
 def task_computeheartbeat():
     print("UP", file=sys.stderr, flush=True)
@@ -38,4 +43,5 @@ def task_computeheartbeat():
 celery_instance.conf.task_routes = {
     'tasks.task_computeheartbeat': {'queue': 'worker'},
     'tasks.task_parse_usi': {'queue': 'worker'},
+    'tasks.task_generate_figure': {'queue': 'worker'},
 }
