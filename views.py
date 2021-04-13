@@ -453,6 +453,11 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
         plotting_args['fragment_mz_tolerance'] = \
             default_plotting_args['fragment_mz_tolerance']
 
+    if plotting_args['width'] > 100:
+        raise ValueError("Too Large Width")
+    if plotting_args['height'] > 100:
+        raise ValueError("Too Large Height")
+
     return plotting_args
 
 
