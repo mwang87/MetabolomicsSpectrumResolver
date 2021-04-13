@@ -15,4 +15,3 @@ scipy
 spectrum_utils
 werkzeug
 git+git://github.com/berlinguyinca/spectra-hash.git#egg=splash&subdirectory=python
-dash
