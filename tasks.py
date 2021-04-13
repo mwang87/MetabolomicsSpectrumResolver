@@ -34,6 +34,10 @@ def task_parse_usi(usi):
 def task_generate_figure(spectrum, extension, kwargs):
     return drawing.generate_figure(spectrum, extension, **kwargs)
 
+@celery_instance.task(time_limit=60, base=QueueOnce)
+def task_generate_mirror_figure(spectrum_top, spectrum_bottom, extension, kwargs):
+    return drawing.generate_mirror_figure(spectrum_top, spectrum_bottom, extension, **kwargs)
+
 @celery_instance.task(time_limit=60)
 def task_computeheartbeat():
     print("UP", file=sys.stderr, flush=True)
@@ -44,4 +48,5 @@ celery_instance.conf.task_routes = {
     'tasks.task_computeheartbeat': {'queue': 'worker'},
     'tasks.task_parse_usi': {'queue': 'worker'},
     'tasks.task_generate_figure': {'queue': 'worker'},
+    'tasks.task_generate_mirror_figure': {'queue': 'worker'},
 }
