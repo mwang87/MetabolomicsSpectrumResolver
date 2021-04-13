@@ -1,5 +1,6 @@
 import gc
 import io
+import numpy as np
 
 from typing import Any, Dict, List, Optional, Tuple
 
