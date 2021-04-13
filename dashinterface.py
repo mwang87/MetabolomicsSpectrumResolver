@@ -345,12 +345,6 @@ def _process_single_usi_table(usi):
 
     columns = [{"name": column, "id": column} for column in peaks_df.columns]
 
-    # import sys
-    # print("XXXXXXX", peak_annotations, file=sys.stderr, flush=True)
-    # row_selected = [False] * len(peaks_df)
-    # for annotation in peak_annotations:
-    #     row_selected[annotation] = True
-
     return [peaks_df.to_dict(orient="records"), columns]
 
 @dash_app.callback([
@@ -447,10 +441,6 @@ def draw_figure(usi1, usi2,
         for selected_index in derived_virtual_selected_rows:
             annotation_masses.append(derived_virtual_data[selected_index]["mz"])
 
-        import sys
-        print(annotation_masses, plotting_args, derived_virtual_selected_rows, file=sys.stderr, flush=True)
-
-        import json
         plotting_args["annotate_peaks"] = json.dumps([annotation_masses])
 
         return _process_single_usi(usi1, plotting_args)
