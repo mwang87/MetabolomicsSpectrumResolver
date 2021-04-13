@@ -4,6 +4,9 @@ import sys
 import parsing
 import drawing
 
+from joblib import Memory
+memory = Memory("temp/joblibcache", verbose=0)
+
 celery_instance = Celery('tasks', 
   backend='redis://metabolomicsusi-redis', 
   broker='pyamqp://guest@metabolomicsusi-rabbitmq//'
@@ -27,16 +30,19 @@ celery_instance.conf.ONCE = {
 
 @celery_instance.task(time_limit=60, base=QueueOnce)
 def task_parse_usi(usi):
-    spectrum, source, splash_key = parsing.parse_usi(usi)
+    cached_parse_usi = memory.cache(parsing.parse_usi)
+    spectrum, source, splash_key = cached_parse_usi(usi)
     return spectrum, source, splash_key
 
 @celery_instance.task(time_limit=60, base=QueueOnce)
 def task_generate_figure(spectrum, extension, kwargs):
-    return drawing.generate_figure(spectrum, extension, **kwargs)
+    cached_generate_figure = memory.cache(drawing.generate_figure)
+    return cached_generate_figure(spectrum, extension, **kwargs)
 
 @celery_instance.task(time_limit=60, base=QueueOnce)
 def task_generate_mirror_figure(spectrum_top, spectrum_bottom, extension, kwargs):
-    return drawing.generate_mirror_figure(spectrum_top, spectrum_bottom, extension, **kwargs)
+    cached_generate_figure = memory.cache(drawing.generate_mirror_figure)
+    return cached_generate_figure(spectrum_top, spectrum_bottom, extension, **kwargs)
 
 @celery_instance.task(time_limit=60)
 def task_computeheartbeat():
