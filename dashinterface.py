@@ -9,8 +9,9 @@ import dash_table
 
 import werkzeug
 import requests
-from urllib.parse import urlencode, quote
+from urllib.parse import urlencode, quote, parse_qs
 import pandas as pd
+import json
 
 from app import app
 from views import _get_peaks, _prepare_spectrum, _get_plotting_args, _parse_usi
@@ -285,21 +286,60 @@ def _get_url_param(param_dict, key, default):
 
 # Callbacks
 @dash_app.callback([
-                Output('usi1', 'value'), 
-                Output('usi2', 'value'), 
+                  Output('usi1', 'value'), 
+                  Output('usi2', 'value'),
+                  Output('width', 'value'),
+                  Output('height', 'value'),
+                  Output('mz_min', 'value'),
+                  Output('mz_max', 'value'),
+                  Output('max_intensity', 'value'),
+                  Output('annotate_precision', 'value'),
+                  Output('annotation_rotation', 'value'),
+                  Output('cosine', 'value'),
+                  Output('fragment_mz_tolerance', 'value'),
               ],
-              [Input('url', 'search')])
-def determine_task(search):
+              [
+                  Input('url', 'pathname')
+              ],
+              [
+                  State('url', 'search')
+              ])
+def determine_task(pathname, search):
     try:
-        query_dict = urllib.parse.parse_qs(search[1:])
+        query_dict = parse_qs(search[1:])
     except:
+        raise
         query_dict = {}
 
     usi1 = _get_url_param(query_dict, "usi1", 'mzspec:MSV000082796:KP_108_Positive:scan:1974')
     #usi2 = _get_url_param(query_dict, "usi2", 'mzspec:MSV000082796:KP_108_Positive:scan:1977')
-    usi2 = _get_url_param(query_dict, "usi2", '')
+    usi2 = _get_url_param(query_dict, "usi2", dash.no_update)
 
-    return [usi1, usi2]
+    width = _get_url_param(query_dict, "width", dash.no_update)
+    height = _get_url_param(query_dict, "height", dash.no_update)
+    mz_min = _get_url_param(query_dict, "mz_min", dash.no_update)
+    mz_max = _get_url_param(query_dict, "mz_max", dash.no_update)
+
+    max_intensity = _get_url_param(query_dict, "max_intensity", dash.no_update)
+    annotate_precision = _get_url_param(query_dict, "annotate_precision", dash.no_update)
+    annotation_rotation = _get_url_param(query_dict, "annotation_rotation", dash.no_update)
+    cosine = _get_url_param(query_dict, "cosine", dash.no_update)
+    fragment_mz_tolerance = _get_url_param(query_dict, "fragment_mz_tolerance", dash.no_update)
+
+    import sys
+    print(query_dict, file=sys.stderr, flush=True)
+
+    return [usi1, 
+            usi2, 
+            width,
+            height,
+            mz_min,
+            mz_max,
+            max_intensity,
+            annotate_precision,
+            annotation_rotation,
+            cosine,
+            fragment_mz_tolerance]
 
 
 def _process_single_usi(usi, plotting_args):
@@ -308,6 +348,7 @@ def _process_single_usi(usi, plotting_args):
     cleaned_plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict(plotting_args))
     spectrum = _prepare_spectrum(spectrum, **cleaned_plotting_args)
 
+    cleaned_plotting_args["usi"] = usi
     usi1_url = "/svg/?{}".format(urlencode(plotting_args, quote_via=quote))
     local_url = "http://localhost:5000{}".format(usi1_url)
     r = requests.get(local_url)
@@ -328,7 +369,7 @@ def _process_single_usi(usi, plotting_args):
     peak_annotations = spectrum.annotation.nonzero()[0].tolist()
     peaks_list = _get_peaks(spectrum)
     
-    return [[download_div, image_obj]]
+    return [download_div, image_obj], plotting_args
 
 def _process_single_usi_table(usi):
     spectrum, source_link, splash_key = _parse_usi(usi)
@@ -348,7 +389,8 @@ def _process_single_usi_table(usi):
     return [peaks_df.to_dict(orient="records"), columns]
 
 @dash_app.callback([
-                Output('output', 'children'),
+                  Output('output', 'children'),
+                  Output('url', 'search'),
               ],
               [
                   Input('usi1', 'value'),
@@ -438,12 +480,15 @@ def draw_figure(usi1, usi2,
         plotting_args["usi"] = usi1
 
         annotation_masses = []
-        for selected_index in derived_virtual_selected_rows:
-            annotation_masses.append(derived_virtual_data[selected_index]["mz"])
+        if derived_virtual_selected_rows is not None:
+            for selected_index in derived_virtual_selected_rows:
+                annotation_masses.append(derived_virtual_data[selected_index]["mz"])
 
         plotting_args["annotate_peaks"] = json.dumps([annotation_masses])
+        spectrum_visualization, plotting_args = _process_single_usi(usi1, plotting_args)
+        plotting_args["usi1"] = usi1
 
-        return _process_single_usi(usi1, plotting_args)
+        return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote)]
 
 
 @dash_app.callback([
