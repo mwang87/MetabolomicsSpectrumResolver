@@ -643,16 +643,16 @@ def generate_qr():
     return flask.send_file(qr_bytes, 'image/png')
 
 
-# @blueprint.errorhandler(Exception)
-# def render_error(error):
-#     if type(error) == UsiError:
-#         error_code = error.error_code
-#     else:
-#         error_code = 500
-#     if hasattr(error, 'message'):
-#         error_message = error.message
-#     else:
-#         error_message = 'RunTime Server Error'
+@blueprint.errorhandler(Exception)
+def render_error(error):
+    if type(error) == UsiError:
+        error_code = error.error_code
+    else:
+        error_code = 500
+    if hasattr(error, 'message'):
+        error_message = error.message
+    else:
+        error_message = 'RunTime Server Error'
 
-#     return (flask.render_template('error.html', error=error_message),
-#             error_code)
+    return (flask.render_template('error.html', error=error_message),
+            error_code)
