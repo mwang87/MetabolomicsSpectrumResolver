@@ -67,7 +67,8 @@ DATASELECTION_CARD = [
                             id="width",
                             type="number",
                             placeholder="input number",
-                            value=10
+                            value=10,
+                            step=0.01
                         ),
                         dbc.InputGroupAddon("\"", addon_type="append"),
                         html.Span(" X ", className="col-form-label"),
@@ -75,7 +76,8 @@ DATASELECTION_CARD = [
                             id="height",
                             type="number",
                             placeholder="input number",
-                            value=6
+                            value=6,
+                            step=0.01
                         ),
                         dbc.InputGroupAddon("\"", addon_type="append"),
                     ])
@@ -179,7 +181,8 @@ DATASELECTION_CARD = [
                             id="fragment_mz_tolerance",
                             type="number",
                             placeholder="input number",
-                            value=0.02
+                            value=0.1,
+                            step="any"
                         ),
                         dbc.InputGroupAddon("m/z", addon_type="append"),
                     ])
@@ -211,6 +214,7 @@ MIDDLE_DASHBOARD = [
                 columns=[{"name": "filename", "id": "filename"}],
                 data=[],
                 page_size= 10,
+                sort_action='native',
                 row_selectable="multi",
                 filter_action="native",
                 selected_rows=[],
@@ -324,7 +328,7 @@ def _process_single_usi(usi, plotting_args):
     peak_annotations = spectrum.annotation.nonzero()[0].tolist()
     peaks_list = _get_peaks(spectrum)
     
-    return [[download_div, image_obj, html.Br(), str(plotting_args)]]
+    return [[download_div, image_obj]]
 
 def _process_single_usi_table(usi):
     spectrum, source_link, splash_key = _parse_usi(usi)
@@ -341,7 +345,13 @@ def _process_single_usi_table(usi):
 
     columns = [{"name": column, "id": column} for column in peaks_df.columns]
 
-    return [peaks_df.to_dict(orient="records"), columns, peak_annotations]
+    # import sys
+    # print("XXXXXXX", peak_annotations, file=sys.stderr, flush=True)
+    # row_selected = [False] * len(peaks_df)
+    # for annotation in peak_annotations:
+    #     row_selected[annotation] = True
+
+    return [peaks_df.to_dict(orient="records"), columns]
 
 @dash_app.callback([
                 Output('output', 'children'),
@@ -358,6 +368,8 @@ def _process_single_usi_table(usi):
                   Input('annotation_rotation', 'value'),
                   Input('cosine', 'value'),
                   Input('fragment_mz_tolerance', 'value'),
+                  Input('peak_table', 'derived_virtual_data'),
+                  Input('peak_table', 'derived_virtual_selected_rows'),
               ],
               [
               ])
@@ -370,7 +382,9 @@ def draw_figure(usi1, usi2,
                 annotate_precision, 
                 annotation_rotation,
                 cosine,
-                fragment_mz_tolerance):
+                fragment_mz_tolerance,
+                derived_virtual_data,
+                derived_virtual_selected_rows):
     # Setting up parameters from url
     plotting_args = {}
     plotting_args["width"] = width
@@ -402,7 +416,7 @@ def draw_figure(usi1, usi2,
         pass
 
     try:
-        plotting_args["fragment_mz_tolerance"] = int(fragment_mz_tolerance)
+        plotting_args["fragment_mz_tolerance"] = float(fragment_mz_tolerance)
     except:
         pass
     
@@ -428,23 +442,32 @@ def draw_figure(usi1, usi2,
     else:
         # Single spectrum
         plotting_args["usi"] = usi1
+
+        annotation_masses = []
+        for selected_index in derived_virtual_selected_rows:
+            annotation_masses.append(derived_virtual_data[selected_index]["mz"])
+
+        import sys
+        print(annotation_masses, plotting_args, derived_virtual_selected_rows, file=sys.stderr, flush=True)
+
+        import json
+        plotting_args["annotate_peaks"] = json.dumps([annotation_masses])
+
         return _process_single_usi(usi1, plotting_args)
 
 
 @dash_app.callback([
                 Output('peak_table', 'data'),
-                Output('peak_table', 'columns'),
-                Output('peak_table', 'selected_rows')
+                Output('peak_table', 'columns')
               ],
               [
                   Input('usi1', 'value'),
                   Input('usi2', 'value'),
               ],
               [
-                  State('peak_table', 'derived_virtual_selected_rows'),
+                  
               ])
-def draw_table(usi1, usi2,
-                derived_virtual_selected_rows):
+def draw_table(usi1, usi2):
     # Setting up parameters from url
     usi = usi1
 
