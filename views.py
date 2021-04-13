@@ -690,7 +690,7 @@ def _parse_usi(usi: str) \
         spectrum, source, splash_key = result.get()
     except:
         # This is mostly for testing
-        raise
+        #raise
         spectrum, source, splash_key = parsing.parse_usi(usi)
 
 
