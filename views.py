@@ -19,8 +19,6 @@ from spectrum_utils import plot as sup, spectrum as sus
 import parsing
 from error import UsiError
 
-import tasks
-
 matplotlib.use('Agg')
 
 USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
@@ -687,6 +685,7 @@ def _parse_usi(usi: str) \
 
     # First attempt to schedule with celery
     try:
+        import tasks
         result = tasks.task_parse_usi.apply_async(args=[usi], serializer="pickle")
         spectrum, source, splash_key = result.get()
     except:
