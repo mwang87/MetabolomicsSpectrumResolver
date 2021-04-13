@@ -16,7 +16,8 @@ interactive: clean
 bash: clean
 	docker run -it -p 5087:5000 --name metabolomicsusi metabolomicsusi bash
 
-
+clear-cache:
+	sudo rm temp/joblibcache -rf
 
 
 

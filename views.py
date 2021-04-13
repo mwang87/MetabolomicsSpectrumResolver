@@ -473,8 +473,8 @@ def _parse_usi(usi: str) \
         result = tasks.task_parse_usi.apply_async(args=[usi], serializer="pickle")
         spectrum, source, splash_key = result.get()
     except:
-        # This is mostly for testing
-        #raise
+        # Fallback in case it fails, but mostly used for testing
+        # TODO: catch specific exception
         spectrum, source, splash_key = parsing.parse_usi(usi)
 
 
