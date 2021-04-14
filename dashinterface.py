@@ -212,16 +212,32 @@ MIDDLE_DASHBOARD = [
                 children=[html.Div([html.Div(id="loading-output-23")])],
                 type="default",
             ),
-            dash_table.DataTable(
-                id='peak_table',
-                columns=[{"name": "filename", "id": "filename"}],
-                data=[],
-                page_size= 10,
-                sort_action='native',
-                row_selectable="multi",
-                filter_action="native",
-                selected_rows=[],
-            )
+            dbc.Row([
+                dbc.Col(
+                    dash_table.DataTable(
+                        id='peak_table1',
+                        columns=[{"name": "filename", "id": "filename"}],
+                        data=[],
+                        page_size= 10,
+                        sort_action='native',
+                        row_selectable="multi",
+                        filter_action="native",
+                        selected_rows=[],
+                    ),
+                ),
+                dbc.Col(
+                    dash_table.DataTable(
+                        id='peak_table2',
+                        columns=[{"name": "filename", "id": "filename"}],
+                        data=[],
+                        page_size= 10,
+                        sort_action='native',
+                        row_selectable="multi",
+                        filter_action="native",
+                        selected_rows=[],
+                    ),
+                )
+            ])
         ]
     )
 ]
@@ -387,7 +403,7 @@ def _process_single_usi_table(usi):
 
     columns = [{"name": column, "id": column} for column in peaks_df.columns]
 
-    return [peaks_df.to_dict(orient="records"), columns]
+    return peaks_df.to_dict(orient="records"), columns
 
 def _process_mirror_usi(usi1, usi2, plotting_args):
     spectrum1, _, _ = _parse_usi(usi1)
@@ -430,8 +446,8 @@ def _process_mirror_usi(usi1, usi2, plotting_args):
                   Input('annotation_rotation', 'value'),
                   Input('cosine', 'value'),
                   Input('fragment_mz_tolerance', 'value'),
-                  Input('peak_table', 'derived_virtual_data'),
-                  Input('peak_table', 'derived_virtual_selected_rows'),
+                  Input('peak_table1', 'derived_virtual_data'),
+                  Input('peak_table1', 'derived_virtual_selected_rows'),
               ],
               [
               ])
@@ -515,8 +531,10 @@ def draw_figure(usi1, usi2,
 
 
 @dash_app.callback([
-                Output('peak_table', 'data'),
-                Output('peak_table', 'columns')
+                Output('peak_table1', 'data'),
+                Output('peak_table1', 'columns'),
+                Output('peak_table2', 'data'),
+                Output('peak_table2', 'columns'),
               ],
               [
                   Input('usi1', 'value'),
@@ -527,10 +545,15 @@ def draw_figure(usi1, usi2,
               ])
 def draw_table(usi1, usi2):
     # Setting up parameters from url
-    usi = usi1
+    if len(usi1) > 0 and len(usi2) > 0:
+        peaks1, columns1 = _process_single_usi_table(usi1)
+        peaks2, columns2 = _process_single_usi_table(usi2)
 
-    return _process_single_usi_table(usi)
-    
+        return [peaks1, columns1, peaks2, columns2]
+    else:
+        peaks1, columns1 = _process_single_usi_table(usi1)
+        return [peaks1, columns1]
+
     
 
 
