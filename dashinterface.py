@@ -564,7 +564,7 @@ def draw_table(usi1, usi2):
         return [peaks1, columns1, selected_rows1, peaks2, columns2, selected_rows2]
     else:
         peaks1, columns1, selected_rows1 = _process_single_usi_table(usi1)
-        return [peaks1, columns1, selected_rows1, dash.no_update, dash.no_update, dash.no_update]
+        return [peaks1, columns1, selected_rows1, [], dash.no_update, []]
 
     
 
