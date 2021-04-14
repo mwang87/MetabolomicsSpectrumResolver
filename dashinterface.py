@@ -60,6 +60,7 @@ DATASELECTION_CARD = [
             ),
             html.Hr(),
             html.H4("Drawing Controls"),
+            html.Hr(),
             dbc.Row([
                 dbc.Col(
                     "Figure Size"
@@ -191,6 +192,28 @@ DATASELECTION_CARD = [
                     ])
                 ]),
             ]),
+            html.Br(),
+            html.H4("UI Adjustment"),
+            html.Hr(),
+            dbc.Row([
+                dbc.Col(
+                    "Selection Size"
+                ),
+                dbc.Col([
+                    dcc.Slider(
+                        id="ui_width",
+                        min=2,
+                        max=6,
+                        value=4,
+                        marks={
+                            2: {'label': '2'},
+                            4: {'label': '4'},
+                            6: {'label': '6'},
+                        },
+                        included=True
+                    )  
+                ]),
+            ]),
         ]
     )
 ]
@@ -279,7 +302,8 @@ BODY = dbc.Container(
             dbc.Col([
                 dbc.Card(LEFT_DASHBOARD),
                 ],
-                className="w-50"
+                className="col-4",
+                id="left_panel_col"
             ),
             dbc.Col(
                 [
@@ -289,7 +313,8 @@ BODY = dbc.Container(
                     html.Br(),
                     dbc.Card(EXAMPLES_DASHBOARD)
                 ],
-                className="w-50"
+                className="col-8",
+                id="right_panel_col"
             ),
         ], style={"marginTop": 30}),
     ],
@@ -330,7 +355,6 @@ def determine_task(pathname, search):
         query_dict = {}
 
     usi1 = _get_url_param(query_dict, "usi1", 'mzspec:MSV000082796:KP_108_Positive:scan:1974')
-    #usi2 = _get_url_param(query_dict, "usi2", 'mzspec:MSV000082796:KP_108_Positive:scan:1977')
     usi2 = _get_url_param(query_dict, "usi2", dash.no_update)
 
     width = _get_url_param(query_dict, "width", dash.no_update)
@@ -385,6 +409,10 @@ def _process_single_usi(usi, plotting_args):
 
     peak_annotations = spectrum.annotation.nonzero()[0].tolist()
     peaks_list = _get_peaks(spectrum)
+
+    import sys
+    print("XXXXXX", peak_annotations, file=sys.stderr, flush=True)
+    plotting_args["annotate_peaks"] = peak_annotations
     
     return [download_div, image_obj], plotting_args
 
@@ -551,22 +579,43 @@ def draw_figure(usi1, usi2,
               [
                   Input('usi1', 'value'),
                   Input('usi2', 'value'),
+                  Input('url', 'pathname')
               ],
               [
-                  
+                  State('url', 'search')
               ])
-def draw_table(usi1, usi2):
+def draw_table(usi1, usi2, pathname, search):
+    
     # Setting up parameters from url
     if len(usi1) > 0 and len(usi2) > 0:
         peaks1, columns1, selected_rows1 = _process_single_usi_table(usi1)
         peaks2, columns2, selected_rows2 = _process_single_usi_table(usi2)
-
-        return [peaks1, columns1, selected_rows1, peaks2, columns2, selected_rows2]
     else:
         peaks1, columns1, selected_rows1 = _process_single_usi_table(usi1)
-        return [peaks1, columns1, selected_rows1, [], dash.no_update, []]
+        peaks2, columns2, selected_rows2 = [], dash.no_update, []
 
+    # Determining URL override
+    import sys
+    triggered_ids = [p['prop_id'] for p in dash.callback_context.triggered]
+    print("YYYYYYYYYYY", triggered_ids, file=sys.stderr, flush=True)
     
+    return [peaks1, columns1, selected_rows1, peaks2, columns2, selected_rows2]
+
+@dash_app.callback([
+                Output('left_panel_col', 'className'),
+                Output('right_panel_col', 'className'),
+              ],
+              [
+                  Input('ui_width', 'value'),
+              ],
+              [
+              ])
+def set_ui_width(ui_width):
+    left_class = "col-{}".format(ui_width)
+    right_class = "col-{}".format(12 - ui_width)
+
+    return [left_class, right_class]
+
 
 
 if __name__ == "__main__":
