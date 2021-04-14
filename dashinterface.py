@@ -255,7 +255,7 @@ LEFT_DASHBOARD = [
 ]
 
 MIDDLE_DASHBOARD = [
-    dbc.CardHeader(html.H5("Data Exploration")),
+    dbc.CardHeader(html.H5("Data Visualization")),
     dbc.CardBody(
         [
             dcc.Loading(
@@ -303,7 +303,7 @@ CONTRIBUTORS_DASHBOARD = [
             html.Br(),
             "Christopher Chen - UC San Diego",
             html.Br(),
-            "Simon Rogers PhD - Glasgow",
+            "Simon Rogers PhD - University of Glasgow",
             html.Br(),
             html.Br(),
             html.H5("Citation"),
@@ -318,7 +318,10 @@ EXAMPLES_DASHBOARD = [
     dbc.CardBody(
         [
             html.A('Basic', 
-                    href=""),
+                    href="/dashinterface/"),
+            html.Br(),
+            html.A('Proteomics', 
+                    href="/dashinterface/"),
             dcc.Loading(
                 id="debug",
                 children=[html.Div([html.Div(id="loading-output-243")])],
@@ -428,15 +431,34 @@ def _process_single_usi(usi, plotting_args):
 
     image_obj = html.Img(src=usi1_url)
 
-    json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/?usi1={}".format(usi))
-    csv_button = html.A(dbc.Button("Download as CSV", color="primary", className="mr-1"), href="/csv/?usi1={}".format(usi))
-    png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/{}".format(urlencode(plotting_args, quote_via=quote)), download="spectrum.png")
+    json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/?usi={}".format(quote(usi)))
+    csv_button = html.A(dbc.Button("Download as CSV", color="primary", className="mr-1"), href="/csv/?usi={}".format(quote(usi)))
+    png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/?{}".format(urlencode(plotting_args, quote_via=quote)), download="spectrum.png")
     svg_button = html.A(dbc.Button("Download as SVG", color="primary", className="mr-1"), href=usi1_url, download="spectrum.svg")
-    download_div = html.Div([
-        json_button,
-        csv_button,
-        png_button,
-        svg_button,
+    download_div = dbc.Row([
+        dbc.Col([
+            html.Img(src="/qrcode?usi={}".format(quote(usi)))
+        ],
+        className="col-1"),
+        dbc.Col([
+            dbc.Row([
+                dbc.Col("Universal Spectrum Identifier", className="col-3 font-weight-bold text-right"),
+                dbc.Col(usi, className="col-8"),
+            ]),
+            dbc.Row([
+                dbc.Col("SPLASH Identifier", className="col-3 font-weight-bold text-right"),
+                dbc.Col(splash_key, className="col-8"),
+            ]),
+            dbc.Row([
+                json_button,
+                csv_button,
+                png_button,
+                svg_button
+            ],
+                className="offset-1"
+            )
+        ],
+        className="col-11")
     ])
 
     peak_annotations = spectrum.annotation.nonzero()[0].tolist()
@@ -462,8 +484,8 @@ def _process_single_usi_table(usi, plotting_args):
     return peaks_df.to_dict(orient="records"), columns, peak_annotations_indices
 
 def _process_mirror_usi(usi1, usi2, plotting_args):
-    spectrum1, _, _ = _parse_usi(usi1)
-    spectrum2, _, _ = _parse_usi(usi1)
+    spectrum1, source_link1, splash_key1 = _parse_usi(usi1)
+    spectrum2, source_link2, splash_key2 = _parse_usi(usi1)
 
     cleaned_plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict(plotting_args), mirror=True)
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
@@ -478,10 +500,37 @@ def _process_mirror_usi(usi1, usi2, plotting_args):
     json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/mirror?usi1={}&usi2={}".format(usi1, usi2))
     png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/mirror?usi1={}&usi2={}".format(usi1, usi2), download="mirror.png")
     svg_button = html.A(dbc.Button("Download as SVG", color="primary", className="mr-1"), href=mirror_url, download="mirror.svg")
-    download_div = html.Div([
-        json_button,
-        png_button,
-        svg_button,
+    download_div = dbc.Row([
+        dbc.Col([
+            html.Img(src="/qrcode?mirror=true&usi1={}&usi2={}".format(quote(usi1), quote(usi2)))
+        ],
+        className="col-1"),
+        dbc.Col([
+            dbc.Row([
+                dbc.Col("Universal Spectrum Identifier 1", className="col-4 font-weight-bold text-right"),
+                dbc.Col(usi1, className="col-8"),
+            ]),
+            dbc.Row([
+                dbc.Col("SPLASH Identifier 1", className="col-4 font-weight-bold text-right"),
+                dbc.Col(splash_key1, className="col-8"),
+            ]),
+            dbc.Row([
+                dbc.Col("Universal Spectrum Identifier 2", className="col-4 font-weight-bold text-right"),
+                dbc.Col(usi2, className="col-8"),
+            ]),
+            dbc.Row([
+                dbc.Col("SPLASH Identifier 2", className="col-4 font-weight-bold text-right"),
+                dbc.Col(splash_key2, className="col-8"),
+            ]),
+            dbc.Row([
+                json_button,
+                png_button,
+                svg_button,
+            ],
+                className="offset-2"
+            ),
+        ],
+        className="col-11")
     ])
 
     return [download_div, image_obj, html.Br()], plotting_args
@@ -581,7 +630,7 @@ def draw_figure(usi1, usi2,
         plotting_args["annotate_peaks"] = json.dumps([annotation_masses, annotation_masses2])
         spectrum_visualization, plotting_args = _process_mirror_usi(usi1, usi2, plotting_args)
 
-        return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote), str(plotting_args)]
+        return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote), ""]
         
     else:
         # Single spectrum
@@ -596,7 +645,7 @@ def draw_figure(usi1, usi2,
         spectrum_visualization, plotting_args = _process_single_usi(usi1, plotting_args)
         plotting_args["usi1"] = usi1
 
-        return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote), str(plotting_args)]
+        return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote), ""]
 
 
 @dash_app.callback([
