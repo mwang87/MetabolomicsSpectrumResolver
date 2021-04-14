@@ -59,7 +59,18 @@ DATASELECTION_CARD = [
                 className="mb-3",
             ),
             html.Hr(),
-            html.H4("Drawing Controls"),
+            dbc.Row([
+                dbc.Col(
+                    html.H4("Drawing Controls"),
+                ),
+                dbc.Col(
+                    html.A(
+                        dbc.Badge("Reset Figure", color="warning", className="mr-1"),
+                        id="reset_figure"
+                    )
+                ),
+            ]),
+            
             html.Hr(),
             dbc.Row([
                 dbc.Col(
@@ -97,14 +108,14 @@ DATASELECTION_CARD = [
                         dbc.Input(
                             id="mz_min",
                             type="number",
-                            placeholder="input number"
+                            placeholder="min m/z"
                         ),
                         dbc.InputGroupAddon("m/z", addon_type="append"),
                         html.Span(" - ", className="col-form-label"),
                         dbc.Input(
                             id="mz_max",
                             type="number",
-                            placeholder="input number"
+                            placeholder="max m/z"
                         ),
                         dbc.InputGroupAddon("m/z", addon_type="append"),
                     ])
@@ -308,6 +319,11 @@ EXAMPLES_DASHBOARD = [
         [
             html.A('Basic', 
                     href=""),
+            dcc.Loading(
+                id="debug",
+                children=[html.Div([html.Div(id="loading-output-243")])],
+                type="default",
+            ),
         ]
     )
 ]
@@ -369,7 +385,6 @@ def determine_task(pathname, search):
     try:
         query_dict = parse_qs(search[1:])
     except:
-        raise
         query_dict = {}
 
     usi1 = _get_url_param(query_dict, "usi1", 'mzspec:MSV000082796:KP_108_Positive:scan:1974')
@@ -386,9 +401,6 @@ def determine_task(pathname, search):
     cosine = _get_url_param(query_dict, "cosine", dash.no_update)
     fragment_mz_tolerance = _get_url_param(query_dict, "fragment_mz_tolerance", dash.no_update)
     grid = _get_url_param(query_dict, "grid", dash.no_update)
-
-    import sys
-    print(query_dict, file=sys.stderr, flush=True)
 
     return [usi1, 
             usi2, 
@@ -429,19 +441,15 @@ def _process_single_usi(usi, plotting_args):
 
     peak_annotations = spectrum.annotation.nonzero()[0].tolist()
     peaks_list = _get_peaks(spectrum)
-
-    import sys
-    print("XXXXXX", peak_annotations, file=sys.stderr, flush=True)
-    plotting_args["annotate_peaks"] = peak_annotations
     
     return [download_div, image_obj], plotting_args
 
-def _process_single_usi_table(usi):
+def _process_single_usi_table(usi, plotting_args):
     spectrum, source_link, splash_key = _parse_usi(usi)
-    cleaned_plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict())
+    cleaned_plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict(plotting_args))
     spectrum = _prepare_spectrum(spectrum, **cleaned_plotting_args)
 
-    peak_annotations = spectrum.annotation.nonzero()[0].tolist()
+    peak_annotations_indices = spectrum.annotation.nonzero()[0].tolist()
     peaks_list = _get_peaks(spectrum)
 
     # Creating a table of peak annotations
@@ -451,7 +459,7 @@ def _process_single_usi_table(usi):
 
     columns = [{"name": column, "id": column} for column in peaks_df.columns]
 
-    return peaks_df.to_dict(orient="records"), columns, peak_annotations
+    return peaks_df.to_dict(orient="records"), columns, peak_annotations_indices
 
 def _process_mirror_usi(usi1, usi2, plotting_args):
     spectrum1, _, _ = _parse_usi(usi1)
@@ -481,6 +489,7 @@ def _process_mirror_usi(usi1, usi2, plotting_args):
 @dash_app.callback([
                   Output('output', 'children'),
                   Output('url', 'search'),
+                  Output('debug', 'children'),
               ],
               [
                   Input('usi1', 'value'),
@@ -572,7 +581,7 @@ def draw_figure(usi1, usi2,
         plotting_args["annotate_peaks"] = json.dumps([annotation_masses, annotation_masses2])
         spectrum_visualization, plotting_args = _process_mirror_usi(usi1, usi2, plotting_args)
 
-        return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote)]
+        return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote), str(plotting_args)]
         
     else:
         # Single spectrum
@@ -587,7 +596,7 @@ def draw_figure(usi1, usi2,
         spectrum_visualization, plotting_args = _process_single_usi(usi1, plotting_args)
         plotting_args["usi1"] = usi1
 
-        return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote)]
+        return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote), str(plotting_args)]
 
 
 @dash_app.callback([
@@ -608,23 +617,36 @@ def draw_figure(usi1, usi2,
                   State('url', 'search')
               ])
 def draw_table(usi1, usi2, pathname, search):
-    
     # Setting up parameters from url
-    if len(usi1) > 0 and len(usi2) > 0:
-        peaks1, columns1, selected_rows1 = _process_single_usi_table(usi1)
-        peaks2, columns2, selected_rows2 = _process_single_usi_table(usi2)
-    else:
-        peaks1, columns1, selected_rows1 = _process_single_usi_table(usi1)
-        peaks2, columns2, selected_rows2 = [], dash.no_update, []
+    plotting_args = {}
 
     # Determining URL override
     triggered_ids = [p['prop_id'] for p in dash.callback_context.triggered]
     if "url.pathname" in triggered_ids:
         # Doing override from URL for selected rows
-        x = 1
-    import sys
+        try:
+            query_dict = parse_qs(search[1:])
+        except:
+            query_dict = {}
+
+        try:
+            plotting_args["annotate_peaks"] = _get_url_param(query_dict, "annotate_peaks", None)
+            plotting_args["fragment_mz_tolerance"] = float(_get_url_param(query_dict, "fragment_mz_tolerance", 0.02))
+            
+            if plotting_args["annotate_peaks"] is None:
+                plotting_args = {}
+        except:
+            pass
     
-    print("YYYYYYYYYYY", triggered_ids, file=sys.stderr, flush=True)
+    # Setting up parameters from url
+    if len(usi1) > 0 and len(usi2) > 0:
+        peaks1, columns1, selected_rows1 = _process_single_usi_table(usi1, plotting_args)
+        peaks2, columns2, selected_rows2 = _process_single_usi_table(usi2, plotting_args)
+    else:
+        peaks1, columns1, selected_rows1 = _process_single_usi_table(usi1, plotting_args)
+        peaks2, columns2, selected_rows2 = [], dash.no_update, []
+
+    
     
     return [peaks1, columns1, selected_rows1, peaks2, columns2, selected_rows2]
 
@@ -642,6 +664,23 @@ def set_ui_width(ui_width):
     right_class = "col-{}".format(12 - ui_width)
 
     return [left_class, right_class]
+
+
+@dash_app.callback([
+                Output('reset_figure', 'href'),
+              ],
+              [
+                  Input('usi1', 'value'),
+                  Input('usi2', 'value'),
+              ],
+              [
+              ])
+def create_reset(usi1, usi2):
+    if len(usi1) > 0 and len(usi2) > 0:
+        return ["/dashinterface/?usi1={}&usi2={}".format(quote(usi1), quote(usi2))]
+    else:
+        return ["/dashinterface/?usi={}".format(quote(usi1))]
+
 
 
 
