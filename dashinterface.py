@@ -20,6 +20,8 @@ dash_app = dash.Dash(name='dashinterface',
                 server=app, url_base_pathname='/dashinterface/',
                 external_stylesheets=[dbc.themes.BOOTSTRAP])
 
+dash_app.title = 'USI'
+
 NAVBAR = dbc.Navbar(
     children=[
         dbc.NavbarBrand(
@@ -449,6 +451,7 @@ def draw_figure(usi1, usi2,
     plotting_args = {}
     plotting_args["width"] = width
     plotting_args["height"] = height
+    plotting_args["cosine"] = cosine
 
     try:
         plotting_args["mz_min"] = float(mz_min)
