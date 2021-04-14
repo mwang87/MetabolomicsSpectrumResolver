@@ -14,7 +14,7 @@ import pandas as pd
 import json
 
 from app import app
-from views import _get_peaks, _prepare_spectrum, _get_plotting_args, _parse_usi
+from views import _get_peaks, _prepare_spectrum, _get_plotting_args, _parse_usi, _prepare_mirror_spectra
 
 dash_app = dash.Dash(name='dashinterface', 
                 server=app, url_base_pathname='/dashinterface/',
@@ -348,7 +348,6 @@ def _process_single_usi(usi, plotting_args):
     cleaned_plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict(plotting_args))
     spectrum = _prepare_spectrum(spectrum, **cleaned_plotting_args)
 
-    cleaned_plotting_args["usi"] = usi
     usi1_url = "/svg/?{}".format(urlencode(plotting_args, quote_via=quote))
     local_url = "http://localhost:5000{}".format(usi1_url)
     r = requests.get(local_url)
@@ -387,6 +386,31 @@ def _process_single_usi_table(usi):
     columns = [{"name": column, "id": column} for column in peaks_df.columns]
 
     return [peaks_df.to_dict(orient="records"), columns]
+
+def _process_mirror_usi(usi1, usi2, plotting_args):
+    spectrum1, _, _ = _parse_usi(usi1)
+    spectrum2, _, _ = _parse_usi(usi1)
+
+    cleaned_plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict(plotting_args), mirror=True)
+    spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
+                                                   cleaned_plotting_args)
+
+    mirror_url = "/svg/mirror/?{}".format(urlencode(plotting_args, quote_via=quote))
+    local_url = "http://localhost:5000{}".format(mirror_url)
+    r = requests.get(local_url)
+
+    image_obj = html.Img(src=mirror_url)
+
+    json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/mirror?usi1={}&usi2={}".format(usi1, usi2))
+    png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/mirror?usi1={}&usi2={}".format(usi1, usi2), download="mirror.png")
+    svg_button = html.A(dbc.Button("Download as SVG", color="primary", className="mr-1"), href=mirror_url, download="mirror.svg")
+    download_div = html.Div([
+        json_button,
+        png_button,
+        svg_button,
+    ])
+
+    return [download_div, image_obj, html.Br()], plotting_args
 
 @dash_app.callback([
                   Output('output', 'children'),
@@ -458,23 +482,13 @@ def draw_figure(usi1, usi2,
     
     if len(usi1) > 0 and len(usi2) > 0:
         # Mirror spectrum
+        plotting_args["usi1"] = usi1
+        plotting_args["usi2"] = usi2
 
-        mirror_url = "/svg/mirror/?usi1={}&usi2={}".format(usi1, usi2)
-        local_url = "http://localhost:5000{}".format(mirror_url)
-        r = requests.get(local_url)
+        spectrum_visualization, plotting_args = _process_mirror_usi(usi1, usi2, plotting_args)
 
-        image_obj = html.Img(src=mirror_url)
-
-        json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/mirror?usi1={}&usi2={}".format(usi1, usi2))
-        png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/mirror?usi1={}&usi2={}".format(usi1, usi2), download="mirror.png")
-        svg_button = html.A(dbc.Button("Download as SVG", color="primary", className="mr-1"), href=mirror_url, download="mirror.svg")
-        download_div = html.Div([
-            json_button,
-            png_button,
-            svg_button,
-        ])
-
-        return [[image_obj, html.Br(), download_div], dash.no_update, dash.no_update, dash.no_update]
+        return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote)]
+        
     else:
         # Single spectrum
         plotting_args["usi"] = usi1
