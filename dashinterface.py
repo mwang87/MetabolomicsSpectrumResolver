@@ -443,7 +443,7 @@ def _process_single_usi(usi, plotting_args):
         dbc.Col([
             dbc.Row([
                 dbc.Col("Universal Spectrum Identifier", className="col-3 font-weight-bold text-right"),
-                dbc.Col(usi, className="col-8"),
+                dbc.Col([usi, " ", html.A(dbc.Badge("Source", color="info", className="mr-1"), href=source_link)], className="col-8"),
             ]),
             dbc.Row([
                 dbc.Col("SPLASH Identifier", className="col-3 font-weight-bold text-right"),
@@ -508,7 +508,7 @@ def _process_mirror_usi(usi1, usi2, plotting_args):
         dbc.Col([
             dbc.Row([
                 dbc.Col("Universal Spectrum Identifier 1", className="col-4 font-weight-bold text-right"),
-                dbc.Col(usi1, className="col-8"),
+                dbc.Col([usi1, " ", html.A(dbc.Badge("Source", color="info", className="mr-1"), href=source_link1)], className="col-8"),
             ]),
             dbc.Row([
                 dbc.Col("SPLASH Identifier 1", className="col-4 font-weight-bold text-right"),
@@ -516,7 +516,7 @@ def _process_mirror_usi(usi1, usi2, plotting_args):
             ]),
             dbc.Row([
                 dbc.Col("Universal Spectrum Identifier 2", className="col-4 font-weight-bold text-right"),
-                dbc.Col(usi2, className="col-8"),
+                dbc.Col([usi2, " ", html.A(dbc.Badge("Source", color="info", className="mr-1"), href=source_link2)], className="col-8"),
             ]),
             dbc.Row([
                 dbc.Col("SPLASH Identifier 2", className="col-4 font-weight-bold text-right"),
