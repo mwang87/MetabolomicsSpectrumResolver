@@ -497,8 +497,8 @@ def _process_mirror_usi(usi1, usi2, plotting_args):
 
     image_obj = html.Img(src=mirror_url)
 
-    json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/mirror?usi1={}&usi2={}".format(usi1, usi2))
-    png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/mirror?usi1={}&usi2={}".format(usi1, usi2), download="mirror.png")
+    json_button = html.A(dbc.Button("Download as JSON", color="primary", className="mr-1"), href="/json/mirror?usi1={}&usi2={}".format(quote(usi1), quote(usi2)))
+    png_button = html.A(dbc.Button("Download as PNG", color="primary", className="mr-1"), href="/png/mirror?usi1={}&usi2={}".format(quote(usi1), quote(usi2)), download="mirror.png")
     svg_button = html.A(dbc.Button("Download as SVG", color="primary", className="mr-1"), href=mirror_url, download="mirror.svg")
     download_div = dbc.Row([
         dbc.Col([
