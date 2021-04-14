@@ -193,6 +193,23 @@ DATASELECTION_CARD = [
                 ]),
             ]),
             html.Br(),
+            dbc.Row([
+                dbc.Col(
+                    "Show Grid"
+                ),
+                dbc.Col([
+                    dcc.Dropdown(
+                        id='grid',
+                        options=[
+                            {'label': 'Yes', 'value': 'true'},
+                            {'label': 'No', 'value': 'false'}
+                        ],
+                        value='true',
+                        clearable=False
+                    )
+                ]),
+            ]),
+            html.Br(),
             html.H4("UI Adjustment"),
             html.Hr(),
             dbc.Row([
@@ -340,6 +357,7 @@ def _get_url_param(param_dict, key, default):
                   Output('annotation_rotation', 'value'),
                   Output('cosine', 'value'),
                   Output('fragment_mz_tolerance', 'value'),
+                  Output('grid', 'value'),
               ],
               [
                   Input('url', 'pathname')
@@ -367,6 +385,7 @@ def determine_task(pathname, search):
     annotation_rotation = _get_url_param(query_dict, "annotation_rotation", dash.no_update)
     cosine = _get_url_param(query_dict, "cosine", dash.no_update)
     fragment_mz_tolerance = _get_url_param(query_dict, "fragment_mz_tolerance", dash.no_update)
+    grid = _get_url_param(query_dict, "grid", dash.no_update)
 
     import sys
     print(query_dict, file=sys.stderr, flush=True)
@@ -381,7 +400,8 @@ def determine_task(pathname, search):
             annotate_precision,
             annotation_rotation,
             cosine,
-            fragment_mz_tolerance]
+            fragment_mz_tolerance,
+            grid]
 
 
 def _process_single_usi(usi, plotting_args):
@@ -474,6 +494,7 @@ def _process_mirror_usi(usi1, usi2, plotting_args):
                   Input('annotation_rotation', 'value'),
                   Input('cosine', 'value'),
                   Input('fragment_mz_tolerance', 'value'),
+                  Input('grid', 'value'),
                   Input('peak_table1', 'derived_virtual_data'),
                   Input('peak_table1', 'derived_virtual_selected_rows'),
                   Input('peak_table2', 'derived_virtual_data'),
@@ -491,6 +512,7 @@ def draw_figure(usi1, usi2,
                 annotation_rotation,
                 cosine,
                 fragment_mz_tolerance,
+                grid,
                 derived_virtual_data,
                 derived_virtual_selected_rows,
                 derived_virtual_data2,
@@ -500,7 +522,8 @@ def draw_figure(usi1, usi2,
     plotting_args["width"] = width
     plotting_args["height"] = height
     plotting_args["cosine"] = cosine
-
+    plotting_args["grid"] = grid
+    
     try:
         plotting_args["mz_min"] = float(mz_min)
     except:
@@ -595,8 +618,12 @@ def draw_table(usi1, usi2, pathname, search):
         peaks2, columns2, selected_rows2 = [], dash.no_update, []
 
     # Determining URL override
-    import sys
     triggered_ids = [p['prop_id'] for p in dash.callback_context.triggered]
+    if "url.pathname" in triggered_ids:
+        # Doing override from URL for selected rows
+        x = 1
+    import sys
+    
     print("YYYYYYYYYYY", triggered_ids, file=sys.stderr, flush=True)
     
     return [peaks1, columns1, selected_rows1, peaks2, columns2, selected_rows2]
