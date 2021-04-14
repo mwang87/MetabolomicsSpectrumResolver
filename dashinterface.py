@@ -488,6 +488,12 @@ def draw_figure(usi1, usi2,
         plotting_args["usi1"] = usi1
         plotting_args["usi2"] = usi2
 
+        annotation_masses = []
+        if derived_virtual_selected_rows is not None:
+            for selected_index in derived_virtual_selected_rows:
+                annotation_masses.append(derived_virtual_data[selected_index]["mz"])
+
+        plotting_args["annotate_peaks"] = json.dumps([annotation_masses, []])
         spectrum_visualization, plotting_args = _process_mirror_usi(usi1, usi2, plotting_args)
 
         return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote)]
