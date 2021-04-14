@@ -390,7 +390,7 @@ def determine_task(pathname, search):
     except:
         query_dict = {}
 
-    usi1 = _get_url_param(query_dict, "usi1", 'mzspec:MSV000082796:KP_108_Positive:scan:1974')
+    usi1 = _get_url_param(query_dict, "usi1", _get_url_param(query_dict, "usi", 'mzspec:MSV000082796:KP_108_Positive:scan:1974'))
     usi2 = _get_url_param(query_dict, "usi2", dash.no_update)
 
     width = _get_url_param(query_dict, "width", dash.no_update)
