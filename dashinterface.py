@@ -321,7 +321,7 @@ EXAMPLES_DASHBOARD = [
                     href="/dashinterface/"),
             html.Br(),
             html.A('Proteomics', 
-                    href="/dashinterface/"),
+                    href="/dashinterface/?width=10&height=6&cosine=shifted&grid=true&max_intensity=200.0&annotate_precision=3&annotation_rotation=90.0&fragment_mz_tolerance=0.1&usi1=mzspec%3APXD002854%3A20150414_QEp1_LC7_GaPI_SA_Serum_LH_30.mzXML%3Ascan%3A15073%3AHPYFYAPELLFFAKR%2F3"),
             dcc.Loading(
                 id="debug",
                 children=[html.Div([html.Div(id="loading-output-243")])],
