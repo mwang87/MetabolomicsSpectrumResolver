@@ -403,7 +403,7 @@ def _process_single_usi_table(usi):
 
     columns = [{"name": column, "id": column} for column in peaks_df.columns]
 
-    return peaks_df.to_dict(orient="records"), columns
+    return peaks_df.to_dict(orient="records"), columns, peak_annotations
 
 def _process_mirror_usi(usi1, usi2, plotting_args):
     spectrum1, _, _ = _parse_usi(usi1)
@@ -448,6 +448,8 @@ def _process_mirror_usi(usi1, usi2, plotting_args):
                   Input('fragment_mz_tolerance', 'value'),
                   Input('peak_table1', 'derived_virtual_data'),
                   Input('peak_table1', 'derived_virtual_selected_rows'),
+                  Input('peak_table2', 'derived_virtual_data'),
+                  Input('peak_table2', 'derived_virtual_selected_rows'),
               ],
               [
               ])
@@ -462,7 +464,9 @@ def draw_figure(usi1, usi2,
                 cosine,
                 fragment_mz_tolerance,
                 derived_virtual_data,
-                derived_virtual_selected_rows):
+                derived_virtual_selected_rows,
+                derived_virtual_data2,
+                derived_virtual_selected_rows2):
     # Setting up parameters from url
     plotting_args = {}
     plotting_args["width"] = width
@@ -509,7 +513,12 @@ def draw_figure(usi1, usi2,
             for selected_index in derived_virtual_selected_rows:
                 annotation_masses.append(derived_virtual_data[selected_index]["mz"])
 
-        plotting_args["annotate_peaks"] = json.dumps([annotation_masses, []])
+        annotation_masses2 = []
+        if derived_virtual_selected_rows2 is not None:
+            for selected_index in derived_virtual_selected_rows2:
+                annotation_masses2.append(derived_virtual_data2[selected_index]["mz"])
+
+        plotting_args["annotate_peaks"] = json.dumps([annotation_masses, annotation_masses2])
         spectrum_visualization, plotting_args = _process_mirror_usi(usi1, usi2, plotting_args)
 
         return [spectrum_visualization, "?" + urlencode(plotting_args, quote_via=quote)]
@@ -533,8 +542,11 @@ def draw_figure(usi1, usi2,
 @dash_app.callback([
                 Output('peak_table1', 'data'),
                 Output('peak_table1', 'columns'),
+                Output('peak_table1', 'selected_rows'),
+                
                 Output('peak_table2', 'data'),
                 Output('peak_table2', 'columns'),
+                Output('peak_table2', 'selected_rows'),
               ],
               [
                   Input('usi1', 'value'),
@@ -546,13 +558,13 @@ def draw_figure(usi1, usi2,
 def draw_table(usi1, usi2):
     # Setting up parameters from url
     if len(usi1) > 0 and len(usi2) > 0:
-        peaks1, columns1 = _process_single_usi_table(usi1)
-        peaks2, columns2 = _process_single_usi_table(usi2)
+        peaks1, columns1, selected_rows1 = _process_single_usi_table(usi1)
+        peaks2, columns2, selected_rows2 = _process_single_usi_table(usi2)
 
-        return [peaks1, columns1, peaks2, columns2]
+        return [peaks1, columns1, selected_rows1, peaks2, columns2, selected_rows2]
     else:
-        peaks1, columns1 = _process_single_usi_table(usi1)
-        return [peaks1, columns1]
+        peaks1, columns1, selected_rows1 = _process_single_usi_table(usi1)
+        return [peaks1, columns1, selected_rows1, dash.no_update, dash.no_update, dash.no_update]
 
     
 
