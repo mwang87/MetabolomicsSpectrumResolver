@@ -1,5 +1,8 @@
+celery
+celery_once
 flask
 flex
+joblib
 locust
 lxml
 matplotlib
