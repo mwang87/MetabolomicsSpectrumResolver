@@ -15,6 +15,7 @@ from spectrum_utils import spectrum as sus
 import drawing
 import parsing
 import similarity
+import tasks
 from error import UsiError
 
 
@@ -156,9 +157,7 @@ def _parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
     # First attempt to schedule with Celery.
     try:
-        import tasks
-        return tasks.task_parse_usi.apply_async(
-            args=[usi], serializer='pickle').get()
+        return tasks.task_parse_usi.apply_async(args=[usi]).get()
     except redis.exceptions.ConnectionError:
         # Fallback in case scheduling via Celery fails.
         # Mostly used for testing.
@@ -185,9 +184,8 @@ def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
         Bytes buffer containing the spectrum plot.
     """
     try:
-        import tasks
         return tasks.task_generate_figure.apply_async(
-            args=[spectrum, extension, kwargs], serializer='pickle').get()
+            args=[spectrum, extension, kwargs]).get()
     except redis.exceptions.ConnectionError:
         return drawing.generate_figure(spectrum, extension, **kwargs)
 
@@ -215,10 +213,8 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
         Bytes buffer containing the mirror plot.
     """
     try:
-        import tasks
         return tasks.task_generate_mirror_figure.apply_async(
-            args=[spectrum_top, spectrum_bottom, extension, kwargs],
-            serializer='pickle').get()
+            args=[spectrum_top, spectrum_bottom, extension, kwargs]).get()
     except redis.exceptions.ConnectionError:
         return drawing.generate_mirror_figure(spectrum_top, spectrum_bottom,
                                               extension, **kwargs)
