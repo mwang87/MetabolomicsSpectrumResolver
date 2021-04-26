@@ -157,7 +157,7 @@ def _parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
     # First attempt to schedule with Celery.
     try:
-        return tasks.task_parse_usi.apply_async(args=[usi]).get()
+        return tasks.task_parse_usi.apply_async(args=(usi,)).get()
     except redis.exceptions.ConnectionError:
         # Fallback in case scheduling via Celery fails.
         # Mostly used for testing.
@@ -185,7 +185,7 @@ def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
     """
     try:
         return tasks.task_generate_figure.apply_async(
-            args=[spectrum, extension, kwargs]).get()
+            args=(spectrum, extension), kwargs=kwargs).get()
     except redis.exceptions.ConnectionError:
         return drawing.generate_figure(spectrum, extension, **kwargs)
 
@@ -212,9 +212,11 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
     io.BytesIO
         Bytes buffer containing the mirror plot.
     """
+    print(kwargs, [spectrum_top, spectrum_bottom, extension, *kwargs])
     try:
         return tasks.task_generate_mirror_figure.apply_async(
-            args=[spectrum_top, spectrum_bottom, extension, kwargs]).get()
+            args=(spectrum_top, spectrum_bottom, extension),
+            kwargs=kwargs).get()
     except redis.exceptions.ConnectionError:
         return drawing.generate_mirror_figure(spectrum_top, spectrum_bottom,
                                               extension, **kwargs)
