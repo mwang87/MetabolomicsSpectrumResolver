@@ -8,6 +8,7 @@ import flask
 import numpy as np
 import qrcode
 import urllib.parse
+import redis
 import werkzeug
 from spectrum_utils import spectrum as sus
 
@@ -158,7 +159,7 @@ def _parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         import tasks
         return tasks.task_parse_usi.apply_async(
             args=[usi], serializer='pickle').get()
-    except:     # TODO: Catch specific exception.
+    except redis.exceptions.ConnectionError:
         # Fallback in case scheduling via Celery fails.
         # Mostly used for testing.
         return parsing.parse_usi(usi)
@@ -187,7 +188,7 @@ def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
         import tasks
         return tasks.task_generate_figure.apply_async(
             args=[spectrum, extension, kwargs], serializer='pickle').get()
-    except:     # TODO: Catch specific exception.
+    except redis.exceptions.ConnectionError:
         return drawing.generate_figure(spectrum, extension, **kwargs)
 
 
@@ -218,7 +219,7 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
         return tasks.task_generate_mirror_figure.apply_async(
             args=[spectrum_top, spectrum_bottom, extension, kwargs],
             serializer='pickle').get()
-    except:     # TODO: Catch specific exception.
+    except redis.exceptions.ConnectionError:
         return drawing.generate_mirror_figure(spectrum_top, spectrum_bottom,
                                               extension, **kwargs)
 
