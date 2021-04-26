@@ -3,11 +3,15 @@ import io
 from typing import Any
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from spectrum_utils import plot as sup, spectrum as sus
 
 from config import USI_SERVER
 import similarity
+
+
+matplotlib.use('Agg')
 
 
 def generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
