@@ -18,11 +18,6 @@ from error import UsiError
 from usi_test_data import usis_to_test
 
 
-@pytest.fixture(autouse=True)
-def clear_cache():
-    parsing.parse_usi.cache_clear()
-
-
 @functools.lru_cache(None)
 def _get_splash_remote(spectrum):
     payload = {'ions': [{'mass': float(mz), 'intensity': float(intensity)}
