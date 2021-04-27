@@ -11,7 +11,7 @@ import parsing
 import drawing
 
 
-memory = joblib.Memory('temp/joblibcache', verbose=0)
+memory = joblib.Memory('tmp/joblibcache', verbose=0)
 cached_parse_usi = memory.cache(parsing.parse_usi)
 cached_generate_figure = memory.cache(drawing.generate_figure)
 cached_generate_mirror_figure = memory.cache(drawing.generate_mirror_figure)
