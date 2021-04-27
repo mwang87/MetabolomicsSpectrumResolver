@@ -19,7 +19,7 @@ cached_generate_mirror_figure = memory.cache(drawing.generate_mirror_figure)
 celery_instance = celery.Celery(
     'tasks',
     backend='redis://metabolomicsusi-redis',
-    broker='pyamqp://guest@metabolomicsusi-rabbitmq//'
+    broker='redis://metabolomicsusi-redis'
 )
 
 celery_instance.conf.update(

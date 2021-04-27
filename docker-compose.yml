@@ -27,16 +27,9 @@ services:
     restart: unless-stopped
     depends_on:
       - metabolomicsusi-redis
-      - metabolomicsusi-rabbitmq
     networks:
       - default
       - nginx-net
-
-  metabolomicsusi-rabbitmq:
-    container_name: metabolomicsusi-rabbitmq
-    image: rabbitmq
-    networks:
-      - default
 
   metabolomicsusi-redis:
     container_name: metabolomicsusi-redis
