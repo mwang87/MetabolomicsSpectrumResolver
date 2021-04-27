@@ -136,3 +136,5 @@ dmypy.json
 .pytype/
 .DS_Store
 demo_cache.sqlite
+
+tmp/
