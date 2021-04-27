@@ -212,7 +212,6 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
     io.BytesIO
         Bytes buffer containing the mirror plot.
     """
-    print(kwargs, [spectrum_top, spectrum_bottom, extension, *kwargs])
     try:
         return tasks.task_generate_mirror_figure.apply_async(
             args=(spectrum_top, spectrum_bottom, extension),
