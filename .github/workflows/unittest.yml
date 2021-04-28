@@ -29,7 +29,7 @@ jobs:
         conda update -q conda
         conda create -n usi -c conda-forge -c bioconda -c defaults flake8 \
           flask flex-swagger gunicorn locust lxml matplotlib numba numpy \
-          pillow pytest pyzbar qrcode rdkit requests requests-cache scipy \
+          pillow pytest pytest-xdist pyzbar qrcode rdkit requests requests-cache scipy \
           spectrum_utils werkzeug zbar
         apt-get update -y && apt-get install -y git-core
         source activate usi
@@ -49,4 +49,4 @@ jobs:
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
         source ~/.bashrc
-        cd test	&& pytest -v
+        cd test	&& pytest -v -n 4
