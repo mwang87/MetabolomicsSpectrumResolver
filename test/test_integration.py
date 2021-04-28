@@ -20,6 +20,7 @@ from pyzbar import pyzbar
 
 import app
 import parsing
+import config
 from error import UsiError
 
 from usi_test_data import usis_to_test
@@ -61,7 +62,7 @@ def _get_custom_plotting_args_str():
 
 @pytest.fixture
 def client():
-    app.app.config['TESTING'] = True
+    config.TESTING = True
     with app.app.test_client() as client:
         yield client
 

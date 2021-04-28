@@ -17,7 +17,7 @@ import parsing
 import similarity
 import tasks
 from error import UsiError
-
+import config
 
 default_plotting_args = {
     'width': 10.0,
@@ -155,6 +155,12 @@ def _parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         A tuple of the `MsmsSpectrum`, its source link, and its SPLASH.
         sus.MsmsSpectrum : spectrum object
     """
+    
+    import sys
+    print(config.TESTING, file=sys.stderr, flush=True)
+    if config.TESTING:
+        return parsing.parse_usi(usi)
+        
     # First attempt to schedule with Celery.
     try:
         return tasks.task_parse_usi.apply_async(args=(usi,)).get()
@@ -606,16 +612,16 @@ def generate_qr():
     return flask.send_file(qr_bytes, 'image/png')
 
 
-@blueprint.errorhandler(Exception)
-def render_error(error):
-    if type(error) == UsiError:
-        error_code = error.error_code
-    else:
-        error_code = 500
-    if hasattr(error, 'message'):
-        error_message = error.message
-    else:
-        error_message = 'RunTime Server Error'
+# @blueprint.errorhandler(Exception)
+# def render_error(error):
+#     if type(error) == UsiError:
+#         error_code = error.error_code
+#     else:
+#         error_code = 500
+#     if hasattr(error, 'message'):
+#         error_message = error.message
+#     else:
+#         error_message = 'RunTime Server Error'
 
-    return (flask.render_template('error.html', error=error_message),
-            error_code)
+#     return (flask.render_template('error.html', error=error_message),
+#             error_code)
