@@ -1,4 +1,3 @@
-import functools
 import json
 import re
 from typing import Tuple
@@ -73,7 +72,6 @@ def _match_usi(usi: str):
     return match
 
 
-@functools.lru_cache(100)
 def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
     Retrieve the spectrum associated with the given USI.

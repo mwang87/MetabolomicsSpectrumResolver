@@ -20,6 +20,7 @@ from pyzbar import pyzbar
 
 import app
 import parsing
+import config
 from error import UsiError
 
 from usi_test_data import usis_to_test
@@ -59,14 +60,9 @@ def _get_custom_plotting_args_str():
             f'&fragment_mz_tolerance={fragment_mz_tolerance}')
 
 
-@pytest.fixture(autouse=True)
-def clear_cache():
-    parsing.parse_usi.cache_clear()
-
-
 @pytest.fixture
 def client():
-    app.app.config['TESTING'] = True
+    config.TESTING = True
     with app.app.test_client() as client:
         yield client
 
