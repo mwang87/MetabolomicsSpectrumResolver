@@ -1,11 +1,11 @@
-import numpy as np
-import numba as nb
-
 import collections
 
-from typing import Any, Dict, List, Optional, Tuple
+import numba as nb
+import numpy as np
 
-from spectrum_utils import plot as sup, spectrum as sus
+from typing import List, Tuple
+
+from spectrum_utils import spectrum as sus
 
 
 SpectrumTuple = collections.namedtuple(
@@ -13,7 +13,7 @@ SpectrumTuple = collections.namedtuple(
 
 
 def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
-            fragment_mz_tolerance: float, allow_shift: bool) \
+           fragment_mz_tolerance: float, allow_shift: bool) \
         -> Tuple[float, List[Tuple[int, int]]]:
     """
     Compute the cosine similarity between the given spectra.
@@ -43,6 +43,7 @@ def cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
         np.copy(spectrum2.intensity) / np.linalg.norm(spectrum2.intensity))
     return _cosine_fast(spec_tup1, spec_tup2, fragment_mz_tolerance,
                         allow_shift)
+
 
 @nb.njit
 def _cosine_fast(spec: SpectrumTuple, spec_other: SpectrumTuple,

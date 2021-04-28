@@ -8,7 +8,7 @@ services:
     ports:
     - "5087:5000"
     volumes:
-        - ./temp:/app/temp:rw
+        - ./tmp:/app/tmp:rw
         - ./logs/:/app/logs:rw
     networks:
       - default
@@ -21,29 +21,22 @@ services:
       dockerfile: Dockerfile
     container_name: metabolomicsusi-worker
     volumes:
-      - ./temp:/app/temp:rw
+      - ./tmp:/app/tmp:rw
       - ./logs:/app/logs:rw
     command: /app/run_worker.sh
     restart: unless-stopped
-    depends_on: 
+    depends_on:
       - metabolomicsusi-redis
-      - metabolomicsusi-rabbitmq
     networks:
       - default
       - nginx-net
-
-  metabolomicsusi-rabbitmq:
-    container_name: metabolomicsusi-rabbitmq
-    image: rabbitmq
-    networks:
-      - default
 
   metabolomicsusi-redis:
     container_name: metabolomicsusi-redis
     image: redis
     networks:
       - default
-  
+
 networks:
   nginx-net:
     external:
