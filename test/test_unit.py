@@ -11,15 +11,11 @@ import werkzeug.datastructures
 from spectrum_utils import spectrum as sus
 
 import parsing
+import similarity
 import views
 from error import UsiError
 
 from usi_test_data import usis_to_test
-
-
-@pytest.fixture(autouse=True)
-def clear_cache():
-    parsing.parse_usi.cache_clear()
 
 
 @functools.lru_cache(None)
@@ -386,20 +382,20 @@ def test_cosine():
     spectrum3 = sus.MsmsSpectrum(
         '3', 240, 1, [100, 110, 119.9, 120, 200], intensity)
     # Standard cosine.
-    cosine, peak_matches = views._cosine(spectrum1, spectrum2, 0.02, False)
+    cosine, peak_matches = similarity.cosine(spectrum1, spectrum2, 0.02, False)
     assert cosine == pytest.approx(intensity[0] * intensity[0] +
                                    intensity[1] * intensity[1] +
                                    intensity[2] * intensity[2])
     assert peak_matches == [(2, 2), (1, 1), (0, 0)]
     # Shifted cosine.
-    cosine, peak_matches = views._cosine(spectrum1, spectrum2, 0.02, True)
+    cosine, peak_matches = similarity.cosine(spectrum1, spectrum2, 0.02, True)
     assert cosine == pytest.approx(intensity[0] * intensity[0] +
                                    intensity[1] * intensity[1] +
                                    intensity[2] * intensity[2] +
                                    intensity[3] * intensity[4])
     assert peak_matches == [(3, 4), (2, 2), (1, 1), (0, 0)]
     # Greedy peak matching.
-    cosine, peak_matches = views._cosine(spectrum1, spectrum3, 0.02, False)
+    cosine, peak_matches = similarity.cosine(spectrum1, spectrum3, 0.02, False)
     assert cosine == pytest.approx(intensity[0] * intensity[0] +
                                    intensity[1] * intensity[1] +
                                    intensity[2] * intensity[3])
