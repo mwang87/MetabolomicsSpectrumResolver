@@ -1,5 +1,8 @@
+celery
+celery_once
 flask
 flex
+joblib
 locust
 lxml
 matplotlib
@@ -9,6 +12,7 @@ pillow
 pytest
 pyzbar
 qrcode
+redis
 requests
 requests_cache
 scipy
