@@ -1,18 +1,21 @@
 import gc
 import io
+from typing import Any
+
 import numpy as np
-
-from typing import Any, Dict, List, Optional, Tuple
-
-from spectrum_utils import plot as sup, spectrum as sus
+import matplotlib
 import matplotlib.pyplot as plt
+from spectrum_utils import plot as sup, spectrum as sus
 
 from config import USI_SERVER
 import similarity
 
 
+matplotlib.use('Agg')
+
+
 def generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
-                     **kwargs: Any) -> io.BytesIO:
+                    **kwargs: Any) -> io.BytesIO:
     """
     Generate a spectrum plot.
 
@@ -71,9 +74,10 @@ def generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
 
     return buf
 
+
 def generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
-                            spectrum_bottom: sus.MsmsSpectrum,
-                            extension: str, **kwargs: Any) -> io.BytesIO:
+                           spectrum_bottom: sus.MsmsSpectrum,
+                           extension: str, **kwargs: Any) -> io.BytesIO:
     """
     Generate a mirror plot of two spectra.
 

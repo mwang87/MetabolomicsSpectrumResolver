@@ -1,28 +1,23 @@
-import collections
 import copy
 import csv
-import gc
 import io
 import json
 from typing import Any, Dict, List, Optional, Tuple
 
 import flask
-import urllib.parse
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 import qrcode
+import urllib.parse
+import redis
 import werkzeug
-from spectrum_utils import plot as sup, spectrum as sus
+from spectrum_utils import spectrum as sus
 
-import parsing
 import drawing
+import parsing
 import similarity
-
+import tasks
 from error import UsiError
-from config import USI_SERVER
 
-matplotlib.use('Agg')
 
 default_plotting_args = {
     'width': 10.0,
@@ -42,6 +37,7 @@ default_plotting_args = {
 
 blueprint = flask.Blueprint('ui', __name__)
 
+
 @blueprint.route('/', methods=['GET'])
 def render_homepage():
     return flask.render_template('homepage.html')
@@ -60,7 +56,6 @@ def render_heartbeat():
 @blueprint.route('/spectrum/', methods=['GET'])
 def render_spectrum():
     usi = flask.request.args.get('usi')
-
     plotting_args = _get_plotting_args(flask.request.args)
     spectrum, source_link, splash_key = _parse_usi(usi)
     spectrum = _prepare_spectrum(spectrum, **plotting_args)
@@ -142,6 +137,33 @@ def generate_mirror_svg():
     return flask.send_file(buf, mimetype='image/svg+xml')
 
 
+def _parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
+    """
+    Retrieve the spectrum associated with the given USI.
+
+    The first attempt to parse the USI is via a Celery task. Alternatively, as
+    a fallback option the USI can be parsed directly in this thread.
+
+    Parameters
+    ----------
+    usi : str
+        The USI of the spectrum to be retrieved from its resource.
+
+    Returns
+    -------
+    Tuple[sus.MsmsSpectrum, str, str]
+        A tuple of the `MsmsSpectrum`, its source link, and its SPLASH.
+        sus.MsmsSpectrum : spectrum object
+    """
+    # First attempt to schedule with Celery.
+    try:
+        return tasks.task_parse_usi.apply_async(args=(usi,)).get()
+    except redis.exceptions.ConnectionError:
+        # Fallback in case scheduling via Celery fails.
+        # Mostly used for testing.
+        return parsing.parse_usi(usi)
+
+
 def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
                      **kwargs: Any) -> io.BytesIO:
     """
@@ -161,15 +183,11 @@ def _generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
     io.BytesIO
         Bytes buffer containing the spectrum plot.
     """
-
     try:
-        import tasks
-        result = tasks.task_generate_figure.apply_async(args=[spectrum, extension, kwargs], serializer="pickle")
-        return result.get()
-    except:
+        return tasks.task_generate_figure.apply_async(
+            args=(spectrum, extension), kwargs=kwargs).get()
+    except redis.exceptions.ConnectionError:
         return drawing.generate_figure(spectrum, extension, **kwargs)
-    
-    
 
 
 def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
@@ -194,45 +212,13 @@ def _generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
     io.BytesIO
         Bytes buffer containing the mirror plot.
     """
-
     try:
-        import tasks
-        result = tasks.task_generate_mirror_figure.apply_async(args=[spectrum_top, spectrum_bottom, extension, kwargs], serializer="pickle")
-        return result.get()
-    except:
-        return drawing.generate_mirror_figure(spectrum_top, spectrum_bottom, extension, **kwargs)
-
-
-def _cosine(spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum,
-            fragment_mz_tolerance: float, allow_shift: bool) \
-        -> Tuple[float, List[Tuple[int, int]]]:
-    """
-    Compute the cosine similarity between the given spectra.
-
-    Parameters
-    ----------
-    spectrum1 : sus.MsmsSpectrum
-        The first spectrum.
-    spectrum2 : sus.MsmsSpectrum
-        The second spectrum.
-    fragment_mz_tolerance : float
-        The fragment m/z tolerance used to match peaks.
-    allow_shift : bool
-        Boolean flag indicating whether to allow peak shifts or not.
-
-    Returns
-    -------
-    Tuple[float, List[Tuple[int, int]]]
-        A tuple consisting of (i) the cosine similarity between both spectra,
-        and (ii) the indexes of matching peaks in both spectra.
-    """
-    
-    return similarity.cosine(spectrum1, spectrum2, 
-                        fragment_mz_tolerance,
-                        allow_shift)
-
-
-
+        return tasks.task_generate_mirror_figure.apply_async(
+            args=(spectrum_top, spectrum_bottom, extension),
+            kwargs=kwargs).get()
+    except redis.exceptions.ConnectionError:
+        return drawing.generate_mirror_figure(spectrum_top, spectrum_bottom,
+                                              extension, **kwargs)
 
 
 def _prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) \
@@ -454,37 +440,12 @@ def _get_plotting_args(args: werkzeug.datastructures.ImmutableMultiDict,
             default_plotting_args['fragment_mz_tolerance']
 
     if plotting_args['width'] > 100:
-        raise ValueError("Too Large Width")
+        raise ValueError('Too large width')
     if plotting_args['height'] > 100:
-        raise ValueError("Too Large Height")
+        raise ValueError('Too large height')
 
     return plotting_args
 
-
-def _parse_usi(usi: str) \
-        -> Tuple[sus.MsmsSpectrum, str, str]:
-    """
-    Parses the USI by invoking directly or going through a task
-
-    Returns:
-        sus.MsmsSpectrum : spectrum object
-        str : the source link
-        str : the splash key
-    """
-
-    # First attempt to schedule with celery
-    try:
-        import tasks
-        result = tasks.task_parse_usi.apply_async(args=[usi], serializer="pickle")
-        spectrum, source, splash_key = result.get()
-    except:
-        # Fallback in case it fails, but mostly used for testing
-        # TODO: catch specific exception
-        spectrum, source, splash_key = parsing.parse_usi(usi)
-
-
-    return spectrum, source, splash_key
-    
 
 def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
                        mirror: bool) -> float:
@@ -528,16 +489,13 @@ def _get_max_intensity(max_intensity: Optional[float], annotate_peaks: bool,
 @blueprint.route('/json/')
 def peak_json():
     try:
-        spectrum, _, splash_key = _parse_usi(
-            flask.request.args.get('usi'))
-
+        spectrum, _, splash_key = _parse_usi(flask.request.args.get('usi'))
         result_dict = {
             'peaks': _get_peaks(spectrum),
             'n_peaks': len(spectrum.mz),
             'precursor_mz': spectrum.precursor_mz,
             'splash': splash_key
         }
-
     except UsiError as e:
         result_dict = {'error': {'code': e.error_code, 'message': str(e)}}
     except ValueError as e:
@@ -556,7 +514,7 @@ def mirror_json():
         spectrum2, source2, splash_key2 = _parse_usi(usi2)
         _spectrum1, _spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
                                                          plotting_args)
-        similarity, peak_matches = _cosine(
+        score, peak_matches = similarity.cosine(
             _spectrum1, _spectrum2, plotting_args['fragment_mz_tolerance'],
             plotting_args['cosine'] == 'shifted')
 
@@ -574,7 +532,7 @@ def mirror_json():
         }
         result_dict = {'spectrum1': spectrum1_dict,
                        'spectrum2': spectrum2_dict,
-                       'cosine': similarity,
+                       'cosine': score,
                        'n_peak_matches': len(peak_matches),
                        'peak_matches': peak_matches}
 

@@ -59,11 +59,6 @@ def _get_custom_plotting_args_str():
             f'&fragment_mz_tolerance={fragment_mz_tolerance}')
 
 
-@pytest.fixture(autouse=True)
-def clear_cache():
-    parsing.parse_usi.cache_clear()
-
-
 @pytest.fixture
 def client():
     app.app.config['TESTING'] = True
