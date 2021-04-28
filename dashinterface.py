@@ -485,7 +485,7 @@ def _process_single_usi_table(usi, plotting_args):
 
 def _process_mirror_usi(usi1, usi2, plotting_args):
     spectrum1, source_link1, splash_key1 = _parse_usi(usi1)
-    spectrum2, source_link2, splash_key2 = _parse_usi(usi1)
+    spectrum2, source_link2, splash_key2 = _parse_usi(usi2)
 
     cleaned_plotting_args = _get_plotting_args(werkzeug.datastructures.ImmutableMultiDict(plotting_args), mirror=True)
     spectrum1, spectrum2 = _prepare_mirror_spectra(spectrum1, spectrum2,
