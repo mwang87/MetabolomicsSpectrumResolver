@@ -217,70 +217,70 @@ def _get_plotting_args(**kwargs):
 
 
 def test_get_plotting_args_invalid_figsize():
-    plotting_args = views._get_plotting_args(_get_plotting_args(width=-1))
+    plotting_args = views.get_plotting_args(_get_plotting_args(width=-1))
     assert plotting_args['width'] == views.default_plotting_args['width']
-    plotting_args = views._get_plotting_args(_get_plotting_args(height=-1))
+    plotting_args = views.get_plotting_args(_get_plotting_args(height=-1))
     assert plotting_args['height'] == views.default_plotting_args['height']
-    plotting_args = views._get_plotting_args(_get_plotting_args(width=-1),
-                                             mirror=True)
+    plotting_args = views.get_plotting_args(_get_plotting_args(width=-1),
+                                            mirror=True)
     assert plotting_args['width'] == views.default_plotting_args['width']
-    plotting_args = views._get_plotting_args(_get_plotting_args(height=-1),
-                                             mirror=True)
+    plotting_args = views.get_plotting_args(_get_plotting_args(height=-1),
+                                            mirror=True)
     assert plotting_args['height'] == views.default_plotting_args['height']
 
 
 def test_get_plotting_args_unspecified_mz_range():
-    plotting_args = views._get_plotting_args(_get_plotting_args())
+    plotting_args = views.get_plotting_args(_get_plotting_args())
     assert plotting_args['mz_min'] is None
-    plotting_args = views._get_plotting_args(_get_plotting_args())
+    plotting_args = views.get_plotting_args(_get_plotting_args())
     assert plotting_args['mz_max'] is None
-    plotting_args = views._get_plotting_args(_get_plotting_args(), mirror=True)
+    plotting_args = views.get_plotting_args(_get_plotting_args(), mirror=True)
     assert plotting_args['mz_min'] is None
-    plotting_args = views._get_plotting_args(_get_plotting_args(), mirror=True)
+    plotting_args = views.get_plotting_args(_get_plotting_args(), mirror=True)
     assert plotting_args['mz_max'] is None
 
 
 def test_get_plotting_args_invalid_mz_range():
-    plotting_args = views._get_plotting_args(_get_plotting_args(mz_min=-100))
+    plotting_args = views.get_plotting_args(_get_plotting_args(mz_min=-100))
     assert plotting_args['mz_min'] is None
-    plotting_args = views._get_plotting_args(_get_plotting_args(mz_max=-100))
+    plotting_args = views.get_plotting_args(_get_plotting_args(mz_max=-100))
     assert plotting_args['mz_max'] is None
-    plotting_args = views._get_plotting_args(_get_plotting_args(mz_min=-100),
-                                             mirror=True)
+    plotting_args = views.get_plotting_args(_get_plotting_args(mz_min=-100),
+                                            mirror=True)
     assert plotting_args['mz_min'] is None
-    plotting_args = views._get_plotting_args(_get_plotting_args(mz_max=-100),
-                                             mirror=True)
+    plotting_args = views.get_plotting_args(_get_plotting_args(mz_max=-100),
+                                            mirror=True)
     assert plotting_args['mz_max'] is None
 
 
 def test_get_plotting_args_invalid_max_intensity():
-    plotting_args = views._get_plotting_args(_get_plotting_args(
+    plotting_args = views.get_plotting_args(_get_plotting_args(
         max_intensity=-1))
     assert (plotting_args['max_intensity']
             == views.default_plotting_args['max_intensity_labeled'])
-    plotting_args = views._get_plotting_args(_get_plotting_args(
+    plotting_args = views.get_plotting_args(_get_plotting_args(
         max_intensity=-1), mirror=True)
     assert (plotting_args['max_intensity']
             == views.default_plotting_args['max_intensity_mirror_labeled'])
 
 
 def test_get_plotting_args_invalid_annotate_precision():
-    plotting_args = views._get_plotting_args(_get_plotting_args(
+    plotting_args = views.get_plotting_args(_get_plotting_args(
         annotate_precision=-1))
     assert (plotting_args['annotate_precision']
             == views.default_plotting_args['annotate_precision'])
-    plotting_args = views._get_plotting_args(_get_plotting_args(
+    plotting_args = views.get_plotting_args(_get_plotting_args(
         annotate_precision=-1), mirror=True)
     assert (plotting_args['annotate_precision']
             == views.default_plotting_args['annotate_precision'])
 
 
 def test_get_plotting_args_invalid_fragment_mz_tolerance():
-    plotting_args = views._get_plotting_args(_get_plotting_args(
+    plotting_args = views.get_plotting_args(_get_plotting_args(
         fragment_mz_tolerance=-1))
     assert (plotting_args['fragment_mz_tolerance']
             == views.default_plotting_args['fragment_mz_tolerance'])
-    plotting_args = views._get_plotting_args(_get_plotting_args(
+    plotting_args = views.get_plotting_args(_get_plotting_args(
         fragment_mz_tolerance=-1), mirror=True)
     assert (plotting_args['fragment_mz_tolerance']
             == views.default_plotting_args['fragment_mz_tolerance'])
@@ -289,10 +289,10 @@ def test_get_plotting_args_invalid_fragment_mz_tolerance():
 def test_get_plotting_args_title():
     usi = 'mzspec:MOTIFDB::accession:171163'
     plot_title = 'Custom title'
-    plotting_args = views._get_plotting_args(_get_plotting_args(
+    plotting_args = views.get_plotting_args(_get_plotting_args(
         usi=usi))
     assert plotting_args['plot_title'] == usi
-    plotting_args = views._get_plotting_args(_get_plotting_args(
+    plotting_args = views.get_plotting_args(_get_plotting_args(
         usi=usi, plot_title=plot_title))
     assert plotting_args['plot_title'] == plot_title
 
@@ -300,8 +300,8 @@ def test_get_plotting_args_title():
 def test_prepare_spectrum():
     usi = 'mzspec:MOTIFDB::accession:171163'
     spectrum, _, _ = parsing.parse_usi(usi)
-    spectrum_processed = views._prepare_spectrum(
-        spectrum, **views._get_plotting_args(_get_plotting_args(
+    spectrum_processed = views.prepare_spectrum(
+        spectrum, **views.get_plotting_args(_get_plotting_args(
             mz_min=400, mz_max=700, annotate_peaks=json.dumps([[]]))))
     assert spectrum is not spectrum_processed
     assert len(spectrum.mz) == 49
@@ -315,8 +315,8 @@ def test_prepare_spectrum():
 def test_prepare_spectrum_annotate_peaks_default():
     usi = 'mzspec:MOTIFDB::accession:171163'
     spectrum, _, _ = parsing.parse_usi(usi)
-    spectrum_processed = views._prepare_spectrum(
-        spectrum, **views._get_plotting_args(_get_plotting_args()))
+    spectrum_processed = views.prepare_spectrum(
+        spectrum, **views.get_plotting_args(_get_plotting_args()))
     assert not all([annotation is None
                     for annotation in spectrum_processed.annotation])
 
@@ -324,8 +324,8 @@ def test_prepare_spectrum_annotate_peaks_default():
 def test_prepare_spectrum_annotate_peaks_specified():
     usi = 'mzspec:MOTIFDB::accession:171163'
     spectrum, _, _ = parsing.parse_usi(usi)
-    spectrum_processed = views._prepare_spectrum(
-        spectrum, **views._get_plotting_args(_get_plotting_args(
+    spectrum_processed = views.prepare_spectrum(
+        spectrum, **views.get_plotting_args(_get_plotting_args(
             mz_min=400, mz_max=700,
             annotate_peaks=json.dumps([[477.2525, 654.3575]]))))
     assert sum([annotation is not None
@@ -340,8 +340,8 @@ def test_prepare_spectrum_annotate_peaks_specified():
 def test_prepare_spectrum_annotate_peaks_specified_invalid():
     usi = 'mzspec:MOTIFDB::accession:171163'
     spectrum, _, _ = parsing.parse_usi(usi)
-    spectrum_processed = views._prepare_spectrum(
-        spectrum, **views._get_plotting_args(_get_plotting_args(
+    spectrum_processed = views.prepare_spectrum(
+        spectrum, **views.get_plotting_args(_get_plotting_args(
             annotate_peaks=json.dumps([[1477.2525, 1654.3575]]))))
     assert all([annotation is None
                 for annotation in spectrum_processed.annotation])
@@ -353,7 +353,7 @@ def test_prepare_mirror_spectra():
     spectrum1, _, _ = parsing.parse_usi(usi1)
     spectrum2, _, _ = parsing.parse_usi(usi2)
     spectrum1_processed, spectrum2_processed = views._prepare_mirror_spectra(
-        spectrum1, spectrum2, views._get_plotting_args(_get_plotting_args(
+        spectrum1, spectrum2, views.get_plotting_args(_get_plotting_args(
             mz_min=400, mz_max=700, annotate_peaks=json.dumps([[], []])),
             mirror=True))
     assert spectrum1 is not spectrum1_processed
