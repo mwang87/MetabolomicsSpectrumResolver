@@ -1,5 +1,7 @@
 celery
 celery_once
+dash
+dash-bootstrap-components
 flask
 flex
 joblib
@@ -19,4 +21,3 @@ scipy
 spectrum_utils
 werkzeug
 git+git://github.com/berlinguyinca/spectra-hash.git#egg=splash&subdirectory=python
-dash
