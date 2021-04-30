@@ -698,11 +698,11 @@ def _process_mirror_usi(
 
     json_button = html.A(
         dbc.Button("Download as JSON", color="primary", className="mr-1"),
-        href=f"/json/mirror?usi1={quote(usi1)}&usi2={quote(usi2)}",
+        href=f"/json/mirror?{urlencode(plotting_args, quote_via=quote)}",
     )
     png_button = html.A(
         dbc.Button("Download as PNG", color="primary", className="mr-1"),
-        href=f"/png/mirror?usi1={quote(usi1)}&usi2={quote(usi2)}",
+        href=f"/png/mirror?{urlencode(plotting_args, quote_via=quote)}",
         download="mirror.png",
     )
     svg_button = html.A(
