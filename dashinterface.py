@@ -557,7 +557,7 @@ def _process_single_usi(
 
     usi_url = f"/svg/?{urlencode(plotting_args, quote_via=quote)}"
     local_url = f"http://localhost:5000{usi_url}"
-    r = requests.get(local_url)
+    requests.get(local_url) # This attempts to create the image to warm the cache
 
     image_obj = html.Img(src=usi_url)
 
