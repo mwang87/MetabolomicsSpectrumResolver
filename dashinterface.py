@@ -692,7 +692,7 @@ def _process_mirror_usi(
 
     mirror_url = f"/svg/mirror/?{urlencode(plotting_args, quote_via=quote)}"
     local_url = f"http://localhost:5000{mirror_url}"
-    r = requests.get(local_url)  # FIXME
+    requests.get(local_url) # This attempts to create the image to warm the cache
 
     image_obj = html.Img(src=mirror_url)
 
