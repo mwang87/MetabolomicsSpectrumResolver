@@ -1,6 +1,6 @@
 import json
 from urllib.parse import urlencode, quote, parse_qs
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 import dash
 import dash_bootstrap_components as dbc
@@ -13,6 +13,12 @@ from dash.dependencies import Input, Output, State
 
 import views
 from app import app
+
+
+defaults = {
+    "example_usi": "mzspec:MSV000082796:KP_108_Positive:scan:1974",
+    "fragment_mz_tolerance": 0.02,
+}
 
 
 dash_app = dash.Dash(
@@ -443,19 +449,25 @@ dash_app.layout = html.Div(children=[NAVBAR, BODY])
 
 def _get_url_param(
     param_dict: Dict[str, List[str]], key: str, default: Any = None
-) -> str:
+) -> Any:
     """
-    TODO
+    Utitility function to extract parameters from a URL dictionary.
 
     Parameters
     ----------
-    param_dict :
-    key :
-    default :
+    param_dict : Dict[str, List[str]]
+        A URL parameter dictionary consisting of the parameter keys and a list
+        of their values (expected to only contain a single value).
+    key : str
+        The parameter to retrieve.
+    default : Any
+        A default value in case `param_dict` does not contain `key`.
 
     Returns
     -------
-
+    Any
+        The first value in the list for `key` in `param_dict`, or `default` if
+        `param_dict` does not contain `key`.
     """
     return param_dict[key][0] if key in param_dict else default
 
@@ -478,26 +490,61 @@ def _get_url_param(
     [Input("url", "pathname")],
     [State("url", "search")],
 )
-def determine_task(pathname, search):
+def determine_task(
+    pathname: str, search: str
+) -> Tuple[
+    str,
+    Union[str, dash.no_update],
+    Union[str, dash.no_update],
+    Union[str, dash.no_update],
+    Union[str, dash.no_update],
+    Union[str, dash.no_update],
+    Union[str, dash.no_update],
+    Union[str, dash.no_update],
+    Union[str, dash.no_update],
+    Union[str, dash.no_update],
+    Union[str, dash.no_update],
+    Union[str, dash.no_update],
+]:
     """
-    TODO
+    Apply URL parameters to the settings.
 
     Parameters
     ----------
-    pathname :
-    search :
+    pathname : str
+        URL path.
+    search : str
+        URL-encoded parameter string.
 
     Returns
     -------
-
+    Tuple[str,
+          Union[str, dash.no_update], Union[str, dash.no_update],
+          Union[str, dash.no_update], Union[str, dash.no_update],
+          Union[str, dash.no_update], Union[str, dash.no_update],
+          Union[str, dash.no_update], Union[str, dash.no_update],
+          Union[str, dash.no_update], Union[str, dash.no_update],
+          Union[str, dash.no_update]
+    ]
+        The (string encoded) values for:
+        - The first USI.
+        - The second USI.
+        - The figure width.
+        - The figure height.
+        - The minimum m/z value.
+        - The maximum m/z value.
+        - The maximum intensity value.
+        - The m/z precision for peak annotations.
+        - The angle of peak annotations.
+        - The type of cosine score to compute.
+        - The fragment m/z tolerance.
+        - Whether to use a grid.
     """
     args_dict = parse_qs(search[1:])
     usi1 = _get_url_param(
         args_dict,
         "usi1",
-        _get_url_param(
-            args_dict, "usi", "mzspec:MSV000082796:KP_108_Positive:scan:1974"
-        ),
+        _get_url_param(args_dict, "usi", defaults["example_usi"]),
     )
     usi2 = _get_url_param(args_dict, "usi2", dash.no_update)
 
@@ -536,28 +583,31 @@ def determine_task(pathname, search):
 
 def _process_single_usi(
     usi: str, plotting_args: Dict[str, Any]
-) -> Tuple[Any, Dict]:
+) -> Tuple[Any, Dict[str, Any]]:
     """
-    TODO
+    Process the given USI for plotting.
 
     Parameters
     ----------
-    usi :
-    plotting_args :
+    usi : str
+        The USI to process.
+    plotting_args : Dict[str, Any]
+        The parameters to plot the USI's spectrum.
 
     Returns
     -------
-
+    Tuple[Any, Dict[str, Any]]
+        A tuple with a tuple of the HTML div to download resources associated
+        with the given USI and its image, and the plotting parameters.
     """
-    spectrum, source_link, splash_key = views.parse_usi(usi)
-    cleaned_plotting_args = views.get_plotting_args(
+    _, source_link, splash_key = views.parse_usi(usi)
+    plotting_args = views.get_plotting_args(
         werkzeug.datastructures.ImmutableMultiDict(plotting_args)
     )
-    spectrum = views.prepare_spectrum(spectrum, **cleaned_plotting_args)
 
     usi_url = f"/svg/?{urlencode(plotting_args, quote_via=quote)}"
-    local_url = f"http://localhost:5000{usi_url}"
-    requests.get(local_url) # This attempts to create the image to warm the cache
+    # This attempts to create the image to warm the cache.
+    requests.get(f"http://localhost:5000{usi_url}")
 
     image_obj = html.Img(src=usi_url)
 
@@ -628,9 +678,6 @@ def _process_single_usi(
         ]
     )
 
-    peak_annotations = spectrum.annotation.nonzero()[0].tolist()
-    peaks_list = views.get_peaks(spectrum)
-
     return (download_div, image_obj), plotting_args
 
 
@@ -638,22 +685,27 @@ def _process_single_usi_table(
     usi: str, plotting_args: Dict[str, Any]
 ) -> Tuple[List[Dict[str, float]], List[Dict[str, str]], List[int]]:
     """
-    TODO
+    Process the given USI to generate a peak table.
 
     Parameters
     ----------
-    usi :
-    plotting_args :
+    usi : str
+        The USI to process.
+    plotting_args : Dict[str, Any]
+        The parameters to plot the USI's spectrum.
 
     Returns
     -------
-
+    Tuple[List[Dict[str, float]], List[Dict[str, str]], List[int]]
+        (i) The spectrum's peaks as a dictionary of "m/z" and "Intensity"
+        values; (ii) a dictionary of the column labels; (iii) a list with
+        peak indexes.
     """
     spectrum, source_link, splash_key = views.parse_usi(usi)
-    cleaned_plotting_args = views.get_plotting_args(
+    plotting_args = views.get_plotting_args(
         werkzeug.datastructures.ImmutableMultiDict(plotting_args)
     )
-    spectrum = views.prepare_spectrum(spectrum, **cleaned_plotting_args)
+    spectrum = views.prepare_spectrum(spectrum, **plotting_args)
 
     peaks = [
         {"m/z": peak[0], "Intensity": peak[1]}
@@ -672,27 +724,33 @@ def _process_mirror_usi(
     usi1: str, usi2: str, plotting_args: Dict[str, Any]
 ) -> Tuple[Any, Dict[str, Any]]:
     """
-    TODO
+    Process the given USIs for plotting in a mirror plot.
 
     Parameters
     ----------
-    usi1 :
-    usi2 :
-    plotting_args :
+    usi1 : str
+        The first USI to process.
+    usi2 : str
+        The second USI to process.
+    plotting_args : Dict[str, Any]
+        The parameters to create the mirror plot.
 
     Returns
     -------
-
+    Tuple[Any, Dict[str, Any]]
+        A tuple with a tuple of the HTML div to download resources associated
+        with the given USIs and their mirror plot, and the plotting parameters.
     """
     _, source_link1, splash_key1 = views.parse_usi(usi1)
     _, source_link2, splash_key2 = views.parse_usi(usi2)
-    cleaned_plotting_args = views.get_plotting_args(
+    plotting_args = views.get_plotting_args(
         werkzeug.datastructures.ImmutableMultiDict(plotting_args), mirror=True
     )
 
     mirror_url = f"/svg/mirror/?{urlencode(plotting_args, quote_via=quote)}"
     local_url = f"http://localhost:5000{mirror_url}"
-    requests.get(local_url) # This attempts to create the image to warm the cache
+    # This attempts to create the image to warm the cache.
+    requests.get(local_url)
 
     image_obj = html.Img(src=mirror_url)
 
@@ -841,36 +899,54 @@ def draw_figure(
     cosine: str,
     fragment_mz_tolerance: float,
     grid: bool,
-    derived_virtual_data,
-    derived_virtual_selected_rows,
-    derived_virtual_data2,
-    derived_virtual_selected_rows2,
-):
+    derived_virtual_data: List[Dict[str, str]],
+    derived_virtual_selected_rows: List[int],
+    derived_virtual_data2: List[Dict[str, str]],
+    derived_virtual_selected_rows2: List[int],
+) -> Tuple[Tuple[Any, Dict[str, Any]], str, str]:
     """
-    TODO
+    Draw the figure for the given USI(s).
 
     Parameters
     ----------
-    usi1 :
-    usi2 :
-    width :
-    height :
-    mz_min :
-    mz_max :
-    max_intensity :
-    annotate_precision :
-    annotation_rotation :
-    cosine :
-    fragment_mz_tolerance :
-    grid :
-    derived_virtual_data :
-    derived_virtual_selected_rows :
-    derived_virtual_data2 :
-    derived_virtual_selected_rows2 :
+    usi1 : str
+        The first USI.
+    usi2 : str
+        The second USI (optional for a mirror plot).
+    width : float
+        The figure width.
+    height : float
+        The figure height.
+    mz_min : float
+        The minimum m/z value.
+    mz_max : float
+        The maximum m/z value.
+    max_intensity : float
+        The maximum intensity.
+    annotate_precision : float
+        The number of decimals to use for peak annotations.
+    annotation_rotation : float
+        The angle of the peak annotations.
+    cosine : str
+        The type of cosine similarity to compute.
+    fragment_mz_tolerance : float
+        The fragment m/z tolerance.
+    grid : bool
+        Whether or not to use a grid.
+    derived_virtual_data : List[Dict[str, str]]
+        The peaks of the first spectrum.
+    derived_virtual_selected_rows : List[int]
+        Indexes of the selected peaks in the first spectrum.
+    derived_virtual_data2 : List[Dict[str, str]]
+        The peaks of the second spectrum.
+    derived_virtual_selected_rows2 : List[int]
+        Indexes of the selected peaks in the second spectrum.
 
     Returns
     -------
-
+    Tuple[Tuple[Any, Dict[str, Any]], str, str]
+        A tuple with the HTML resources, the figure's URL parameters, and an
+        empty string.
     """
     plotting_args = {
         "width": width,
@@ -961,20 +1037,29 @@ def draw_figure(
     [Input("usi1", "value"), Input("usi2", "value"), Input("url", "pathname")],
     [State("url", "search")],
 )
-def draw_table(usi1, usi2, pathname, search):
+def draw_table(usi1: str, usi2: str, pathname: str, search: str) -> Tuple[List[Dict[str, float]], List[Dict[str, str]], List[int],
+                                                                          List[Dict[str, float]], List[Dict[str, str]], List[int]]:
     """
-    TODO
+    Plot the table for the given USI(s).
 
     Parameters
     ----------
-    usi1 :
-    usi2 :
-    pathname :
-    search :
+    usi1 : str
+        The first USI.
+    usi2 : str
+        The second USI (optional).
+    pathname : str
+        URL path.
+    search : str
+        URL-encoded parameter string.
 
     Returns
     -------
-
+    Tuple[List[Dict[str, float]], List[Dict[str, str]], List[int],
+          List[Dict[str, float]], List[Dict[str, str]], List[int]]
+        For both spectra: (i) The spectrum's peaks as a dictionary of "m/z" and
+        "Intensity" values; (ii) a dictionary of the column labels; (iii) a
+        list with peak indexes.
     """
     plotting_args = {}
 
@@ -988,21 +1073,22 @@ def draw_table(usi1, usi2, pathname, search):
         if annotate_peaks is not None:
             plotting_args["annotate_peaks"] = annotate_peaks
             plotting_args["fragment_mz_tolerance"] = float(
-                _get_url_param(query_dict, "fragment_mz_tolerance", 0.02)
+                _get_url_param(
+                    query_dict,
+                    "fragment_mz_tolerance",
+                    defaults["fragment_mz_tolerance"],
+                )
             )
 
     # Set up parameters from URL.
-    if usi1 and usi2:
-        peaks1, columns1, selected_rows1 = _process_single_usi_table(
-            usi1, plotting_args
-        )
+    peaks1, columns1, selected_rows1 = _process_single_usi_table(
+        usi1, plotting_args
+    )
+    if usi2:
         peaks2, columns2, selected_rows2 = _process_single_usi_table(
             usi2, plotting_args
         )
     else:
-        peaks1, columns1, selected_rows1 = _process_single_usi_table(
-            usi1, plotting_args
-        )
         peaks2, columns2, selected_rows2 = [], dash.no_update, []
 
     return peaks1, columns1, selected_rows1, peaks2, columns2, selected_rows2
@@ -1018,15 +1104,18 @@ def draw_table(usi1, usi2, pathname, search):
 )
 def set_ui_width(ui_width: int) -> Tuple[str, str]:
     """
-    TODO
+    Modify the size of the settings panel.
 
     Parameters
     ----------
-    ui_width :
+    ui_width : int
+        The scale of the settings panel.
 
     Returns
     -------
-
+    Tuple[str, str]
+        String encodings of the column width for the UI panel and the
+        neighboring panel.
     """
     return f"col-{ui_width}", f"col-{12 - ui_width}"
 
@@ -1038,16 +1127,19 @@ def set_ui_width(ui_width: int) -> Tuple[str, str]:
 )
 def create_reset(usi1: str, usi2: str) -> List[str]:
     """
-    TODO
+    Reset the drawing parameters of the spectrum plot.
 
     Parameters
     ----------
-    usi1 :
-    usi2 :
+    usi1 : str
+        The first USI.
+    usi2 : str
+        The second USI (optional).
 
     Returns
     -------
-
+    List[str]
+        The USI URL without drawing parameters.
     """
     if usi1 and usi2:
         return [f"/dashinterface/?usi1={quote(usi1)}&usi2={quote(usi2)}"]
@@ -1056,5 +1148,4 @@ def create_reset(usi1: str, usi2: str) -> List[str]:
 
 
 if __name__ == "__main__":
-    # TODO: Disable debug.
     dash_app.run_server(host="0.0.0.0", port=5000, debug=True)
