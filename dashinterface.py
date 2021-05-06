@@ -541,7 +541,155 @@ def set_drawing_controls(
     )
 
 
-def _process_single_usi(
+@dash_app.callback(
+    [Output("output", "children"), Output("url", "search")],
+    [
+        Input("usi1", "value"),
+        Input("usi2", "value"),
+        Input("width", "value"),
+        Input("height", "value"),
+        Input("mz_min", "value"),
+        Input("mz_max", "value"),
+        Input("max_intensity", "value"),
+        Input("annotate_precision", "value"),
+        Input("annotation_rotation", "value"),
+        Input("cosine", "value"),
+        Input("fragment_mz_tolerance", "value"),
+        Input("grid", "value"),
+        Input("peak_table1", "derived_virtual_data"),
+        Input("peak_table1", "derived_virtual_selected_rows"),
+        Input("peak_table2", "derived_virtual_data"),
+        Input("peak_table2", "derived_virtual_selected_rows"),
+    ],
+)
+def draw_figure(
+    usi1: str,
+    usi2: str,
+    width: float,
+    height: float,
+    mz_min: float,
+    mz_max: float,
+    max_intensity: float,
+    annotate_precision: int,
+    annotation_rotation: float,
+    cosine: str,
+    fragment_mz_tolerance: float,
+    grid: bool,
+    peak_table1: List[Dict[str, str]],
+    peak_table1_selected_rows: List[int],
+    peak_table2: List[Dict[str, str]],
+    peak_table2_selected_rows: List[int],
+) -> Tuple[Tuple[Any, Dict[str, Any]], str]:
+    """
+    Draw the figure for the given USI(s).
+
+    Parameters
+    ----------
+    usi1 : str
+        The first USI input.
+    usi2 : str
+        The second USI input (optional; if specified a mirror plot will be
+        drawn).
+    width : float
+        The figure width.
+    height : float
+        The figure height.
+    mz_min : float
+        The minimum m/z value.
+    mz_max : float
+        The maximum m/z value.
+    max_intensity : float
+        The maximum intensity value.
+    annotate_precision : float
+        The m/z precision of peak labels.
+    annotation_rotation : float
+        The angle of peak labels.
+    cosine : str
+        The type of cosine score.
+    fragment_mz_tolerance : float
+        The fragment m/z tolerance.
+    grid : bool
+        Whether to display the grid.
+    peak_table1 : List[Dict[str, str]]
+        The table of peaks (m/z and intensity values) for the first spectrum.
+    peak_table1_selected_rows : List[int]
+        Indexes of the selected peaks for the first spectrum.
+    peak_table2 : List[Dict[str, str]]
+        The table of peaks (m/z and intensity values) for the second spectrum.
+    peak_table2_selected_rows : List[int]
+        Indexes of the selected peaks for the second spectrum.
+
+    Returns
+    -------
+    Tuple[Tuple[Any, Dict[str, Any]], str]
+        A tuple with the plot's (i) HTML resources, (ii) URL query string.
+    """
+    # Create a URL query string with the corresponding drawing controls for
+    # the created plot.
+    plotting_args = {"usi1": usi1, "cosine": cosine}
+    # If the drawing controls have an incorrect value and are missing, their
+    # default will be used instead.
+    try:
+        plotting_args["width"] = float(width)
+    except (TypeError, ValueError):
+        pass
+    try:
+        plotting_args["height"] = float(height)
+    except (TypeError, ValueError):
+        pass
+    try:
+        plotting_args["mz_min"] = float(mz_min)
+    except (TypeError, ValueError):
+        pass
+    try:
+        plotting_args["mz_max"] = float(mz_max)
+    except (TypeError, ValueError):
+        pass
+    try:
+        plotting_args["max_intensity"] = float(max_intensity)
+    except (TypeError, ValueError):
+        pass
+    try:
+        plotting_args["annotate_precision"] = int(annotate_precision)
+    except (TypeError, ValueError):
+        pass
+    try:
+        plotting_args["annotation_rotation"] = float(annotation_rotation)
+    except (TypeError, ValueError):
+        pass
+    try:
+        plotting_args["fragment_mz_tolerance"] = float(fragment_mz_tolerance)
+    except (TypeError, ValueError):
+        pass
+    try:
+        plotting_args["grid"] = bool(grid)
+    except (TypeError, ValueError):
+        pass
+
+    annotate_peaks = []
+    if peak_table1_selected_rows is not None:
+        annotate_peaks.append(
+            [peak_table1[i]["m/z"] for i in peak_table1_selected_rows]
+        )
+    if usi2 and peak_table2_selected_rows is not None:
+        annotate_peaks.append(
+            [peak_table2[i]["m/z"] for i in peak_table2_selected_rows]
+        )
+    plotting_args["annotate_peaks"] = json.dumps([annotate_peaks])
+
+    # Single spectrum plot or mirror spectrum plot.
+    if not usi2:
+        spectrum_view, plotting_args = _process_usi(usi1, plotting_args)
+    else:
+        plotting_args["usi2"] = usi2
+        spectrum_view, plotting_args = _process_mirror_usi(
+            usi1, usi2, plotting_args
+        )
+
+    return spectrum_view, f"?{urlencode(plotting_args, quote_via=quote)}"
+
+
+def _process_usi(
     usi: str, plotting_args: Dict[str, Any]
 ) -> Tuple[Any, Dict[str, Any]]:
     """
@@ -818,171 +966,6 @@ def _process_mirror_usi(
     )
 
     return (download_div, image_obj, html.Br()), plotting_args
-
-
-@dash_app.callback(
-    [
-        Output("output", "children"),
-        Output("url", "search"),
-        Output("debug", "children"),
-    ],
-    [
-        Input("usi1", "value"),
-        Input("usi2", "value"),
-        Input("width", "value"),
-        Input("height", "value"),
-        Input("mz_min", "value"),
-        Input("mz_max", "value"),
-        Input("max_intensity", "value"),
-        Input("annotate_precision", "value"),
-        Input("annotation_rotation", "value"),
-        Input("cosine", "value"),
-        Input("fragment_mz_tolerance", "value"),
-        Input("grid", "value"),
-        Input("peak_table1", "derived_virtual_data"),
-        Input("peak_table1", "derived_virtual_selected_rows"),
-        Input("peak_table2", "derived_virtual_data"),
-        Input("peak_table2", "derived_virtual_selected_rows"),
-    ],
-    [],
-)
-def draw_figure(
-    usi1: str,
-    usi2: str,
-    width: float,
-    height: float,
-    mz_min: float,
-    mz_max: float,
-    max_intensity: float,
-    annotate_precision: int,
-    annotation_rotation: float,
-    cosine: str,
-    fragment_mz_tolerance: float,
-    grid: bool,
-    derived_virtual_data: List[Dict[str, str]],
-    derived_virtual_selected_rows: List[int],
-    derived_virtual_data2: List[Dict[str, str]],
-    derived_virtual_selected_rows2: List[int],
-) -> Tuple[Tuple[Any, Dict[str, Any]], str, str]:
-    """
-    Draw the figure for the given USI(s).
-
-    Parameters
-    ----------
-    usi1 : str
-        The first USI.
-    usi2 : str
-        The second USI (optional for a mirror plot).
-    width : float
-        The figure width.
-    height : float
-        The figure height.
-    mz_min : float
-        The minimum m/z value.
-    mz_max : float
-        The maximum m/z value.
-    max_intensity : float
-        The maximum intensity.
-    annotate_precision : float
-        The number of decimals to use for peak annotations.
-    annotation_rotation : float
-        The angle of the peak annotations.
-    cosine : str
-        The type of cosine similarity to compute.
-    fragment_mz_tolerance : float
-        The fragment m/z tolerance.
-    grid : bool
-        Whether or not to use a grid.
-    derived_virtual_data : List[Dict[str, str]]
-        The peaks of the first spectrum.
-    derived_virtual_selected_rows : List[int]
-        Indexes of the selected peaks in the first spectrum.
-    derived_virtual_data2 : List[Dict[str, str]]
-        The peaks of the second spectrum.
-    derived_virtual_selected_rows2 : List[int]
-        Indexes of the selected peaks in the second spectrum.
-
-    Returns
-    -------
-    Tuple[Tuple[Any, Dict[str, Any]], str, str]
-        A tuple with the HTML resources, the figure's URL parameters, and an
-        empty string.
-    """
-    plotting_args = {
-        "width": width,
-        "height": height,
-        "cosine": cosine,
-        "grid": grid,
-    }
-
-    try:
-        plotting_args["mz_min"] = float(mz_min)
-    except (ValueError, TypeError):
-        pass
-    try:
-        plotting_args["mz_max"] = float(mz_max)
-    except (ValueError, TypeError):
-        pass
-    try:
-        plotting_args["max_intensity"] = float(max_intensity)
-    except (ValueError, TypeError):
-        pass
-    try:
-        plotting_args["annotate_precision"] = int(annotate_precision)
-    except (ValueError, TypeError):
-        pass
-    try:
-        plotting_args["annotation_rotation"] = float(annotation_rotation)
-    except (ValueError, TypeError):
-        pass
-    try:
-        plotting_args["fragment_mz_tolerance"] = float(fragment_mz_tolerance)
-    except (ValueError, TypeError):
-        pass
-
-    if usi1 and usi2:
-        # Mirror spectra.
-        plotting_args["usi1"], plotting_args["usi2"] = usi1, usi2
-
-        annotation_masses, annotation_masses2 = [], []
-        if derived_virtual_selected_rows is not None:
-            annotation_masses = [
-                derived_virtual_data[i]["m/z"]
-                for i in derived_virtual_selected_rows
-            ]
-        if derived_virtual_selected_rows2 is not None:
-            annotation_masses2 = [
-                derived_virtual_data2[i]["m/z"]
-                for i in derived_virtual_selected_rows2
-            ]
-
-        plotting_args["annotate_peaks"] = json.dumps(
-            [annotation_masses, annotation_masses2]
-        )
-        spectrum_visualization, plotting_args = _process_mirror_usi(
-            usi1, usi2, plotting_args
-        )
-    else:
-        # Single spectrum.
-        plotting_args["usi"] = plotting_args["usi1"] = usi1
-
-        annotation_masses = []
-        if derived_virtual_selected_rows is not None:
-            annotation_masses = [
-                derived_virtual_data[i]["m/z"]
-                for i in derived_virtual_selected_rows
-            ]
-
-        plotting_args["annotate_peaks"] = json.dumps([annotation_masses])
-        spectrum_visualization, plotting_args = _process_single_usi(
-            usi1, plotting_args
-        )
-
-    return (
-        spectrum_visualization,
-        f"?{urlencode(plotting_args, quote_via=quote)}",
-        "",
-    )
 
 
 @dash_app.callback(
