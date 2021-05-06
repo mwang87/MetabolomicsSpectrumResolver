@@ -451,7 +451,7 @@ def _get_url_param(
     param_dict: Dict[str, List[str]], key: str, default: Any = None
 ) -> Any:
     """
-    Utitility function to extract parameters from a URL dictionary.
+    Utility function to extract parameters from a URL dictionary.
 
     Parameters
     ----------
@@ -490,43 +490,27 @@ def _get_url_param(
     [Input("url", "pathname")],
     [State("url", "search")],
 )
-def determine_task(
-    pathname: str, search: str
+def set_drawing_controls(
+    _: str, search: str
 ) -> Tuple[
-    str,
-    Union[str, dash.no_update],
-    Union[str, dash.no_update],
-    Union[str, dash.no_update],
-    Union[str, dash.no_update],
-    Union[str, dash.no_update],
-    Union[str, dash.no_update],
-    Union[str, dash.no_update],
-    Union[str, dash.no_update],
-    Union[str, dash.no_update],
-    Union[str, dash.no_update],
-    Union[str, dash.no_update],
+    str, str, str, str, str, str, str, str, str, str, str, str,
 ]:
     """
-    Apply URL parameters to the settings.
+    Set the drawing controls from the URL query parameters.
 
     Parameters
     ----------
-    pathname : str
-        URL path.
+    _ : str
+        The URL path string. This is not used but needed to trigger the
+        callback.
     search : str
-        URL-encoded parameter string.
+        The URL query string.
 
     Returns
     -------
-    Tuple[str,
-          Union[str, dash.no_update], Union[str, dash.no_update],
-          Union[str, dash.no_update], Union[str, dash.no_update],
-          Union[str, dash.no_update], Union[str, dash.no_update],
-          Union[str, dash.no_update], Union[str, dash.no_update],
-          Union[str, dash.no_update], Union[str, dash.no_update],
-          Union[str, dash.no_update]
-    ]
-        The (string encoded) values for:
+    Tuple[str, str, str, str, str, str, str, str, str, str, str, str,]
+        The drawing controls (as strings or `dash.no_update` if no interface
+        update should be triggered):
         - The first USI.
         - The second USI.
         - The figure width.
@@ -534,50 +518,26 @@ def determine_task(
         - The minimum m/z value.
         - The maximum m/z value.
         - The maximum intensity value.
-        - The m/z precision for peak annotations.
-        - The angle of peak annotations.
-        - The type of cosine score to compute.
+        - The m/z precision of peak labels.
+        - The angle of peak labels.
+        - The type of cosine score.
         - The fragment m/z tolerance.
-        - Whether to use a grid.
+        - Whether to display the grid.
     """
-    args_dict = parse_qs(search[1:])
-    usi1 = _get_url_param(
-        args_dict,
-        "usi1",
-        _get_url_param(args_dict, "usi", defaults["example_usi"]),
-    )
-    usi2 = _get_url_param(args_dict, "usi2", dash.no_update)
-
-    width = _get_url_param(args_dict, "width", dash.no_update)
-    height = _get_url_param(args_dict, "height", dash.no_update)
-    mz_min = _get_url_param(args_dict, "mz_min", dash.no_update)
-    mz_max = _get_url_param(args_dict, "mz_max", dash.no_update)
-    max_intensity = _get_url_param(args_dict, "max_intensity", dash.no_update)
-    annotate_precision = _get_url_param(
-        args_dict, "annotate_precision", dash.no_update
-    )
-    annotation_rotation = _get_url_param(
-        args_dict, "annotation_rotation", dash.no_update
-    )
-    cosine = _get_url_param(args_dict, "cosine", dash.no_update)
-    fragment_mz_tolerance = _get_url_param(
-        args_dict, "fragment_mz_tolerance", dash.no_update
-    )
-    grid = _get_url_param(args_dict, "grid", dash.no_update)
-
+    drawing_controls = parse_qs(search[1:])
     return (
-        usi1,
-        usi2,
-        width,
-        height,
-        mz_min,
-        mz_max,
-        max_intensity,
-        annotate_precision,
-        annotation_rotation,
-        cosine,
-        fragment_mz_tolerance,
-        grid,
+        drawing_controls.get("usi1", [defaults["example_usi"]])[0],
+        drawing_controls.get("usi2", [dash.no_update])[0],
+        drawing_controls.get("width", [dash.no_update])[0],
+        drawing_controls.get("height", [dash.no_update])[0],
+        drawing_controls.get("mz_min", [dash.no_update])[0],
+        drawing_controls.get("mz_max", [dash.no_update])[0],
+        drawing_controls.get("max_intensity", [dash.no_update])[0],
+        drawing_controls.get("annotate_precision", [dash.no_update])[0],
+        drawing_controls.get("annotation_rotation", [dash.no_update])[0],
+        drawing_controls.get("cosine", [dash.no_update])[0],
+        drawing_controls.get("fragment_mz_tolerance", [dash.no_update])[0],
+        drawing_controls.get("grid", [dash.no_update])[0],
     )
 
 
