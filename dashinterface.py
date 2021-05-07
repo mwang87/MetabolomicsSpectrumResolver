@@ -15,9 +15,20 @@ import views
 from app import app
 
 
-defaults = {
+default_drawing_controls = {
     "example_usi": "mzspec:MSV000082796:KP_108_Positive:scan:1974",
+    "width": 10.0,
+    "height": 6.0,
+    "mz_min": None,
+    "mz_max": None,
+    "max_intensity": 1.25,
+    "annotate_precision": 4,
+    "annotation_rotation": 90,
+    "cosine": "standard",
     "fragment_mz_tolerance": 0.02,
+    "grid": True,
+    # List of peaks to annotate in the first/second spectrum.
+    "annotate_peaks": [True, True],
 }
 
 
@@ -447,31 +458,6 @@ BODY = dbc.Container(
 dash_app.layout = html.Div(children=[NAVBAR, BODY])
 
 
-def _get_url_param(
-    param_dict: Dict[str, List[str]], key: str, default: Any = None
-) -> Any:
-    """
-    Utility function to extract parameters from a URL dictionary.
-
-    Parameters
-    ----------
-    param_dict : Dict[str, List[str]]
-        A URL parameter dictionary consisting of the parameter keys and a list
-        of their values (expected to only contain a single value).
-    key : str
-        The parameter to retrieve.
-    default : Any
-        A default value in case `param_dict` does not contain `key`.
-
-    Returns
-    -------
-    Any
-        The first value in the list for `key` in `param_dict`, or `default` if
-        `param_dict` does not contain `key`.
-    """
-    return param_dict[key][0] if key in param_dict else default
-
-
 @dash_app.callback(
     [
         Output("usi1", "value"),
@@ -526,7 +512,9 @@ def set_drawing_controls(
     """
     drawing_controls = parse_qs(search[1:])
     return (
-        drawing_controls.get("usi1", [defaults["example_usi"]])[0],
+        drawing_controls.get(
+            "usi1", [default_drawing_controls["example_usi"]]
+        )[0],
         drawing_controls.get("usi2", [dash.no_update])[0],
         drawing_controls.get("width", [dash.no_update])[0],
         drawing_controls.get("height", [dash.no_update])[0],
@@ -626,43 +614,45 @@ def draw_figure(
     """
     # Create a URL query string with the corresponding drawing controls for
     # the created plot.
-    plotting_args = {"usi1": usi1, "cosine": cosine}
+    drawing_controls = {"usi1": usi1, "cosine": cosine}
     # If the drawing controls have an incorrect value and are missing, their
     # default will be used instead.
     try:
-        plotting_args["width"] = float(width)
+        drawing_controls["width"] = float(width)
     except (TypeError, ValueError):
         pass
     try:
-        plotting_args["height"] = float(height)
+        drawing_controls["height"] = float(height)
     except (TypeError, ValueError):
         pass
     try:
-        plotting_args["mz_min"] = float(mz_min)
+        drawing_controls["mz_min"] = float(mz_min)
     except (TypeError, ValueError):
         pass
     try:
-        plotting_args["mz_max"] = float(mz_max)
+        drawing_controls["mz_max"] = float(mz_max)
     except (TypeError, ValueError):
         pass
     try:
-        plotting_args["max_intensity"] = float(max_intensity)
+        drawing_controls["max_intensity"] = float(max_intensity)
     except (TypeError, ValueError):
         pass
     try:
-        plotting_args["annotate_precision"] = int(annotate_precision)
+        drawing_controls["annotate_precision"] = int(annotate_precision)
     except (TypeError, ValueError):
         pass
     try:
-        plotting_args["annotation_rotation"] = float(annotation_rotation)
+        drawing_controls["annotation_rotation"] = float(annotation_rotation)
     except (TypeError, ValueError):
         pass
     try:
-        plotting_args["fragment_mz_tolerance"] = float(fragment_mz_tolerance)
+        drawing_controls["fragment_mz_tolerance"] = float(
+            fragment_mz_tolerance
+        )
     except (TypeError, ValueError):
         pass
     try:
-        plotting_args["grid"] = bool(grid)
+        drawing_controls["grid"] = bool(grid)
     except (TypeError, ValueError):
         pass
 
@@ -675,18 +665,130 @@ def draw_figure(
         annotate_peaks.append(
             [peak_table2[i]["m/z"] for i in peak_table2_selected_rows]
         )
-    plotting_args["annotate_peaks"] = json.dumps([annotate_peaks])
+    drawing_controls["annotate_peaks"] = json.dumps([annotate_peaks])
 
     # Single spectrum plot or mirror spectrum plot.
     if not usi2:
-        spectrum_view, plotting_args = _process_usi(usi1, plotting_args)
+        spectrum_view, drawing_controls = _process_usi(usi1, drawing_controls)
     else:
-        plotting_args["usi2"] = usi2
-        spectrum_view, plotting_args = _process_mirror_usi(
-            usi1, usi2, plotting_args
+        drawing_controls["usi2"] = usi2
+        spectrum_view, drawing_controls = _process_mirror_usi(
+            usi1, usi2, drawing_controls
         )
 
-    return spectrum_view, f"?{urlencode(plotting_args, quote_via=quote)}"
+    return spectrum_view, f"?{urlencode(drawing_controls, quote_via=quote)}"
+
+
+@dash_app.callback(
+    [
+        Output("peak_table1", "columns"),
+        Output("peak_table1", "data"),
+        Output("peak_table1", "selected_rows"),
+        Output("peak_table2", "columns"),
+        Output("peak_table2", "data"),
+        Output("peak_table2", "selected_rows"),
+    ],
+    [
+        Input("usi1", "value"),
+        Input("usi2", "value"),
+        Input("mz_min", "value"),
+        Input("mz_max", "value"),
+        Input("annotate_precision", "value"),
+    ],
+)
+def draw_table(
+    usi1: str, usi2: str, mz_min: str, mz_max: str, annotate_precision: str,
+) -> Tuple[
+    List[Dict[str, str]],
+    List[Dict[str, float]],
+    List[int],
+    List[Dict[str, str]],
+    List[Dict[str, float]],
+    List[int],
+]:
+    """
+    Plot the table for the given USI(s).
+
+    Parameters
+    ----------
+    usi1 : str
+        The first USI.
+    usi2 : str
+        The second USI (optional).
+    mz_min : float
+        The minimum m/z value.
+    mz_max : float
+        The maximum m/z value.
+    annotate_precision : float
+        The m/z precision of peak labels.
+
+    Returns
+    -------
+    Tuple[List[Dict[str, str]], List[Dict[str, float]], List[int],
+         List[Dict[str, str]], List[Dict[str, float]], List[int]]
+        A tuple with table data for both spectra: (i) a dictionary of the
+        column labels, (ii) the spectrum's peaks as a dictionary of "m/z" and
+        "Intensity" values, (iii) a list of indexes of the selected peaks.
+        If only a single USI is being processed, data for the second table is
+        empty.
+    """
+    columns1 = columns2 = [
+        {"name": "m/z", "id": "m/z"},
+        {"name": "Intensity", "id": "Intensity"},
+    ]
+    peak_controls = {
+        "mz_min": float(mz_min) if mz_min is not None else None,
+        "mz_max": float(mz_max) if mz_max is not None else None,
+        "fragment_mz_tolerance": 0.001,
+        "annotate_precision": int(annotate_precision),
+        "annotate_peaks": [True, True],
+    }
+    peaks1, peaks1_selected_i = _get_peaks(usi1, peak_controls)
+    if usi2:
+        peaks2, peaks2_selected_i = _get_peaks(usi2, peak_controls)
+    else:
+        peaks2, peaks2_selected_i, columns2 = [], [], dash.no_update
+
+    return (
+        columns1,
+        peaks1,
+        peaks1_selected_i,
+        columns2,
+        peaks2,
+        peaks2_selected_i,
+    )
+
+
+def _get_peaks(
+    usi: str, peak_controls: Dict[str, Any]
+) -> List[Dict[str, float]]:
+    """
+    Generate a peak table for the given USI.
+
+    Parameters
+    ----------
+    usi : str
+        The USI for which to generate a peak table.
+    peak_controls : Dict[str, Any]
+        A dictionary with settings to filter the spectrum's peaks.
+
+    Returns
+    -------
+    Tuple[List[Dict[str, float]], List[int]]
+        A tuple with (i) the spectrum's peaks as a dictionary of "m/z" and
+        "Intensity" values; (ii) a list with indexes of the selected peaks.
+    """
+    spectrum = views.prepare_spectrum(views.parse_usi(usi)[0], **peak_controls)
+    peaks = [
+        {
+            "m/z": round(float(mz), peak_controls["annotate_precision"]),
+            "Intensity": round(intensity * 100, 1),
+        }
+        for mz, intensity in zip(spectrum.mz, spectrum.intensity)
+    ]
+    # FIXME
+    selected_peaks = spectrum.annotation.nonzero()[0].tolist()
+    return peaks, selected_peaks
 
 
 def _process_usi(
@@ -787,45 +889,6 @@ def _process_usi(
     )
 
     return (download_div, image_obj), plotting_args
-
-
-def _process_single_usi_table(
-    usi: str, plotting_args: Dict[str, Any]
-) -> Tuple[List[Dict[str, float]], List[Dict[str, str]], List[int]]:
-    """
-    Process the given USI to generate a peak table.
-
-    Parameters
-    ----------
-    usi : str
-        The USI to process.
-    plotting_args : Dict[str, Any]
-        The parameters to plot the USI's spectrum.
-
-    Returns
-    -------
-    Tuple[List[Dict[str, float]], List[Dict[str, str]], List[int]]
-        (i) The spectrum's peaks as a dictionary of "m/z" and "Intensity"
-        values; (ii) a dictionary of the column labels; (iii) a list with
-        peak indexes.
-    """
-    spectrum, source_link, splash_key = views.parse_usi(usi)
-    plotting_args = views.get_plotting_args(
-        werkzeug.datastructures.ImmutableMultiDict(plotting_args)
-    )
-    spectrum = views.prepare_spectrum(spectrum, **plotting_args)
-
-    peaks = [
-        {"m/z": peak[0], "Intensity": peak[1]}
-        for peak in views.get_peaks(spectrum)
-    ]
-    columns = [
-        {"name": "m/z", "id": "m/z"},
-        {"name": "Intensity", "id": "Intensity"},
-    ]
-    peak_annotations_indices = spectrum.annotation.nonzero()[0].tolist()
-
-    return peaks, columns, peak_annotations_indices
 
 
 def _process_mirror_usi(
@@ -966,75 +1029,6 @@ def _process_mirror_usi(
     )
 
     return (download_div, image_obj, html.Br()), plotting_args
-
-
-@dash_app.callback(
-    [
-        Output("peak_table1", "data"),
-        Output("peak_table1", "columns"),
-        Output("peak_table1", "selected_rows"),
-        Output("peak_table2", "data"),
-        Output("peak_table2", "columns"),
-        Output("peak_table2", "selected_rows"),
-    ],
-    [Input("usi1", "value"), Input("usi2", "value"), Input("url", "pathname")],
-    [State("url", "search")],
-)
-def draw_table(usi1: str, usi2: str, pathname: str, search: str) -> Tuple[List[Dict[str, float]], List[Dict[str, str]], List[int],
-                                                                          List[Dict[str, float]], List[Dict[str, str]], List[int]]:
-    """
-    Plot the table for the given USI(s).
-
-    Parameters
-    ----------
-    usi1 : str
-        The first USI.
-    usi2 : str
-        The second USI (optional).
-    pathname : str
-        URL path.
-    search : str
-        URL-encoded parameter string.
-
-    Returns
-    -------
-    Tuple[List[Dict[str, float]], List[Dict[str, str]], List[int],
-          List[Dict[str, float]], List[Dict[str, str]], List[int]]
-        For both spectra: (i) The spectrum's peaks as a dictionary of "m/z" and
-        "Intensity" values; (ii) a dictionary of the column labels; (iii) a
-        list with peak indexes.
-    """
-    plotting_args = {}
-
-    # Determine URL override.
-    triggered_ids = [p["prop_id"] for p in dash.callback_context.triggered]
-    if "url.pathname" in triggered_ids:
-        # Doing override from URL for selected rows.
-        query_dict = parse_qs(search[1:])
-
-        annotate_peaks = _get_url_param(query_dict, "annotate_peaks", None)
-        if annotate_peaks is not None:
-            plotting_args["annotate_peaks"] = annotate_peaks
-            plotting_args["fragment_mz_tolerance"] = float(
-                _get_url_param(
-                    query_dict,
-                    "fragment_mz_tolerance",
-                    defaults["fragment_mz_tolerance"],
-                )
-            )
-
-    # Set up parameters from URL.
-    peaks1, columns1, selected_rows1 = _process_single_usi_table(
-        usi1, plotting_args
-    )
-    if usi2:
-        peaks2, columns2, selected_rows2 = _process_single_usi_table(
-            usi2, plotting_args
-        )
-    else:
-        peaks2, columns2, selected_rows2 = [], dash.no_update, []
-
-    return peaks1, columns1, selected_rows1, peaks2, columns2, selected_rows2
 
 
 @dash_app.callback(
