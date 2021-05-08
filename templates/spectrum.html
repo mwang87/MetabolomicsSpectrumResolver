@@ -73,6 +73,13 @@
                         Download as PNG
                     </a>
                 </div>
+                <div class="col-2">
+                    <a class="btn btn-primary"
+                       id="dash_link"
+                       href="/dashinterface/?usi=(( usi_encoded ))">
+                        Dashboard (Beta)
+                    </a>
+                </div>
             </div>
         </div>
         <div class="col-1 my-auto">
@@ -91,10 +98,13 @@
 <script type="text/javascript">
     function updateFigure() {
         let svg_url = "/svg/?usi=(( usi_encoded ))";
+        let png_url = "/png/?usi=(( usi_encoded ))";
+        let dashboard_url = "/dashinterface/?usi=(( usi_encoded ))";
         let draw_parameters = getDrawingControls();
         $("#render_spectrum")[0].src = svg_url + draw_parameters;
         $("#download_svg")[0].href = svg_url + draw_parameters;
-        $("#download_png")[0].href = "/png/?usi=(( usi_encoded ))" + draw_parameters;
+        $("#download_png")[0].href = png_url + draw_parameters;
+        $("#dash_link")[0].href = dashboard_url + draw_parameters;
         window.history.replaceState(
             {}, "", "/spectrum/?usi=(( usi_encoded ))" + draw_parameters);
     }

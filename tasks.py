@@ -5,6 +5,7 @@ from typing import Any, Tuple
 import celery
 import celery_once
 import joblib
+import redis
 import spectrum_utils.spectrum as sus
 
 import parsing
@@ -46,8 +47,36 @@ celery_instance.conf.task_routes = {
 }
 
 
+def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
+    """
+    Retrieve the spectrum associated with the given USI.
+
+    The first attempt to parse the USI is via a Celery task. Alternatively, as
+    a fallback option the USI can be parsed directly in this thread.
+
+    Parameters
+    ----------
+    usi : str
+        The USI of the spectrum to be retrieved from its resource.
+
+    Returns
+    -------
+    Tuple[sus.MsmsSpectrum, str, str]
+        A tuple of (i) the `MsmsSpectrum`, (ii) its source link, and (iii) its
+        SPLASH.
+    """
+    # First attempt to schedule with Celery.
+    try:
+        return _task_generate_figure.apply_async(args=(usi,)).get()
+    except redis.exceptions.ConnectionError:
+        # Fallback in case scheduling via Celery fails.
+        # Mostly used for testing.
+        # noinspection PyTypeChecker
+        return parsing.parse_usi(usi)
+
+
 @celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
-def task_parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
+def _task_parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
     Retrieve the spectrum associated with the given USI.
 
@@ -61,14 +90,44 @@ def task_parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     Returns
     -------
     Tuple[sus.MsmsSpectrum, str, str]
-        A tuple of the `MsmsSpectrum`, its source link, and its SPLASH.
+        A tuple of (i) the `MsmsSpectrum`, (ii) its source link, and (iii) its
+        SPLASH.
     """
+    # noinspection PyTypeChecker
     return cached_parse_usi(usi)
 
 
+def generate_figure(
+    spectrum: sus.MsmsSpectrum, extension: str, **kwargs: Any
+) -> io.BytesIO:
+    """
+    Generate a spectrum plot.
+
+    Parameters
+    ----------
+    spectrum : sus.MsmsSpectrum
+        The spectrum to be plotted.
+    extension : str
+        Image format.
+    kwargs : Any
+        Plotting settings.
+
+    Returns
+    -------
+    io.BytesIO
+        Bytes buffer containing the spectrum plot.
+    """
+    try:
+        return _task_generate_figure.apply_async(
+            args=(spectrum, extension), kwargs=kwargs
+        ).get()
+    except redis.exceptions.ConnectionError:
+        return drawing.generate_figure(spectrum, extension, **kwargs)
+
+
 @celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
-def task_generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
-                         **kwargs: Any) -> io.BytesIO:
+def _task_generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
+                          **kwargs: Any) -> io.BytesIO:
     """
     Generate a spectrum plot.
 
@@ -91,10 +150,45 @@ def task_generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
     return cached_generate_figure(spectrum, extension, **kwargs)
 
 
+def generate_mirror_figure(
+    spectrum_top: sus.MsmsSpectrum,
+    spectrum_bottom: sus.MsmsSpectrum,
+    extension: str,
+    **kwargs: Any,
+) -> io.BytesIO:
+    """
+    Generate a mirror plot of two spectra.
+
+    Parameters
+    ----------
+    spectrum_top : sus.MsmsSpectrum
+        The spectrum to be plotted at the top of the mirror plot.
+    spectrum_bottom : sus.MsmsSpectrum
+        The spectrum to be plotted at the bottom of the mirror plot.
+    extension : str
+        Image format.
+    kwargs : Any
+        Plotting settings.
+
+    Returns
+    -------
+    io.BytesIO
+        Bytes buffer containing the mirror plot.
+    """
+    try:
+        return _task_generate_mirror_figure.apply_async(
+            args=(spectrum_top, spectrum_bottom, extension), kwargs=kwargs
+        ).get()
+    except redis.exceptions.ConnectionError:
+        return drawing.generate_mirror_figure(
+            spectrum_top, spectrum_bottom, extension, **kwargs
+        )
+
+
 @celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
-def task_generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
-                                spectrum_bottom: sus.MsmsSpectrum,
-                                extension: str, **kwargs: Any) -> io.BytesIO:
+def _task_generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
+                                 spectrum_bottom: sus.MsmsSpectrum,
+                                 extension: str, **kwargs: Any) -> io.BytesIO:
     """
     Generate a mirror plot of two spectra.
 

@@ -1,5 +1,7 @@
 celery
 celery_once
+dash
+dash-bootstrap-components
 flask
 flex
 joblib
