@@ -43,7 +43,7 @@ def generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
         grid=kwargs['grid'], ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
-    ax.set_ylim(0, kwargs['max_intensity'])
+    ax.set_ylim(0, kwargs['max_intensity'] / 100)
 
     if not kwargs['grid']:
         ax.spines['right'].set_visible(False)
@@ -51,7 +51,7 @@ def generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-    title = ax.text(0.5, 1.06, kwargs['plot_title'],
+    title = ax.text(0.5, 1.06, kwargs['usi1'],
                     horizontalalignment='center', verticalalignment='bottom',
                     fontsize='x-large', fontweight='bold',
                     transform=ax.transAxes)
@@ -151,7 +151,7 @@ def generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
                     'grid': kwargs['grid']}, ax=ax)
 
     ax.set_xlim(kwargs['mz_min'], kwargs['mz_max'])
-    ax.set_ylim(-kwargs['max_intensity'], kwargs['max_intensity'])
+    ax.set_ylim(-kwargs['max_intensity'] / 100, kwargs['max_intensity'] / 100)
 
     if not kwargs['grid']:
         ax.spines['right'].set_visible(False)
