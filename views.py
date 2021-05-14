@@ -52,7 +52,12 @@ def render_heartbeat():
 
 @blueprint.route("/png/")
 def generate_png():
-    drawing_controls = get_drawing_controls(**flask.request.args.to_dict())
+    # Making sure annotate peaks is a list
+    request_arguments = flask.request.args.to_dict()
+    if "annotate_peaks" in request_arguments:
+        request_arguments["annotate_peaks"] = json.loads(request_arguments["annotate_peaks"])
+
+    drawing_controls = get_drawing_controls(**request_arguments)
     drawing_controls["annotate_peaks"] = drawing_controls["annotate_peaks"][0]
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
@@ -64,8 +69,13 @@ def generate_png():
 
 @blueprint.route("/png/mirror/")
 def generate_mirror_png():
+    # Making sure annotate peaks is a list
+    request_arguments = flask.request.args.to_dict()
+    if "annotate_peaks" in request_arguments:
+        request_arguments["annotate_peaks"] = json.loads(request_arguments["annotate_peaks"])
+
     drawing_controls = get_drawing_controls(
-        **flask.request.args.to_dict(), mirror=True
+        **request_arguments, mirror=True
     )
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
@@ -81,20 +91,32 @@ def generate_mirror_png():
 
 @blueprint.route("/svg/")
 def generate_svg():
-    drawing_controls = get_drawing_controls(**flask.request.args.to_dict())
+    # Making sure annotate peaks is a list
+    request_arguments = flask.request.args.to_dict()
+    if "annotate_peaks" in request_arguments:
+        request_arguments["annotate_peaks"] = json.loads(request_arguments["annotate_peaks"])
+
+    drawing_controls = get_drawing_controls(**request_arguments)
     drawing_controls["annotate_peaks"] = drawing_controls["annotate_peaks"][0]
+    
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
         tasks.parse_usi(drawing_controls["usi1"])[0], **drawing_controls
     )
+
     buf = tasks.generate_figure(spectrum, "svg", **drawing_controls)
     return flask.send_file(buf, mimetype="image/svg+xml")
 
 
 @blueprint.route("/svg/mirror/")
 def generate_mirror_svg():
+    # Making sure annotate peaks is a list
+    request_arguments = flask.request.args.to_dict()
+    if "annotate_peaks" in request_arguments:
+        request_arguments["annotate_peaks"] = json.loads(request_arguments["annotate_peaks"])
+
     drawing_controls = get_drawing_controls(
-        **flask.request.args.to_dict(), mirror=True
+        **request_arguments, mirror=True
     )
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
@@ -228,7 +250,7 @@ def get_drawing_controls(
             "fragment_mz_tolerance"
         ]
     drawing_controls["grid"] = grid == "True"
-    drawing_controls["annotate_peaks"] = json.dumps(annotate_peaks)
+    drawing_controls["annotate_peaks"] = annotate_peaks
     if drawing_controls["max_intensity"] is None:
         if any(annotate_peaks):
             # Labeled (because peak annotations are provided) standard or
