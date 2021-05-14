@@ -69,7 +69,9 @@ def generate_png():
         request_arguments["annotate_peaks"] = json.loads(request_arguments["annotate_peaks"])
 
     drawing_controls = get_drawing_controls(**request_arguments)
-    drawing_controls["annotate_peaks"] = drawing_controls["annotate_peaks"][0]
+    if drawing_controls["annotate_peaks"] is not None:
+        drawing_controls["annotate_peaks"] = drawing_controls["annotate_peaks"][0]
+
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
         tasks.parse_usi(drawing_controls["usi1"])[0], **drawing_controls
@@ -108,7 +110,8 @@ def generate_svg():
         request_arguments["annotate_peaks"] = json.loads(request_arguments["annotate_peaks"])
 
     drawing_controls = get_drawing_controls(**request_arguments)
-    drawing_controls["annotate_peaks"] = drawing_controls["annotate_peaks"][0]
+    if drawing_controls["annotate_peaks"] is not None:
+        drawing_controls["annotate_peaks"] = drawing_controls["annotate_peaks"][0]
     
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
@@ -415,9 +418,11 @@ def _prepare_mirror_spectra(
         Both processed spectra.
     """
     annotate_peaks = kwargs["annotate_peaks"]
-    kwargs["annotate_peaks"] = annotate_peaks[0]
+    if annotate_peaks is not None:
+        kwargs["annotate_peaks"] = annotate_peaks[0]
     spectrum1 = prepare_spectrum(spectrum1, **kwargs)
-    kwargs["annotate_peaks"] = annotate_peaks[1]
+    if annotate_peaks is not None:
+        kwargs["annotate_peaks"] = annotate_peaks[1]
     spectrum2 = prepare_spectrum(spectrum2, **kwargs)
     kwargs["annotate_peaks"] = annotate_peaks
     return spectrum1, spectrum2
@@ -427,7 +432,7 @@ def _prepare_mirror_spectra(
 def peak_json():
     try:
         spectrum, _, splash_key = tasks.parse_usi(
-            flask.request.args.get("usi1", flask.request.args.get("usi"))
+            flask.request.args.get("usi1")
         )
         peaks = list(zip(spectrum.mz, spectrum.intensity))
         peaks = [[float(peak[0]), float(peak[1])] for peak in peaks]
@@ -465,14 +470,18 @@ def mirror_json():
             drawing_controls["fragment_mz_tolerance"],
             drawing_controls["cosine"] == "shifted",
         )
+        peaks1 = list(zip(spectrum1.mz, spectrum1.intensity))
+        peaks1 = [[float(peak[0]), float(peak[1])] for peak in peaks1]
         spectrum1_dict = {
-            "peaks": list(zip(spectrum1.mz, spectrum1.intensity)),
+            "peaks": peaks1,
             "n_peaks": len(spectrum1.mz),
             "precursor_mz": spectrum1.precursor_mz,
             "splash": splash_key1,
         }
+        peaks2 = list(zip(spectrum2.mz, spectrum2.intensity))
+        peaks2 = [[float(peak[0]), float(peak[1])] for peak in peaks2]
         spectrum2_dict = {
-            "peaks": list(zip(spectrum2.mz, spectrum2.intensity)),
+            "peaks": peaks2,
             "n_peaks": len(spectrum2.mz),
             "precursor_mz": spectrum2.precursor_mz,
             "splash": splash_key2,
@@ -531,7 +540,7 @@ def peak_proxi_json():
 
 @blueprint.route("/csv/")
 def peak_csv():
-    spectrum, _, _ = tasks.parse_usi(flask.request.args.get("usi1", flask.request.args.get("usi")))
+    spectrum, _, _ = tasks.parse_usi(flask.request.args.get("usi1"))
     with io.StringIO() as csv_str:
         writer = csv.writer(csv_str)
         writer.writerow(["mz", "intensity"])
@@ -558,18 +567,18 @@ def generate_qr():
     return flask.send_file(qr_bytes, "image/png")
 
 
-@blueprint.errorhandler(Exception)
-def render_error(error):
-    if type(error) == UsiError:
-        error_code = error.error_code
-    else:
-        error_code = 500
-    if hasattr(error, "message"):
-        error_message = error.message
-    else:
-        error_message = f"RunTime Server Error: {error}"
+# @blueprint.errorhandler(Exception)
+# def render_error(error):
+#     if type(error) == UsiError:
+#         error_code = error.error_code
+#     else:
+#         error_code = 500
+#     if hasattr(error, "message"):
+#         error_message = error.message
+#     else:
+#         error_message = f"RunTime Server Error: {error}"
 
-    return (
-        flask.render_template("error.html", error=error_message),
-        error_code,
-    )
+#     return (
+#         flask.render_template("error.html", error=error_message),
+#         error_code,
+#     )
