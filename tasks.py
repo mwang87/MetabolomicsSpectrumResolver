@@ -41,9 +41,10 @@ celery_instance.conf.ONCE = {
 
 celery_instance.conf.task_routes = {
     'tasks.task_compute_heartbeat': {'queue': 'worker'},
-    'tasks.task_parse_usi': {'queue': 'worker'},
-    'tasks.task_generate_figure': {'queue': 'worker'},
-    'tasks.task_generate_mirror_figure': {'queue': 'worker'},
+    'tasks._task_parse_usi': {'queue': 'worker'},
+    'tasks._task_generate_figure': {'queue': 'worker'},
+    'tasks._task_generate_mirror_figure': {'queue': 'worker'},
+    
 }
 
 
@@ -67,7 +68,7 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
     # First attempt to schedule with Celery.
     try:
-        return _task_generate_figure.apply_async(args=(usi,)).get()
+        return _task_parse_usi.apply_async(args=(usi,)).get()
     except redis.exceptions.ConnectionError:
         # Fallback in case scheduling via Celery fails.
         # Mostly used for testing.

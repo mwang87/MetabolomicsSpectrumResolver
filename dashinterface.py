@@ -594,6 +594,13 @@ def draw_figure(
     Tuple[Tuple[Any, Dict[str, Any]], str]
         A tuple with the plot's (i) HTML resources, (ii) URL query string.
     """
+
+    import sys
+    annotated_peaks = [
+            [float(peak_table1[i]["m/z"]) for i in peak_table1_selected_rows],
+            [float(peak_table2[i]["m/z"]) for i in peak_table2_selected_rows],
+        ]
+
     drawing_controls = views.get_drawing_controls(
         usi1=usi1,
         usi2=usi2,
@@ -612,6 +619,7 @@ def draw_figure(
             [float(peak_table2[i]["m/z"]) for i in peak_table2_selected_rows],
         ],
     )
+
     # Single spectrum plot or mirror spectrum plot.
     if not usi2:
         del drawing_controls["usi2"]
@@ -619,7 +627,7 @@ def draw_figure(
     else:
         spectrum_view = _process_mirror_usi(usi1, usi2, drawing_controls)
 
-    return spectrum_view, f"?{urlencode(drawing_controls, quote_via=quote)}"
+    return [spectrum_view, f"?{urlencode(drawing_controls, quote_via=quote)}"]
 
 
 def _process_usi(
@@ -910,6 +918,10 @@ def draw_table(
         If only a single USI is being processed, data for the second table is
         empty.
     """
+
+    mz_min = None if mz_min == "None" else mz_min
+    mz_max = None if mz_max == "None" else mz_max
+
     columns1 = columns2 = [
         {"name": "m/z", "id": "m/z"},
         {"name": "Intensity", "id": "Intensity"},
@@ -921,6 +933,7 @@ def draw_table(
         "annotate_precision": int(annotate_precision),
         "annotate_peaks": True,  # FIXME
     }
+
     peaks1, peaks1_selected_i = _get_peaks(usi1, peak_controls)
     if usi2:
         peaks2, peaks2_selected_i = _get_peaks(usi2, peak_controls)
