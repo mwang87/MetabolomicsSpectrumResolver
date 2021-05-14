@@ -38,6 +38,9 @@ NAVBAR = dbc.Navbar(
                 dbc.NavItem(
                     dbc.NavLink("Metabolomics USI — Dash Interface", href="#"),
                 ),
+                dbc.NavItem(
+                    html.A("Homepage", href="/", className="nav-link")
+                ),
             ],
             navbar=True,
         ),
