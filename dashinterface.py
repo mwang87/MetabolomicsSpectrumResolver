@@ -36,8 +36,8 @@ NAVBAR = dbc.Navbar(
         dbc.Nav(
             [
                 dbc.NavItem(
-                    dbc.NavLink("Metabolomics USI — Dash Interface", href="#")
-                )
+                    dbc.NavLink("Metabolomics USI — Dash Interface", href="#"),
+                ),
             ],
             navbar=True,
         ),
@@ -496,7 +496,7 @@ def set_drawing_controls(
     """
     drawing_controls = parse_qs(search[1:])
     return (
-        drawing_controls.get("usi1", [_example_usi])[0],
+        drawing_controls.get("usi1", drawing_controls.get("usi", [_example_usi]))[0],
         drawing_controls.get("usi2", [dash.no_update])[0],
         drawing_controls.get("width", [dash.no_update])[0],
         drawing_controls.get("height", [dash.no_update])[0],
@@ -595,7 +595,6 @@ def draw_figure(
         A tuple with the plot's (i) HTML resources, (ii) URL query string.
     """
 
-    import sys
     annotated_peaks = [
             [float(peak_table1[i]["m/z"]) for i in peak_table1_selected_rows],
             [float(peak_table2[i]["m/z"]) for i in peak_table2_selected_rows],
@@ -881,9 +880,10 @@ def _process_mirror_usi(
         Input("mz_max", "value"),
         Input("annotate_precision", "value"),
     ],
+    [State("url", "search")]
 )
 def draw_table(
-    usi1: str, usi2: str, mz_min: str, mz_max: str, annotate_precision: str,
+    usi1: str, usi2: str, mz_min: str, mz_max: str, annotate_precision: str, search: str
 ) -> Tuple[
     List[Dict[str, str]],
     List[Dict[str, float]],
@@ -919,6 +919,17 @@ def draw_table(
         empty.
     """
 
+    annotate_peaks1 = True
+    annotate_peaks2 = True
+    try:
+        import json
+        url_params = parse_qs(search[1:])
+        annotate_peaks = json.loads(url_params["annotate_peaks"][0])
+        annotate_peaks1 = annotate_peaks[0]
+        annotate_peaks2 = annotate_peaks[1]
+    except ValueError:
+        pass
+
     mz_min = None if mz_min == "None" else mz_min
     mz_max = None if mz_max == "None" else mz_max
 
@@ -931,11 +942,12 @@ def draw_table(
         "mz_max": float(mz_max) if mz_max is not None else None,
         "fragment_mz_tolerance": 0.001,
         "annotate_precision": int(annotate_precision),
-        "annotate_peaks": True,  # FIXME
+        "annotate_peaks": annotate_peaks1,
     }
 
     peaks1, peaks1_selected_i = _get_peaks(usi1, peak_controls)
     if usi2:
+        peak_controls["annotate_peaks"] = annotate_peaks2
         peaks2, peaks2_selected_i = _get_peaks(usi2, peak_controls)
     else:
         peaks2, peaks2_selected_i, columns2 = [], [], dash.no_update

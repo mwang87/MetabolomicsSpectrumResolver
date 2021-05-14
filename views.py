@@ -3,6 +3,7 @@ import csv
 import io
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
+import urllib.parse
 
 import flask
 import numpy as np
@@ -49,6 +50,16 @@ def render_contributors():
 def render_heartbeat():
     return json.dumps({"status": "success"})
 
+# Forwarding some urls
+@blueprint.route("/spectrum/", methods=["GET"])
+def spectrum_forward():
+    params_string = urllib.parse.urlencode(flask.request.args.to_dict(), quote_via=urllib.parse.quote)
+    return flask.redirect("/dashinterface?{}".format(params_string), code=302)
+
+@blueprint.route("/mirror/", methods=["GET"])
+def mirror_forward():
+    params_string = urllib.parse.urlencode(flask.request.args.to_dict(), quote_via=urllib.parse.quote)
+    return flask.redirect("/dashinterface?{}".format(params_string), code=302)
 
 @blueprint.route("/png/")
 def generate_png():
@@ -416,12 +427,14 @@ def _prepare_mirror_spectra(
 def peak_json():
     try:
         spectrum, _, splash_key = tasks.parse_usi(
-            flask.request.args.get("usi1")
+            flask.request.args.get("usi1", flask.request.args.get("usi"))
         )
+        peaks = list(zip(spectrum.mz, spectrum.intensity))
+        peaks = [[float(peak[0]), float(peak[1])] for peak in peaks]
         result_dict = {
-            "peaks": list(zip(spectrum.mz, spectrum.intensity)),
+            "peaks": peaks,
             "n_peaks": len(spectrum.mz),
-            "precursor_mz": spectrum.precursor_mz,
+            "precursor_mz": float(spectrum.precursor_mz),
             "splash": splash_key,
         }
     except UsiError as e:
@@ -518,7 +531,7 @@ def peak_proxi_json():
 
 @blueprint.route("/csv/")
 def peak_csv():
-    spectrum, _, _ = tasks.parse_usi(flask.request.args.get("usi1"))
+    spectrum, _, _ = tasks.parse_usi(flask.request.args.get("usi1", flask.request.args.get("usi")))
     with io.StringIO() as csv_str:
         writer = csv.writer(csv_str)
         writer.writerow(["mz", "intensity"])
