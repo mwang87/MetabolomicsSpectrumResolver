@@ -14,7 +14,7 @@ import views
 from app import app
 
 
-_example_usi = "mzspec:MSV000082796:KP_108_Positive:scan:1974"
+_example_usi = "mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077"
 
 dash_app = dash.Dash(
     name="dashinterface",
@@ -48,7 +48,23 @@ NAVBAR = dbc.Navbar(
 )
 
 DATASELECTION_CARD = [
-    dbc.CardHeader(html.H5("USI Data Selection")),
+    dbc.CardHeader(dbc.Row([
+            dbc.Col(
+                html.H5("USI Data Selection")
+            ),
+            dbc.Col(
+                html.A(
+                    dbc.Button("Link to Plot", 
+                        color="primary", size="sm", 
+                        className="mr-1", 
+                        style={
+                            "float" : "right"
+                        }
+                    ),
+                    id="plot_link", 
+                )
+            )
+    ])),
     dbc.CardBody(
         [
             dbc.InputGroup(
@@ -401,6 +417,13 @@ EXAMPLES_DASHBOARD = [
                     "scan%3A15073%3AHPYFYAPELLFFAKR%2F3"
                 ),
             ),
+            html.Br(),
+            html.A(
+                "Mirror Plot",
+                href=(
+                    "/dashinterface/?usi1=mzspec%3AGNPS%3ATASK-8925aa40e48e468ca9ba02955ee369e6-spectra%2Fspecs_ms.mgf%3Ascan%3A1618&usi2=mzspec%3AGNPS%3AGNPS-LIBRARY%3Aaccession%3ACCMSLIB00000072217&width=10.0&height=6.0&mz_min=None&mz_max=None&max_intensity=150&annotate_precision=4&annotation_rotation=90&cosine=standard&fragment_mz_tolerance=1.0&grid=True&annotate_peaks=%5B%5B527.1060180664062%2C%20689.155029296875%2C%20791.1669921875%2C%20833.1929931640625%5D%2C%20%5B527.3635864257812%2C%20689.3635864257812%2C%20791.45458984375%2C%20833.3635864257812%5D%5D"
+                ),
+            ),
             dcc.Loading(
                 id="debug",
                 children=[html.Div([html.Div(id="loading-output-243")])],
@@ -512,7 +535,7 @@ def set_drawing_controls(
 
 
 @dash_app.callback(
-    [Output("output", "children"), Output("url", "search")],
+    [Output("output", "children"), Output("url", "search"), Output("plot_link", "href")],
     [
         Input("usi1", "value"),
         Input("usi2", "value"),
@@ -626,7 +649,7 @@ def draw_figure(
     else:
         spectrum_view = _process_mirror_usi(usi1, usi2, drawing_controls)
 
-    return [spectrum_view, f"?{urlencode(drawing_controls, quote_via=quote)}"]
+    return [spectrum_view, f"?{urlencode(drawing_controls, quote_via=quote)}", f"/dashinterface?{urlencode(drawing_controls, quote_via=quote)}"]
 
 
 def _process_usi(
@@ -927,7 +950,7 @@ def draw_table(
         annotate_peaks = json.loads(url_params["annotate_peaks"][0])
         annotate_peaks1 = annotate_peaks[0]
         annotate_peaks2 = annotate_peaks[1]
-    except ValueError:
+    except KeyError:
         pass
 
     mz_min = None if mz_min == "None" else mz_min
