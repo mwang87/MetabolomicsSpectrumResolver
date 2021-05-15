@@ -266,7 +266,7 @@ def get_drawing_controls(
     drawing_controls["grid"] = grid == "True"
     drawing_controls["annotate_peaks"] = annotate_peaks
     if drawing_controls["max_intensity"] is None:
-        if any(annotate_peaks):
+        if annotate_peaks is not None and any(annotate_peaks):
             # Labeled (because peak annotations are provided) standard or
             # mirror plot.
             drawing_controls["max_intensity"] = (
@@ -277,8 +277,8 @@ def get_drawing_controls(
         else:
             # Unlabeled plot (no difference between standard and mirror).
             drawing_controls["max_intensity"] = default_drawing_controls[
-                "max_intensity_unlabeled"
-            ]
+                "max_intensity_labeled"
+            ] if not mirror else default_drawing_controls["max_intensity_mirror_labeled"]
 
     return drawing_controls
 
