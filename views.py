@@ -449,7 +449,6 @@ def peak_json():
     except ValueError as e:
         result_dict = {"error": {"code": 404, "message": str(e)}}
         status = 404
-
     return flask.jsonify(result_dict), status
 
 
@@ -497,11 +496,14 @@ def mirror_json():
             "n_peak_matches": len(peak_matches),
             "peak_matches": peak_matches,
         }
+        status = 200
     except UsiError as e:
         result_dict = {"error": {"code": e.error_code, "message": str(e)}}
+        status = e.error_code
     except ValueError as e:
         result_dict = {"error": {"code": 404, "message": str(e)}}
-    return flask.jsonify(result_dict)
+        status = 404
+    return flask.jsonify(result_dict), status
 
 
 @blueprint.route("/proxi/v0.1/spectra")
@@ -571,18 +573,18 @@ def generate_qr():
     return flask.send_file(qr_bytes, "image/png")
 
 
-# @blueprint.errorhandler(Exception)
-# def render_error(error):
-#     if type(error) == UsiError:
-#         error_code = error.error_code
-#     else:
-#         error_code = 500
-#     if hasattr(error, "message"):
-#         error_message = error.message
-#     else:
-#         error_message = f"RunTime Server Error: {error}"
+@blueprint.errorhandler(Exception)
+def render_error(error):
+    if type(error) == UsiError:
+        error_code = error.error_code
+    else:
+        error_code = 500
+    if hasattr(error, "message"):
+        error_message = error.message
+    else:
+        error_message = f"RunTime Server Error: {error}"
 
-#     return (
-#         flask.render_template("error.html", error=error_message),
-#         error_code,
-#     )
+    return (
+        flask.render_template("error.html", error=error_message),
+        error_code,
+    )
