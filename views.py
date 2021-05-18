@@ -442,11 +442,15 @@ def peak_json():
             "precursor_mz": float(spectrum.precursor_mz),
             "splash": splash_key,
         }
+        status = 200
     except UsiError as e:
         result_dict = {"error": {"code": e.error_code, "message": str(e)}}
+        status = e.error_code
     except ValueError as e:
         result_dict = {"error": {"code": 404, "message": str(e)}}
-    return flask.jsonify(result_dict)
+        status = 404
+
+    return flask.jsonify(result_dict), status
 
 
 @blueprint.route("/json/mirror/")
