@@ -440,6 +440,7 @@ def peak_json():
             "peaks": peaks,
             "n_peaks": len(spectrum.mz),
             "precursor_mz": float(spectrum.precursor_mz),
+            "precursor_charge": int(spectrum.precursor_charge),
             "splash": splash_key,
         }
         status = 200

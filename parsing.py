@@ -190,9 +190,13 @@ def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         source_link = (f'https://gnps.ucsd.edu/ProteoSAFe/'
                        f'gnpslibraryspectrum.jsp?SpectrumID={index}')
 
+        # Sorting annotations by date
+        annotations = spectrum_dict['annotations']
+        annotations = sorted(annotations, key=lambda annotation: annotation["create_time"], reverse=True)
+
         spectrum = sus.MsmsSpectrum(
-            usi, float(spectrum_dict['annotations'][0]['Precursor_MZ']),
-            int(spectrum_dict['annotations'][0]['Charge']), mz, intensity)
+            usi, float(annotations[0]['Precursor_MZ']),
+            int(annotations[0]['Charge']), mz, intensity)
         return spectrum, source_link
     except requests.exceptions.HTTPError:
         raise UsiError('Unknown GNPS library USI', 404)
