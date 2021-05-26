@@ -685,11 +685,11 @@ def _process_usi(
 
     json_button = html.A(
         dbc.Button("Download as JSON", color="primary", className="mr-1"),
-        href=f"/json/?usi={quote(usi)}",
+        href=f"/json/?usi1={quote(usi)}",
     )
     csv_button = html.A(
         dbc.Button("Download as CSV", color="primary", className="mr-1"),
-        href=f"/csv/?usi={quote(usi)}",
+        href=f"/csv/?usi1={quote(usi)}",
     )
     png_button = html.A(
         dbc.Button("Download as PNG", color="primary", className="mr-1"),
