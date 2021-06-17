@@ -1,5 +1,6 @@
-from urllib.parse import urlencode, quote, parse_qs
+import json
 from typing import Any, Dict, List, Tuple
+from urllib.parse import urlencode, quote, parse_qs
 
 import dash
 import dash_bootstrap_components as dbc
@@ -79,23 +80,25 @@ NAVBAR = dbc.Navbar(
 )
 
 DATASELECTION_CARD = [
-    dbc.CardHeader(dbc.Row([
-            dbc.Col(
-                html.H5("USI Data Selection")
-            ),
-            dbc.Col(
-                html.A(
-                    dbc.Button("Link to Plot", 
-                        color="primary", size="sm", 
-                        className="mr-1", 
-                        style={
-                            "float" : "right"
-                        }
-                    ),
-                    id="plot_link", 
-                )
-            )
-    ])),
+    dbc.CardHeader(
+        dbc.Row(
+            [
+                dbc.Col(html.H5("USI Data Selection")),
+                dbc.Col(
+                    html.A(
+                        dbc.Button(
+                            "Link to Plot",
+                            color="primary",
+                            size="sm",
+                            className="mr-1",
+                            style={"float": "right"},
+                        ),
+                        id="plot_link",
+                    )
+                ),
+            ]
+        )
+    ),
     dbc.CardBody(
         [
             dbc.InputGroup(
@@ -452,7 +455,18 @@ EXAMPLES_DASHBOARD = [
             html.A(
                 "Mirror Plot",
                 href=(
-                    "/dashinterface/?usi1=mzspec%3AGNPS%3ATASK-8925aa40e48e468ca9ba02955ee369e6-spectra%2Fspecs_ms.mgf%3Ascan%3A1618&usi2=mzspec%3AGNPS%3AGNPS-LIBRARY%3Aaccession%3ACCMSLIB00000072217&width=10.0&height=6.0&mz_min=None&mz_max=None&max_intensity=150&annotate_precision=4&annotation_rotation=90&cosine=standard&fragment_mz_tolerance=1.0&grid=True&annotate_peaks=%5B%5B527.1060180664062%2C%20689.155029296875%2C%20791.1669921875%2C%20833.1929931640625%5D%2C%20%5B527.3635864257812%2C%20689.3635864257812%2C%20791.45458984375%2C%20833.3635864257812%5D%5D"
+                    "/dashinterface/?usi1=mzspec%3AGNPS%3ATASK-"
+                    "8925aa40e48e468ca9ba02955ee369e6-spectra%2Fspecs_ms.mgf"
+                    "%3Ascan%3A1618&usi2=mzspec%3AGNPS%3AGNPS-LIBRARY"
+                    "%3Aaccession%3ACCMSLIB00000072217&width=10.0&"
+                    "height=6.0&mz_min=None&mz_max=None&max_intensity=150&"
+                    "annotate_precision=4&annotation_rotation=90&"
+                    "cosine=standard&fragment_mz_tolerance=1.0&grid=True"
+                    "&annotate_peaks=%5B%5B527.1060180664062%2C%20"
+                    "689.155029296875%2C%20791.1669921875%2C%20"
+                    "833.1929931640625%5D%2C%20%5B527.3635864257812%2C%20"
+                    "689.3635864257812%2C%20791.45458984375%2C%20"
+                    "833.3635864257812%5D%5D"
                 ),
             ),
             dcc.Loading(
@@ -550,7 +564,9 @@ def set_drawing_controls(
     """
     drawing_controls = parse_qs(search[1:])
     return (
-        drawing_controls.get("usi1", drawing_controls.get("usi", [_example_usi]))[0],
+        drawing_controls.get(
+            "usi1", drawing_controls.get("usi", [_example_usi])
+        )[0],
         drawing_controls.get("usi2", [dash.no_update])[0],
         drawing_controls.get("width", [dash.no_update])[0],
         drawing_controls.get("height", [dash.no_update])[0],
@@ -566,7 +582,11 @@ def set_drawing_controls(
 
 
 @dash_app.callback(
-    [Output("output", "children"), Output("url", "search"), Output("plot_link", "href")],
+    [
+        Output("output", "children"),
+        Output("url", "search"),
+        Output("plot_link", "href"),
+    ],
     [
         Input("usi1", "value"),
         Input("usi2", "value"),
@@ -603,7 +623,7 @@ def draw_figure(
     peak_table1_selected_rows: List[int],
     peak_table2: List[Dict[str, str]],
     peak_table2_selected_rows: List[int],
-) -> Tuple[Tuple[Any, Dict[str, Any]], str]:
+) -> Tuple[Tuple[Any, Dict[str, Any]], str, str]:
     """
     Draw the figure for the given USI(s).
 
@@ -645,15 +665,10 @@ def draw_figure(
 
     Returns
     -------
-    Tuple[Tuple[Any, Dict[str, Any]], str]
-        A tuple with the plot's (i) HTML resources, (ii) URL query string.
+    Tuple[Tuple[Any, Dict[str, Any]], str, str]
+        A tuple with the plot's (i) HTML resources, (ii) URL query string,
+        (iii) full URL to the plot.
     """
-
-    annotated_peaks = [
-            [float(peak_table1[i]["m/z"]) for i in peak_table1_selected_rows],
-            [float(peak_table2[i]["m/z"]) for i in peak_table2_selected_rows],
-        ]
-
     drawing_controls = views.get_drawing_controls(
         usi1=usi1,
         usi2=usi2,
@@ -680,7 +695,8 @@ def draw_figure(
     else:
         spectrum_view = _process_mirror_usi(usi1, usi2, drawing_controls)
 
-    return [spectrum_view, f"?{urlencode(drawing_controls, quote_via=quote)}", f"/dashinterface?{urlencode(drawing_controls, quote_via=quote)}"]
+    url_query = f"?{urlencode(drawing_controls, quote_via=quote)}"
+    return spectrum_view, url_query, f"/dashinterface?{url_query}"
 
 
 def _process_usi(
@@ -934,10 +950,15 @@ def _process_mirror_usi(
         Input("mz_max", "value"),
         Input("annotate_precision", "value"),
     ],
-    [State("url", "search")]
+    [State("url", "search")],
 )
 def draw_table(
-    usi1: str, usi2: str, mz_min: str, mz_max: str, annotate_precision: str, search: str
+    usi1: str,
+    usi2: str,
+    mz_min: str,
+    mz_max: str,
+    annotate_precision: str,
+    search: str,
 ) -> Tuple[
     List[Dict[str, str]],
     List[Dict[str, float]],
@@ -955,12 +976,14 @@ def draw_table(
         The first USI.
     usi2 : str
         The second USI (optional).
-    mz_min : float
+    mz_min : str
         The minimum m/z value.
-    mz_max : float
+    mz_max : str
         The maximum m/z value.
     annotate_precision : float
         The m/z precision of peak labels.
+    search : str
+        The URL search string.
 
     Returns
     -------
@@ -972,33 +995,24 @@ def draw_table(
         If only a single USI is being processed, data for the second table is
         empty.
     """
-
-    annotate_peaks1 = True
-    annotate_peaks2 = True
     try:
-        import json
-        url_params = parse_qs(search[1:])
-        annotate_peaks = json.loads(url_params["annotate_peaks"][0])
-        annotate_peaks1 = annotate_peaks[0]
-        annotate_peaks2 = annotate_peaks[1]
+        annotate_peaks = json.loads(parse_qs(search[1:])["annotate_peaks"][0])
+        annotate_peaks1, annotate_peaks2 = annotate_peaks
     except KeyError:
-        pass
-
-    mz_min = None if mz_min == "None" else mz_min
-    mz_max = None if mz_max == "None" else mz_max
+        # Annotate peaks by default.
+        annotate_peaks1 = annotate_peaks2 = True
 
     columns1 = columns2 = [
         {"name": "m/z", "id": "m/z"},
         {"name": "Intensity", "id": "Intensity"},
     ]
     peak_controls = {
-        "mz_min": float(mz_min) if mz_min is not None else None,
-        "mz_max": float(mz_max) if mz_max is not None else None,
+        "mz_min": None if mz_min == "None" else float(mz_min),
+        "mz_max": None if mz_max == "None" else float(mz_max),
         "fragment_mz_tolerance": 0.001,
         "annotate_precision": int(annotate_precision),
         "annotate_peaks": annotate_peaks1,
     }
-
     peaks1, peaks1_selected_i = _get_peaks(usi1, peak_controls)
     if usi2:
         peak_controls["annotate_peaks"] = annotate_peaks2
@@ -1044,8 +1058,7 @@ def _get_peaks(
         }
         for mz, intensity in zip(spectrum.mz, spectrum.intensity)
     ]
-    selected_peaks = spectrum.annotation.nonzero()[0].tolist()
-    return peaks, selected_peaks
+    return peaks, spectrum.annotation.nonzero()[0].tolist()
 
 
 @dash_app.callback(
