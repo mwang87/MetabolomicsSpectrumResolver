@@ -50,28 +50,32 @@ def render_contributors():
 def render_heartbeat():
     return json.dumps({"status": "success"})
 
-# Forwarding some urls
+
+# Forward the old "/spectrum/" endpoint to the new Dash interface.
 @blueprint.route("/spectrum/", methods=["GET"])
 def spectrum_forward():
-    params_string = urllib.parse.urlencode(flask.request.args.to_dict(), quote_via=urllib.parse.quote)
-    return flask.redirect("/dashinterface?{}".format(params_string), code=302)
+    params_string = urllib.parse.urlencode(
+        flask.request.args.to_dict(), quote_via=urllib.parse.quote
+    )
+    return flask.redirect(f"/dashinterface?{params_string}", code=302)
 
+
+# Forward the old "/mirror/" endpoint to the new Dash interface.
 @blueprint.route("/mirror/", methods=["GET"])
 def mirror_forward():
-    params_string = urllib.parse.urlencode(flask.request.args.to_dict(), quote_via=urllib.parse.quote)
-    return flask.redirect("/dashinterface?{}".format(params_string), code=302)
+    params_string = urllib.parse.urlencode(
+        flask.request.args.to_dict(), quote_via=urllib.parse.quote
+    )
+    return flask.redirect(f"/dashinterface?{params_string}", code=302)
+
 
 @blueprint.route("/png/")
 def generate_png():
-    # Making sure annotate peaks is a list
-    request_arguments = flask.request.args.to_dict()
-    if "annotate_peaks" in request_arguments:
-        request_arguments["annotate_peaks"] = json.loads(request_arguments["annotate_peaks"])
-
-    drawing_controls = get_drawing_controls(**request_arguments)
+    drawing_controls = get_drawing_controls(**flask.request.args.to_dict())
     if drawing_controls["annotate_peaks"] is not None:
-        drawing_controls["annotate_peaks"] = drawing_controls["annotate_peaks"][0]
-
+        drawing_controls["annotate_peaks"] = drawing_controls[
+            "annotate_peaks"
+        ][0]
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
         tasks.parse_usi(drawing_controls["usi1"])[0], **drawing_controls
@@ -82,13 +86,8 @@ def generate_png():
 
 @blueprint.route("/png/mirror/")
 def generate_mirror_png():
-    # Making sure annotate peaks is a list
-    request_arguments = flask.request.args.to_dict()
-    if "annotate_peaks" in request_arguments:
-        request_arguments["annotate_peaks"] = json.loads(request_arguments["annotate_peaks"])
-
     drawing_controls = get_drawing_controls(
-        **request_arguments, mirror=True
+        **flask.request.args.to_dict(), mirror=True
     )
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
@@ -104,33 +103,23 @@ def generate_mirror_png():
 
 @blueprint.route("/svg/")
 def generate_svg():
-    # Making sure annotate peaks is a list
-    request_arguments = flask.request.args.to_dict()
-    if "annotate_peaks" in request_arguments:
-        request_arguments["annotate_peaks"] = json.loads(request_arguments["annotate_peaks"])
-
-    drawing_controls = get_drawing_controls(**request_arguments)
+    drawing_controls = get_drawing_controls(**flask.request.args.to_dict())
     if drawing_controls["annotate_peaks"] is not None:
-        drawing_controls["annotate_peaks"] = drawing_controls["annotate_peaks"][0]
-    
+        drawing_controls["annotate_peaks"] = drawing_controls[
+            "annotate_peaks"
+        ][0]
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
         tasks.parse_usi(drawing_controls["usi1"])[0], **drawing_controls
     )
-
     buf = tasks.generate_figure(spectrum, "svg", **drawing_controls)
     return flask.send_file(buf, mimetype="image/svg+xml")
 
 
 @blueprint.route("/svg/mirror/")
 def generate_mirror_svg():
-    # Making sure annotate peaks is a list
-    request_arguments = flask.request.args.to_dict()
-    if "annotate_peaks" in request_arguments:
-        request_arguments["annotate_peaks"] = json.loads(request_arguments["annotate_peaks"])
-
     drawing_controls = get_drawing_controls(
-        **request_arguments, mirror=True
+        **flask.request.args.to_dict(), mirror=True
     )
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
@@ -264,7 +253,12 @@ def get_drawing_controls(
             "fragment_mz_tolerance"
         ]
     drawing_controls["grid"] = grid == "True"
-    drawing_controls["annotate_peaks"] = annotate_peaks
+    # Make sure that `annotate_peaks` is no longer a JSON encoded string.
+    drawing_controls["annotate_peaks"] = (
+        json.loads(annotate_peaks)
+        if isinstance(annotate_peaks, str)
+        else annotate_peaks
+    )
     if drawing_controls["max_intensity"] is None:
         if annotate_peaks is not None and any(annotate_peaks):
             # Labeled (because peak annotations are provided) standard or
@@ -276,9 +270,11 @@ def get_drawing_controls(
             )
         else:
             # Unlabeled plot (no difference between standard and mirror).
-            drawing_controls["max_intensity"] = default_drawing_controls[
-                "max_intensity_labeled"
-            ] if not mirror else default_drawing_controls["max_intensity_mirror_labeled"]
+            drawing_controls["max_intensity"] = (
+                default_drawing_controls["max_intensity_labeled"]
+                if not mirror
+                else default_drawing_controls["max_intensity_mirror_labeled"]
+            )
 
     return drawing_controls
 
