@@ -2,8 +2,8 @@ import copy
 import csv
 import io
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union
 import urllib.parse
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import flask
 import numpy as np
@@ -430,10 +430,8 @@ def peak_json():
         spectrum, _, splash_key = tasks.parse_usi(
             flask.request.args.get("usi1")
         )
-        peaks = list(zip(spectrum.mz, spectrum.intensity))
-        peaks = [[float(peak[0]), float(peak[1])] for peak in peaks]
         result_dict = {
-            "peaks": peaks,
+            "peaks": list(zip(spectrum.mz, spectrum.intensity)),
             "n_peaks": len(spectrum.mz),
             "precursor_mz": float(spectrum.precursor_mz),
             "precursor_charge": int(spectrum.precursor_charge),
@@ -470,18 +468,14 @@ def mirror_json():
             drawing_controls["fragment_mz_tolerance"],
             drawing_controls["cosine"] == "shifted",
         )
-        peaks1 = list(zip(spectrum1.mz, spectrum1.intensity))
-        peaks1 = [[float(peak[0]), float(peak[1])] for peak in peaks1]
         spectrum1_dict = {
-            "peaks": peaks1,
+            "peaks": list(zip(spectrum1.mz, spectrum1.intensity)),
             "n_peaks": len(spectrum1.mz),
             "precursor_mz": spectrum1.precursor_mz,
             "splash": splash_key1,
         }
-        peaks2 = list(zip(spectrum2.mz, spectrum2.intensity))
-        peaks2 = [[float(peak[0]), float(peak[1])] for peak in peaks2]
         spectrum2_dict = {
-            "peaks": peaks2,
+            "peaks": list(zip(spectrum2.mz, spectrum2.intensity)),
             "n_peaks": len(spectrum2.mz),
             "precursor_mz": spectrum2.precursor_mz,
             "splash": splash_key2,
