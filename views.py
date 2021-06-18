@@ -304,6 +304,10 @@ def prepare_spectrum(
     """
     spectrum = copy.deepcopy(spectrum)
     spectrum.set_mz_range(kwargs["mz_min"], kwargs["mz_max"])
+    # No peaks in the specified range.
+    if len(spectrum.mz) == 0:
+        spectrum.annotation = []
+        return spectrum
     spectrum.scale_intensity(max_intensity=1)
 
     # Annotate spectrum peaks.

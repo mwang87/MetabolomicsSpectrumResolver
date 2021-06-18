@@ -1007,8 +1007,12 @@ def draw_table(
         {"name": "Intensity", "id": "Intensity"},
     ]
     peak_controls = {
-        "mz_min": None if mz_min == "None" else float(mz_min),
-        "mz_max": None if mz_max == "None" else float(mz_max),
+        "mz_min": None
+        if mz_min is None or mz_min == "None"
+        else float(mz_min),
+        "mz_max": None
+        if mz_max is None or mz_max == "None"
+        else float(mz_max),
         "fragment_mz_tolerance": 0.001,
         "annotate_precision": int(annotate_precision),
         "annotate_peaks": annotate_peaks1,
@@ -1058,7 +1062,12 @@ def _get_peaks(
         }
         for mz, intensity in zip(spectrum.mz, spectrum.intensity)
     ]
-    return peaks, spectrum.annotation.nonzero()[0].tolist()
+    return (
+        peaks,
+        spectrum.annotation.nonzero()[0].tolist()
+        if spectrum.annotation is not None
+        else [],
+    )
 
 
 @dash_app.callback(
