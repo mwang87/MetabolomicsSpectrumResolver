@@ -13,6 +13,7 @@ import tasks
 import views
 from app import app
 
+from flask import request
 
 _example_usi = "mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077"
 
@@ -84,16 +85,14 @@ DATASELECTION_CARD = [
                 html.H5("USI Data Selection")
             ),
             dbc.Col(
-                html.A(
-                    dbc.Button("Link to Plot", 
-                        color="primary", size="sm", 
-                        className="mr-1", 
-                        style={
-                            "float" : "right"
-                        }
-                    ),
-                    id="plot_link", 
-                )
+                dbc.Button("Copy Link to Plot", 
+                    color="primary", size="sm", 
+                    className="mr-1", 
+                    style={
+                        "float" : "right"
+                    },
+                    id="copy_link_button"
+                ),
             )
     ])),
     dbc.CardBody(
@@ -467,6 +466,12 @@ EXAMPLES_DASHBOARD = [
 BODY = dbc.Container(
     [
         dcc.Location(id="url", refresh=False),
+        html.Div(
+            [
+                dcc.Link(id="query_link", href="#", target="_blank"),
+            ],
+            style="display:none"
+        ),
         dbc.Row(
             [
                 dbc.Col(
@@ -566,7 +571,11 @@ def set_drawing_controls(
 
 
 @dash_app.callback(
-    [Output("output", "children"), Output("url", "search"), Output("plot_link", "href")],
+    [
+        Output("output", "children"), 
+        Output("url", "search"), 
+        Output("query_link", "href")
+    ],
     [
         Input("usi1", "value"),
         Input("usi2", "value"),
@@ -680,7 +689,40 @@ def draw_figure(
     else:
         spectrum_view = _process_mirror_usi(usi1, usi2, drawing_controls)
 
-    return [spectrum_view, f"?{urlencode(drawing_controls, quote_via=quote)}", f"/dashinterface?{urlencode(drawing_controls, quote_via=quote)}"]
+    return [spectrum_view, f"?{urlencode(drawing_controls, quote_via=quote)}", request.host_url + f"/dashinterface?{urlencode(drawing_controls, quote_via=quote)}"]
+
+
+dash_app.clientside_callback(
+    """
+    function(n_clicks, text_to_copy) {
+        original_text = "Copy Link to Plot"
+        if (n_clicks > 0) {
+            const el = document.createElement('textarea');
+            el.value = text_to_copy;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            setTimeout(function(){ 
+                    document.getElementById("copy_link_button").textContent = original_text
+                }, 1000);
+            document.getElementById("copy_link_button").textContent = "Copied!"
+            return 'Copied!';
+        } else {
+            document.getElementById("copy_link_button").textContent = original_text
+            return original_text;
+        }
+    }
+    """,
+    Output('copy_link_button', 'children'),
+    [
+        Input('copy_link_button', 'n_clicks')
+    ],
+    [
+        State('query_link', 'href'),
+    ]
+)
+
 
 
 def _process_usi(
