@@ -49,7 +49,7 @@ usi_pattern_draft = re.compile(
     # index flag
     r':(scan|index|nativeId|trace|accession)'
     # index number
-    r':(.+)'
+    r':([^:]+)'
     # optional spectrum interpretation
     r'(:.+)?$',
     flags=re.IGNORECASE
@@ -99,8 +99,11 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
             raise e
     try:
         collection = match.group(1).lower()
-        # Send all proteomics USIs to MassIVE.
-        if (collection.startswith('msv') or collection.startswith('pxd') or
+        annotation = match.group(5)
+        # Send all proteomics USIs (by definition all annotated USIs) to MassIVE.
+        # mzdraft USIs are assumed to also use ProForma notation.  If this changes,
+        # be sure to change this logic.
+        if (annotation is not None or collection.startswith('msv') or collection.startswith('pxd') or
                 collection.startswith('pxl') or collection.startswith('rpxd')
                 or collection == 'massivekb' or collection == 'massive'):
             spectrum, source_link = _parse_msv_pxd(usi)
@@ -266,6 +269,8 @@ def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
 
 # Parse MSV or PXD library.
 def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+    if usi.startswith('mzdraft:'):
+        usi = usi.replace('mzdraft:','mzspec:')
     match = _match_usi(usi)
     dataset_identifier = match.group(1)
     index_flag = match.group(3)
