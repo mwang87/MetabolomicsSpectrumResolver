@@ -266,7 +266,8 @@ def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
 
 # Parse MSV or PXD library.
 def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
-    usi = usi.replace('mzdraft','mzspec')
+    if usi.startswith('mzdraft:'):
+        usi = usi.replace('mzdraft:','mzspec:')
     match = _match_usi(usi)
     dataset_identifier = match.group(1)
     index_flag = match.group(3)
