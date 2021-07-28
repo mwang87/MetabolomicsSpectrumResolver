@@ -47,12 +47,12 @@ class UsiLoadTester(locust.HttpUser):
     @locust.task
     def generate_png(self):
         usi = random.choice(usis_to_test)
-        self.client.get(f'/png/?usi={usi}', name='/png/')
+        self.client.get(f'/png/?usi1={usi}', name='/png/')
 
     @locust.task
     def generate_svg(self):
         usi = random.choice(usis_to_test)
-        self.client.get(f'/svg/?usi={usi}', name='/svg/')
+        self.client.get(f'/svg/?usi1={usi}', name='/svg/')
 
     @locust.task(3)
     def render_mirror_spectrum(self):
