@@ -49,7 +49,7 @@ usi_pattern_draft = re.compile(
     # index flag
     r":(scan|index|nativeId|trace|accession)"
     # index number
-    r":(.+)"
+    r":([^:]+)"
     # optional spectrum interpretation
     r"(:.+)?$",
     flags=re.IGNORECASE,
