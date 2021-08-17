@@ -42,7 +42,7 @@ class UsiLoadTester(locust.HttpUser):
     @locust.task(3)
     def render_spectrum(self):
         usi = random.choice(usis_to_test)
-        self.client.get(f'/spectrum/?usi={usi}', name='/spectrum/')
+        self.client.get(f'/spectrum/?usi1={usi}', name='/spectrum/')
 
     @locust.task(3)
     def render_spectrum(self):
