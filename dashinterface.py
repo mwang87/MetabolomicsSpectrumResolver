@@ -11,6 +11,7 @@ import requests
 from dash.dependencies import Input, Output, State
 from dash_table import DataTable, FormatTemplate
 from dash_table.Format import Format, Scheme
+from flask import request
 
 import tasks
 import views
@@ -728,7 +729,8 @@ def draw_figure(
         spectrum_view = _process_mirror_usi(usi1, usi2, drawing_controls)
 
     url_query = f"?{urlencode(drawing_controls, quote_via=quote)}"
-    return spectrum_view, url_query, f"/dashinterface?{url_query}"
+    url = request.host_url + f"/dashinterface?{url_query}"
+    return spectrum_view, url_query, url
 
 
 def _process_usi(
