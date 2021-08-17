@@ -9,6 +9,8 @@ import dash_html_components as html
 import dash_table
 import requests
 from dash.dependencies import Input, Output, State
+from dash_table import DataTable, FormatTemplate
+from dash_table.Format import Format, Scheme
 
 import tasks
 import views
@@ -382,7 +384,7 @@ MIDDLE_DASHBOARD = [
             dbc.Row(
                 [
                     dbc.Col(
-                        dash_table.DataTable(
+                        DataTable(
                             id="peak_table1",
                             columns=[{"name": "filename", "id": "filename"}],
                             data=[],
@@ -394,7 +396,7 @@ MIDDLE_DASHBOARD = [
                         )
                     ),
                     dbc.Col(
-                        dash_table.DataTable(
+                        DataTable(
                             id="peak_table2",
                             columns=[{"name": "filename", "id": "filename"}],
                             data=[],
@@ -1003,8 +1005,20 @@ def draw_table(
         annotate_peaks1 = annotate_peaks2 = True
 
     columns1 = columns2 = [
-        {"name": "m/z", "id": "m/z"},
-        {"name": "Intensity", "id": "Intensity"},
+        {
+            "name": "m/z",
+            "id": "m/z",
+            "type": "numeric",
+            "format": Format(
+                precision=int(annotate_precision), scheme=Scheme.fixed
+            ),
+        },
+        {
+            "name": "Intensity",
+            "id": "Intensity",
+            "type": "numeric",
+            "format": dash_table.FormatTemplate.percentage(1),
+        },
     ]
     peak_controls = {
         "mz_min": None
@@ -1056,10 +1070,7 @@ def _get_peaks(
     # noinspection PyTypeChecker
     spectrum = views.prepare_spectrum(tasks.parse_usi(usi)[0], **peak_controls)
     peaks = [
-        {
-            "m/z": round(mz, peak_controls["annotate_precision"]),
-            "Intensity": round(intensity * 100, 1),
-        }
+        {"m/z": mz, "Intensity": intensity}
         for mz, intensity in zip(spectrum.mz, spectrum.intensity)
     ]
     return (
