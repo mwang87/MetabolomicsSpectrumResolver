@@ -384,7 +384,6 @@ def test_generate_qr_mirror_drawing_controls(client):
 def test_render_error(client):
     for usi, status_code in zip(*_get_invalid_usi_status_code()):
         if usi is not None:
-            print(usi)
             response = client.get(
                 '/json/',
                 query_string=f'usi1={urllib.parse.quote_plus(usi)}')

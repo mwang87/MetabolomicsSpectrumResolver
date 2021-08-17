@@ -311,9 +311,6 @@ def test_prepare_spectrum_annotate_peaks_default():
     spectrum, _, _ = parsing.parse_usi(usi)
     spectrum_processed = views.prepare_spectrum(
         spectrum, **views.get_drawing_controls(**_get_plotting_args()))
-
-    print(spectrum_processed.annotation)
-
     assert all([annotation is None
                 for annotation in spectrum_processed.annotation])
 
