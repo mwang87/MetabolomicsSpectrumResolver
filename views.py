@@ -180,7 +180,7 @@ def get_drawing_controls(
         The fragment m/z tolerance.
     grid : bool
         Whether to display the grid.
-    annotate_peaks: List[Union[bool, List[float]]] = None,
+    annotate_peaks: List[Union[bool, List[float]]] = None
         M/z values of the peaks in both spectra that should be labeled.
     mirror : bool
         Flag indicating whether this is a mirror spectrum or not.
