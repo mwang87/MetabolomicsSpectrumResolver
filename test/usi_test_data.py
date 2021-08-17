@@ -24,6 +24,8 @@ usis_to_test = [
     'mzspec:MassIVE:TASK-f4b86b150a164ee4a440b661e97a7193-spectra:scan:309566:AAAPAPVSEAVC[+57.021]R/2',
     'mzspec:PXD002854:20150414_QEp1_LC7_GaPI_SA_Serum_LH_30.mzXML:scan:15073:HPYFYAPELLFFAKR/3',
     'mzspec:MassIVE:TASK-f4b86b150a164ee4a440b661e97a7193-spectra/specs_ms.mgf:scan:287215:HPYFYAPELLF[-10.059]FAKR/3',
+    # MassIVE Task USIs disguised as GNPS Task USIs
+    'mzspec:GNPS:TASK-f4b86b150a164ee4a440b661e97a7193-spectra/specs_ms.mgf:scan:287215:HPYFYAPELLF[-10.059]FAKR/3',
     # Legacy cases.
     'mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943',
     'mzspec:GNPSTASK-64b22841ab3548f987b3cfc18696a581:spectra/specs_ms.mgf:scan:1469',
