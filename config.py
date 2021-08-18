@@ -1,1 +1,1 @@
-USI_SERVER = 'https://metabolomics-usi.ucsd.edu/'
+USI_SERVER = "https://metabolomics-usi.ucsd.edu/"
