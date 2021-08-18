@@ -1,4 +1,4 @@
-import json
+import ast
 from typing import Any, Dict, List, Tuple
 from urllib.parse import urlencode, quote, parse_qs
 
@@ -384,8 +384,10 @@ MIDDLE_DASHBOARD = [
                     dbc.Col(
                         DataTable(
                             id="peak_table1",
-                            columns=[{"name": "m/z", "id": "m/z"},
-                                     {"name": "Intensity", "id": "Intensity"}],
+                            columns=[
+                                {"name": "m/z", "id": "m/z"},
+                                {"name": "Intensity", "id": "Intensity"},
+                            ],
                             data=[],
                             filter_action="native",
                             page_size=10,
@@ -397,8 +399,10 @@ MIDDLE_DASHBOARD = [
                     dbc.Col(
                         DataTable(
                             id="peak_table2",
-                            columns=[{"name": "m/z", "id": "m/z"},
-                                     {"name": "Intensity", "id": "Intensity"}],
+                            columns=[
+                                {"name": "m/z", "id": "m/z"},
+                                {"name": "Intensity", "id": "Intensity"},
+                            ],
                             data=[],
                             filter_action="native",
                             page_size=10,
@@ -715,8 +719,12 @@ def draw_figure(
         fragment_mz_tolerance=fragment_mz_tolerance,
         grid=grid,
         annotate_peaks=[
-            [float(peak_table1[i]["m/z"]) for i in peak_table1_selected_rows],
-            [float(peak_table2[i]["m/z"]) for i in peak_table2_selected_rows],
+            [float(peak_table1[i]["m/z"]) for i in peak_table1_selected_rows]
+            if peak_table1_selected_rows
+            else True,
+            [float(peak_table2[i]["m/z"]) for i in peak_table2_selected_rows]
+            if peak_table2_selected_rows
+            else True,
         ],
     )
 
@@ -1030,8 +1038,9 @@ def draw_table(
         empty.
     """
     try:
-        annotate_peaks = json.loads(parse_qs(search[1:])["annotate_peaks"][0])
-        annotate_peaks1, annotate_peaks2 = annotate_peaks
+        annotate_peaks1, annotate_peaks2 = ast.literal_eval(
+            parse_qs(search[1:])["annotate_peaks"][0]
+        )
     except KeyError:
         # Annotate peaks by default.
         annotate_peaks1 = annotate_peaks2 = True
