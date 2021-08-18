@@ -128,6 +128,11 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
             spectrum, source_link = _parse_motifdb(usi_base)
         else:
             raise UsiError(f"Unknown USI collection: {match.group(1)}", 400)
+        # Assign ProForma annotation.
+        if proforma is not None:
+            # TODO: spectrum_utils native ProForma resolution.
+            #   spectrum.annotate(proforma)
+            pass
         splash_key = splash_builder.splash(
             splash.Spectrum(
                 list(zip(spectrum.mz, spectrum.intensity)),
@@ -368,52 +373,9 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                         f"https://massive.ucsd.edu/ProteoSAFe/"
                         f"QueryMSV?id={dataset_identifier}"
                     )
-
-                # Parse the peptide if available.
-                try:
-                    # Get the peptide information from resolution,
-                    # this dereferences proforma.
-                    peptide_clean = lookup_json["usi_components"]["peptide"]
-                    peptide = lookup_json["usi_components"]["variant"]
-                    charge = int(lookup_json["usi_components"]["charge"])
-
-                    # Parse out gapped sequence (e.g. X+129.04259), faking it
-                    # with Glycine as the base residue and adding more mods to
-                    # it.
-                    gapmod_pattern = re.compile("X[+][0-9.]*")
-                    transformed_peptide = peptide
-                    for match in gapmod_pattern.finditer(peptide):
-                        gap_mass = float(match.group().replace("X", ""))
-                        # Fake the gap with glycine.
-                        transformed_peptide = transformed_peptide.replace(
-                            match.group(), f"G{gap_mass - 57.021463735:+}"
-                        )
-                    peptide_clean = peptide_clean.replace("X", "G")
-                    peptide = transformed_peptide
-
-                    # Parse out modifications.
-                    mod_pattern = re.compile("[-+][0-9.]*")
-                    modifications, previous_mod_len = {}, 0
-                    for match in mod_pattern.finditer(peptide):
-                        found_pos = match.start()
-                        found_len = len(match.group())
-                        i = max(0, found_pos - previous_mod_len - 1)
-                        modifications[i] = float(match.group())
-                        previous_mod_len += found_len
-
-                    spectrum = sus.MsmsSpectrum(
-                        usi,
-                        precursor_mz,
-                        charge,
-                        mz,
-                        intensity,
-                        peptide=peptide_clean,
-                        modifications=modifications,
-                    )
-                except (TypeError, KeyError):
-                    spectrum = sus.MsmsSpectrum(
-                        usi, precursor_mz, charge, mz, intensity
-                    )
+                spectrum = sus.MsmsSpectrum(
+                    usi, precursor_mz, charge, mz, intensity
+                )
 
                 return spectrum, source_link
     except requests.exceptions.HTTPError:
