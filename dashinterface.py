@@ -11,6 +11,7 @@ import requests
 from dash.dependencies import Input, Output, State
 from dash_table import DataTable, FormatTemplate
 from dash_table.Format import Format, Scheme
+from flask import request
 
 import tasks
 import views
@@ -87,16 +88,14 @@ DATASELECTION_CARD = [
             [
                 dbc.Col(html.H5("USI Data Selection")),
                 dbc.Col(
-                    html.A(
-                        dbc.Button(
-                            "Link to Plot",
-                            color="primary",
-                            size="sm",
-                            className="mr-1",
-                            style={"float": "right"},
-                        ),
-                        id="plot_link",
-                    )
+                    dbc.Button(
+                        "Copy Link to Plot",
+                        color="primary",
+                        size="sm",
+                        className="mr-1",
+                        style={"float": "right"},
+                        id="copy_link_button",
+                    ),
                 ),
             ]
         )
@@ -483,6 +482,10 @@ EXAMPLES_DASHBOARD = [
 BODY = dbc.Container(
     [
         dcc.Location(id="url", refresh=False),
+        html.Div(
+            [dcc.Link(id="query_link", href="#", target="_blank")],
+            style="display:none",
+        ),
         dbc.Row(
             [
                 dbc.Col(
@@ -510,6 +513,34 @@ BODY = dbc.Container(
 )
 
 dash_app.layout = html.Div(children=[NAVBAR, BODY])
+
+
+dash_app.clientside_callback(
+    """
+    function(n_clicks, text_to_copy) {
+        original_text = "Copy Link to Plot"
+        if (n_clicks > 0) {
+            const el = document.createElement("textarea");
+            el.value = text_to_copy;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand("copy");
+            document.body.removeChild(el);
+            setTimeout(function() {
+                       document.getElementById("copy_link_button").textContent = original_text
+                       }, 1000);
+            document.getElementById("copy_link_button").textContent = "Copied"
+            return "Copied";
+        } else {
+            document.getElementById("copy_link_button").textContent = original_text
+            return original_text;
+        }
+    }
+    """,
+    Output("copy_link_button", "children"),
+    [Input("copy_link_button", "n_clicks")],
+    [State("query_link", "href")],
+)
 
 
 @dash_app.callback(
@@ -587,7 +618,7 @@ def set_drawing_controls(
     [
         Output("output", "children"),
         Output("url", "search"),
-        Output("plot_link", "href"),
+        Output("query_link", "href"),
     ],
     [
         Input("usi1", "value"),
@@ -698,7 +729,8 @@ def draw_figure(
         spectrum_view = _process_mirror_usi(usi1, usi2, drawing_controls)
 
     url_query = f"?{urlencode(drawing_controls, quote_via=quote)}"
-    return spectrum_view, url_query, f"/dashinterface?{url_query}"
+    url = request.host_url + f"/dashinterface?{url_query}"
+    return spectrum_view, url_query, url
 
 
 def _process_usi(

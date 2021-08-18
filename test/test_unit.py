@@ -296,7 +296,7 @@ def test_prepare_spectrum():
     spectrum, _, _ = parsing.parse_usi(usi)
     spectrum_processed = views.prepare_spectrum(
         spectrum, **views.get_drawing_controls(**_get_plotting_args(
-            mz_min=400, mz_max=700, annotate_peaks=json.dumps([[]]))))
+            mz_min=400, mz_max=700, annotate_peaks=[])))
     assert spectrum is not spectrum_processed
     assert len(spectrum.mz) == 49
     assert len(spectrum_processed.mz) == 5
@@ -311,11 +311,8 @@ def test_prepare_spectrum_annotate_peaks_default():
     spectrum, _, _ = parsing.parse_usi(usi)
     spectrum_processed = views.prepare_spectrum(
         spectrum, **views.get_drawing_controls(**_get_plotting_args()))
-    
-    print(spectrum_processed.annotation)
-
     assert all([annotation is None
-                    for annotation in spectrum_processed.annotation])
+                for annotation in spectrum_processed.annotation])
 
 
 def test_prepare_spectrum_annotate_peaks_specified():
@@ -339,7 +336,7 @@ def test_prepare_spectrum_annotate_peaks_specified_invalid():
     spectrum, _, _ = parsing.parse_usi(usi)
     spectrum_processed = views.prepare_spectrum(
         spectrum, **views.get_drawing_controls(**_get_plotting_args(
-            annotate_peaks=json.dumps([[1477.2525, 1654.3575]]))))
+            annotate_peaks=[1477.2525, 1654.3575])))
     assert all([annotation is None
                 for annotation in spectrum_processed.annotation])
 
@@ -351,7 +348,7 @@ def test_prepare_mirror_spectra():
     spectrum2, _, _ = parsing.parse_usi(usi2)
     spectrum1_processed, spectrum2_processed = views._prepare_mirror_spectra(
         spectrum1, spectrum2, **views.get_drawing_controls(**_get_plotting_args(
-            mz_min=400, mz_max=700, annotate_peaks=json.dumps([[], []])),
+            mz_min=400, mz_max=700, annotate_peaks=[[], []]),
             mirror=True))
     assert spectrum1 is not spectrum1_processed
     assert spectrum2 is not spectrum2_processed

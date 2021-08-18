@@ -15,7 +15,6 @@ import pytest
 import requests
 import spectrum_utils.spectrum as sus
 import urllib.parse
-from lxml import etree
 from pyzbar import pyzbar
 
 import app
@@ -88,6 +87,7 @@ def test_render_spectrum(client):
             '/spectrum/', query_string=f'usi1={urllib.parse.quote_plus(usi)}')
         assert response.status_code == 302
 
+
 # itertools recipe.
 def pairwise(iterable):
     """s -> (s0,s1), (s1,s2), (s2, s3), ..."""
@@ -103,6 +103,7 @@ def test_render_mirror(client):
                                      f'usi2={urllib.parse.quote_plus(usi2)}')
         assert response.status_code == 302
 
+
 def test_generate_png(client):
     for usi in usis_to_test:
         response = client.get(
@@ -117,7 +118,8 @@ def test_generate_png_drawing_controls(client):
     for usi in usis_to_test:
         response = client.get(
             '/png/',
-            query_string=f'usi1={urllib.parse.quote_plus(usi)}&{plotting_args}')
+            query_string=f'usi1={urllib.parse.quote_plus(usi)}&'
+                         f'{plotting_args}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
@@ -161,7 +163,8 @@ def test_generate_svg_drawing_controls(client):
     for usi in usis_to_test:
         response = client.get(
             '/svg/',
-            query_string=f'usi1={urllib.parse.quote_plus(usi)}&{plotting_args}')
+            query_string=f'usi1={urllib.parse.quote_plus(usi)}&'
+                         f'{plotting_args}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert b'<!DOCTYPE svg' in response.data
@@ -332,7 +335,8 @@ def test_generate_qr_drawing_controls(client):
     for usi in usis_to_test:
         response = client.get(
             '/qrcode/',
-            query_string=f'usi1={urllib.parse.quote_plus(usi)}&{plotting_args}')
+            query_string=f'usi1={urllib.parse.quote_plus(usi)}&'
+                         f'{plotting_args}')
         assert response.status_code == 200
         assert len(response.data) > 0
         assert imghdr.what(None, response.data) == 'png'
@@ -380,7 +384,6 @@ def test_generate_qr_mirror_drawing_controls(client):
 def test_render_error(client):
     for usi, status_code in zip(*_get_invalid_usi_status_code()):
         if usi is not None:
-            print(usi)
             response = client.get(
                 '/json/',
                 query_string=f'usi1={urllib.parse.quote_plus(usi)}')
@@ -388,6 +391,7 @@ def test_render_error(client):
             assert response.status_code == status_code, usi
 
 
+# FIXME
 @pytest.mark.skip(reason="Mock seems to have some issues")
 def test_render_error_timeout(client):
     with unittest.mock.patch(

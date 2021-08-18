@@ -180,7 +180,7 @@ def get_drawing_controls(
         The fragment m/z tolerance.
     grid : bool
         Whether to display the grid.
-    annotate_peaks: List[Union[bool, List[float]]] = None,
+    annotate_peaks: List[Union[bool, List[float]]] = None
         M/z values of the peaks in both spectra that should be labeled.
     mirror : bool
         Flag indicating whether this is a mirror spectrum or not.
@@ -435,7 +435,8 @@ def peak_json():
             flask.request.args.get("usi1")
         )
         result_dict = {
-            "peaks": list(zip(spectrum.mz, spectrum.intensity)),
+            "peaks": list(zip(spectrum.mz.astype(float),
+                              spectrum.intensity.astype(float))),
             "n_peaks": len(spectrum.mz),
             "precursor_mz": float(spectrum.precursor_mz),
             "precursor_charge": int(spectrum.precursor_charge),
@@ -473,15 +474,19 @@ def mirror_json():
             drawing_controls["cosine"] == "shifted",
         )
         spectrum1_dict = {
-            "peaks": list(zip(spectrum1.mz, spectrum1.intensity)),
+            "peaks": list(zip(spectrum1.mz.astype(float),
+                              spectrum1.intensity.astype(float))),
             "n_peaks": len(spectrum1.mz),
-            "precursor_mz": spectrum1.precursor_mz,
+            "precursor_mz": float(spectrum1.precursor_mz),
+            "precursor_charge": int(spectrum1.precursor_charge),
             "splash": splash_key1,
         }
         spectrum2_dict = {
-            "peaks": list(zip(spectrum2.mz, spectrum2.intensity)),
+            "peaks": list(zip(spectrum2.mz.astype(float),
+                              spectrum2.intensity.astype(float))),
             "n_peaks": len(spectrum2.mz),
-            "precursor_mz": spectrum2.precursor_mz,
+            "precursor_mz": float(spectrum2.precursor_mz),
+            "precursor_charge": int(spectrum2.precursor_charge),
             "splash": splash_key2,
         }
         result_dict = {
@@ -509,8 +514,8 @@ def peak_proxi_json():
         result_dict = {
             "usi": usi,
             "status": "READABLE",
-            "mzs": spectrum.mz.tolist(),
-            "intensities": spectrum.intensity.tolist(),
+            "mzs": spectrum.mz.astype(float).tolist(),
+            "intensities": spectrum.intensity.astype(float).tolist(),
             "attributes": [
                 {
                     "accession": "MS:1000744",
