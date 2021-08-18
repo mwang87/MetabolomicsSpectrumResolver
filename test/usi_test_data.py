@@ -14,6 +14,8 @@ usis_to_test = [
     "mzspec:MSV000082791:(-)-epigallocatechin:scan:2",
     "mzspec:MSV000082680:iPSC-T1R1:scan:3",
     "mzspec:MSV000085444:Hui_N3_fe:scan:500",
+    # This one has a problematic file name (#139).
+    "mzspec:MSV000080918:SS279_RH9_01_7628.mzML:scan:2629",
     # Proteomics Annotations
     "mzspec:PXD000966:CPTAC_CompRef_00_iTRAQ_05_2Feb12_Cougar_11-10-09.mzML:scan:12298:[UNIMOD:214]-LHFFM[UNIMOD:35]PGFAPLTSR/2",
     "mzspec:PXD015901:TCGA_BH-A18U_A2-A0YI_A2-A0EQ_117C_W_BI_20130405_H-JQ_f13.mzML:scan:28941:[+144.102063]-HPYFYAPELLFFAK[+144.102063]R/2",
