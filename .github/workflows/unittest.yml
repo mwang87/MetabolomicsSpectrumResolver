@@ -37,5 +37,6 @@ jobs:
     - name: Run unit and integration tests
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
+        export PYTHONPATH=${PYTHONPATH}:.
         source ~/.bashrc
         pytest -v -n 4 ./test/
