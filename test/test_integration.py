@@ -4,10 +4,7 @@ import imghdr
 import io
 import itertools
 import json
-import sys
 import unittest.mock
-
-sys.path.insert(0, "..")
 
 import flask
 import flex
@@ -18,9 +15,8 @@ import spectrum_utils.spectrum as sus
 import urllib.parse
 from pyzbar import pyzbar
 
-import app
-import parsing
-from error import UsiError
+from metabolomics_spectrum_resolver import app
+from metabolomics_spectrum_resolver.error import UsiError
 
 from usi_test_data import usis_to_test
 
@@ -440,7 +436,7 @@ def test_render_error(client):
 @pytest.mark.skip(reason="Mock seems to have some issues")
 def test_render_error_timeout(client):
     with unittest.mock.patch(
-        "parsing.requests.get",
+        "metabolomics_spectrum_resolver.parsing.requests.get",
         side_effect=UsiError(
             "Timeout while retrieving the USI from an " "external resource",
             504,

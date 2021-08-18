@@ -1,19 +1,14 @@
 import functools
 import json
-import sys
 import unittest.mock
-
-sys.path.insert(0, "..")
 
 import numpy as np
 import pytest
 import requests
 from spectrum_utils import spectrum as sus
 
-import parsing
-import similarity
-import views
-from error import UsiError
+from metabolomics_spectrum_resolver import parsing, similarity, views
+from metabolomics_spectrum_resolver.error import UsiError
 
 from usi_test_data import usis_to_test
 
@@ -232,7 +227,7 @@ def test_parse_motifdb():
 
 def test_parse_timeout():
     with unittest.mock.patch(
-        "parsing.requests.get",
+        "metabolomics_spectrum_resolver.parsing.requests.get",
         side_effect=UsiError(
             "Timeout while retrieving the USI from an " "external resource",
             504,

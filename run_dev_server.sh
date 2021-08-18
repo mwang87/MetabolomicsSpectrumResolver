@@ -2,4 +2,5 @@
 source activate usi
 
 export FLASK_ENV=development
-python3 ./main.py
+export PYTHONPATH=${PYTHONPATH}:.
+python3 metabolomics_spectrum_resolver/main.py

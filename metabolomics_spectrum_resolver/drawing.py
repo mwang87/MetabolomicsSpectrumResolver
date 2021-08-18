@@ -7,8 +7,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 from spectrum_utils import plot as sup, spectrum as sus
 
-from config import USI_SERVER
-import similarity
+from metabolomics_spectrum_resolver import similarity
+from metabolomics_spectrum_resolver.config import USI_SERVER
 
 
 matplotlib.use("Agg")

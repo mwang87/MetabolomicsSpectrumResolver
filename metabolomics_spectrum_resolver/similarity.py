@@ -1,11 +1,9 @@
 import collections
+from typing import List, Tuple
 
 import numba as nb
 import numpy as np
-
-from typing import List, Tuple
-
-from spectrum_utils import spectrum as sus
+import spectrum_utils.spectrum as sus
 
 
 SpectrumTuple = collections.namedtuple(

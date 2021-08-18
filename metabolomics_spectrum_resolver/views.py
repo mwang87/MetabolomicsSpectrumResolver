@@ -10,9 +10,8 @@ import numpy as np
 import qrcode
 from spectrum_utils import spectrum as sus
 
-import similarity
-import tasks
-from error import UsiError
+from metabolomics_spectrum_resolver import similarity, tasks
+from metabolomics_spectrum_resolver.error import UsiError
 
 
 default_drawing_controls = {

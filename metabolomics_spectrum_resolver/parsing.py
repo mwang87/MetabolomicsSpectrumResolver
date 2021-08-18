@@ -7,8 +7,8 @@ import urllib.parse
 import spectrum_utils.spectrum as sus
 import splash
 
-import parsing_legacy
-from error import UsiError
+from metabolomics_spectrum_resolver import parsing_legacy
+from metabolomics_spectrum_resolver.error import UsiError
 
 timeout = 45  # seconds
 
