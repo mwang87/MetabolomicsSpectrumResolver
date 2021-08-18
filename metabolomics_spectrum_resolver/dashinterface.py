@@ -25,7 +25,7 @@ dash_app = dash.Dash(
     url_base_pathname="/dashinterface/",
     external_stylesheets=[dbc.themes.BOOTSTRAP],
 )
-dash_app.title = "USI"
+dash_app.title = "Metabolomics USI"
 
 dash_app.index_string = """<!DOCTYPE html>
 <html>
@@ -67,10 +67,9 @@ NAVBAR = dbc.Navbar(
         dbc.Nav(
             [
                 dbc.NavItem(
-                    dbc.NavLink("Metabolomics USI — Dash Interface", href="#"),
-                ),
-                dbc.NavItem(
-                    html.A("Homepage", href="/", className="nav-link")
+                    dbc.NavLink(
+                        "Metabolomics USI", href="/", className="nav-link"
+                    )
                 ),
             ],
             navbar=True,
@@ -125,14 +124,13 @@ DATASELECTION_CARD = [
                 [
                     dbc.Col(html.H4("Drawing Controls")),
                     dbc.Col(
-                        html.A(
-                            dbc.Badge(
-                                "Reset Figure",
-                                color="warning",
-                                className="mr-1",
-                            ),
+                        dbc.Button(
+                            "Reset Figure",
+                            color="warning",
+                            size="sm",
+                            className="mr-1",
                             id="reset_figure",
-                        )
+                        ),
                     ),
                 ]
             ),
@@ -242,12 +240,19 @@ DATASELECTION_CARD = [
                     dbc.Col("Label Precision"),
                     dbc.Col(
                         [
-                            dbc.Input(
-                                id="annotate_precision",
-                                min=0,
-                                placeholder="input number",
-                                value=4,
-                                type="number",
+                            dbc.InputGroup(
+                                [
+                                    dbc.Input(
+                                        id="annotate_precision",
+                                        min=0,
+                                        placeholder="input number",
+                                        value=4,
+                                        type="number",
+                                    ),
+                                    dbc.InputGroupAddon(
+                                        "decimals", addon_type="append"
+                                    ),
+                                ]
                             )
                         ]
                     ),
@@ -789,7 +794,7 @@ def _process_usi(
     download_div = dbc.Row(
         [
             dbc.Col(
-                [html.Img(src=f"/qrcode?usi={quote(usi)}")],
+                [html.Img(src=f"/qrcode?usi1={quote(usi)}")],
                 className="col-1",
             ),
             dbc.Col(
