@@ -332,8 +332,8 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     f"https://massive.ucsd.edu/ProteoSAFe/"
                     f"DownloadResultFile?"
                     f"task=4f2ac74ea114401787a7e96e143bb4a1&"
-                    f"invoke=annotatedSpectrumImageText&block=0&"
-                    f'file=FILE->{spectrum_file["file_descriptor"]}'
+                    f"invoke=annotatedSpectrumImageText&block=0&file=FILE->"
+                    f"{urllib.parse.quote(spectrum_file['file_descriptor'])}"
                     f"&scan={scan}&peptide=*..*&force=false&"
                     f"format=JSON&uploadfile=True"
                 )
