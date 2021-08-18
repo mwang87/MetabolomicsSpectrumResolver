@@ -794,7 +794,7 @@ def _process_usi(
     download_div = dbc.Row(
         [
             dbc.Col(
-                [html.Img(src=f"/qrcode?usi1={quote(usi)}")],
+                [html.Img(src=usi_url.replace("/svg/", "/qrcode"))],
                 className="col-1",
             ),
             dbc.Col(
@@ -895,8 +895,7 @@ def _process_mirror_usi(
                 [
                     html.Img(
                         src=(
-                            f"/qrcode?mirror=true&usi1={quote(usi1)}&"
-                            f"usi2={quote(usi2)}"
+                            mirror_url.replace("/svg/mirror/", "/qrcode")
                         )
                     )
                 ],
