@@ -7,7 +7,6 @@ import urllib.parse
 import spectrum_utils.spectrum as sus
 import splash
 
-import parsing_legacy
 from error import UsiError
 
 timeout = 45  # seconds
@@ -37,9 +36,9 @@ usi_pattern = re.compile(
     flags=re.IGNORECASE,
 )
 # OR: Metabolomics USIs.
-usi_pattern_draft = re.compile(
-    # mzdraft preamble
-    r"^(?:mzspec|mzdraft)"
+usi_metabolomics_pattern = re.compile(
+    # mzspec preamble
+    r"^mzspec"
     # collection identifier
     # Unofficial proteomics spectral library identifier: MASSIVEKB
     # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB
@@ -54,22 +53,26 @@ usi_pattern_draft = re.compile(
     r"(:.+)?$",
     flags=re.IGNORECASE,
 )
+# Legacy metabolomics USIs.
+usi_legacy_pattern = re.compile(
+    # Legacy GNPS task.
+    r"^((?:mzspec|mzdraft):GNPSTASK-[a-z0-9]{32}:.+:scan:\d+)|"
+    # Legacy GNPS library.
+    r"((?:mzspec|mzdraft):GNPSLIBRARY:CCMSLIB\d+)|"
+    # Legacy MassBank.
+    r"((?:mzspec|mzdraft):MASSBANK:[^:]+)|"
+    # Legacy MotifDB.
+    r"((?:mzspec|mzdraft):MOTIFDB:motif:[^:]+)|"
+    # Legacy MS2LDA.
+    r"((?:mzspec|mzdraft):MS2LDATASK-[^:]+:document:[^:]+)$",
+    flags=re.IGNORECASE,
+)
 gnps_task_pattern = re.compile(
     r"^TASK-([a-z0-9]{32})-(.+)$", flags=re.IGNORECASE
 )
 ms2lda_task_pattern = re.compile(r"^TASK-(\d+)$", flags=re.IGNORECASE)
 
 splash_builder = splash.Splash()
-
-
-def _match_usi(usi: str):
-    # First try matching as an official USI, then as a metabolomics draft USI.
-    match = usi_pattern.match(usi)
-    if match is None:
-        match = usi_pattern_draft.match(usi)
-    if match is None:
-        raise UsiError(f"Incorrectly formatted USI: {usi}", 400)
-    return match
 
 
 def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
@@ -86,21 +89,7 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     Tuple[sus.MsmsSpectrum, str, str]
         A tuple of the `MsmsSpectrum`, its source link, and its SPLASH.
     """
-    try:
-        match = _match_usi(usi)
-    except UsiError as e:
-        # FIXME: Legacy parsing is attempted when the USI is invalid.
-        try:
-            spectrum, source_link = parsing_legacy.parse_usi_legacy(usi)
-            splash_key = splash_builder.splash(
-                splash.Spectrum(
-                    list(zip(spectrum.mz, spectrum.intensity)),
-                    splash.SpectrumType.MS,
-                )
-            )
-            return spectrum, source_link, splash_key
-        except ValueError:
-            raise e
+    match = _match_usi(usi)
     try:
         collection = match.group(1).lower()
         annotation = match.group(5)
@@ -140,6 +129,96 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
             "Timeout while retrieving the USI from an external " "resource",
             504,
         )
+
+
+def _match_usi(usi: str) -> re.Match:
+    """
+    Parse a USI into its constituent parts.
+
+    Parameters
+    ----------
+    usi : str
+        The USI to be parsed.
+
+    Returns
+    -------
+    re.Match
+        The parsed USI.
+
+    Raises
+    ------
+    UsiError
+        If the USI could not be parsed because it is incorrectly formatted.
+    """
+    # Translate legacy USIs if necessary.
+    if usi_legacy_pattern.match(usi) is not None:
+        usi = _convert_legacy_usi(usi)
+    # First try matching as an official USI, then as a metabolomics USI.
+    match = usi_pattern.match(usi)
+    if match is None:
+        match = usi_metabolomics_pattern.match(usi)
+    if match is None:
+        raise UsiError(f"Incorrectly formatted USI: {usi}", 400)
+    return match
+
+
+def _convert_legacy_usi(usi: str) -> str:
+    """
+    Convert a legacy format metabolomics USI to the proper metabolomics USI
+    format.
+
+    Parameters
+    ----------
+    usi : str
+        The legacy metabolomics USI to convert.
+
+    Returns
+    -------
+    str
+        The updated metabolomics USI.
+
+    Raises
+    ------
+    UsiError
+        If the legacy USI is incorrectly formatted.
+    """
+    # Convert GNPS task legacy USI.
+    match = re.compile(
+        r"^(?:mzspec|mzdraft):GNPSTASK-([a-z0-9]{32}):(.+):scan:(\d+)$",
+        flags=re.IGNORECASE
+    ).match(usi)
+    if match is not None:
+        return f"mzspec:GNPS:TASK-{match[1]}-{match[2]}:scan:{match[3]}"
+    # Convert GNPS library legacy USI.
+    match = re.compile(
+        r"^(?:mzspec|mzdraft):GNPSLIBRARY:(CCMSLIB\d+)$",
+        flags=re.IGNORECASE
+    ).match(usi)
+    if match is not None:
+        return f"mzspec:GNPS:GNPS-LIBRARY:accession:{match[1]}"
+    # Convert MassBank legacy USI.
+    match = re.compile(
+        r"^(?:mzspec|mzdraft):MASSBANK:([^:]+)$",
+        flags=re.IGNORECASE
+    ).match(usi)
+    if match is not None:
+        return f"mzspec:MASSBANK::accession:{match[1]}"
+    # Convert MotifDB legacy USI.
+    match = re.compile(
+        r"^(?:mzspec|mzdraft):MOTIFDB:motif:([^:]+)$",
+        flags=re.IGNORECASE
+    ).match(usi)
+    if match is not None:
+        return f"mzspec:MOTIFDB::accession:{match[1]}"
+    # Convert MS2LDA legacy USI.
+    match = re.compile(
+        r"^(?:mzspec|mzdraft):MS2LDATASK-([^:]+):document:([^:]+)$",
+        flags=re.IGNORECASE
+    ).match(usi)
+    if match is not None:
+        return f"mzspec:MS2LDA:TASK-{match[1]}:accession:{match[2]}"
+    # Give an error on unknown legacy USI.
+    raise UsiError(f"Incorrectly formatted legacy USI: {usi}", 400)
 
 
 # Parse GNPS tasks or library spectra.
