@@ -384,7 +384,8 @@ MIDDLE_DASHBOARD = [
                     dbc.Col(
                         DataTable(
                             id="peak_table1",
-                            columns=[{"name": "filename", "id": "filename"}],
+                            columns=[{"name": "m/z", "id": "m/z"},
+                                     {"name": "Intensity", "id": "Intensity"}],
                             data=[],
                             filter_action="native",
                             page_size=10,
@@ -396,7 +397,8 @@ MIDDLE_DASHBOARD = [
                     dbc.Col(
                         DataTable(
                             id="peak_table2",
-                            columns=[{"name": "filename", "id": "filename"}],
+                            columns=[{"name": "m/z", "id": "m/z"},
+                                     {"name": "Intensity", "id": "Intensity"}],
                             data=[],
                             filter_action="native",
                             page_size=10,
