@@ -532,23 +532,23 @@ def _get_invalid_usi_status_code():
         (
             "mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/"
             "nonexisting.mgf:scan:1943",
-            400,
+            404,
         ),
         (
             "mzspec:GNPS:TASK-c95481f0c53d42e78a61bf899e9f9adb-spectra/"
             "specs_ms.mgf:scan:this_scan_does_not_exist",
-            400,
+            404,
         ),
-        ("mzspec:GNPS:GNPS-LIBRARY:index:CCMSLIB00005436077", 404),
+        ("mzspec:GNPS:GNPS-LIBRARY:index:CCMSLIB00005436077", 400),
         (
             "mzspec:GNPS:GNPS-LIBRARY:accession:this_accession_does_not_exist",
             404,
         ),
         ("mzspec:MASSBANK::index:SM858102", 400),
-        ("mzspec:MASSBANK::accession:this_accession_does_not_exist", 400),
-        ("mzspec:MS2LDA:TASK-bla190:accession:270684", 404),
+        ("mzspec:MASSBANK::accession:this_accession_does_not_exist", 404),
+        ("mzspec:MS2LDA:TASK-bla190:accession:270684", 400),
         ("mzspec:MS2LDA:TASK-190:index:270684", 400),
-        ("mzspec:MS2LDA:TASK-666666666:accession:270684", 400),
+        ("mzspec:MS2LDA:TASK-666666666:accession:270684", 404),
         ("mzspec:MS2LDA:TASK-190:accession:this_document_does_not_exist", 404),
         (
             "mzspec:MSV666666666:Adult_Frontalcortex_bRP_Elite_85_f09:scan:"
@@ -559,13 +559,13 @@ def _get_invalid_usi_status_code():
         (
             "mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:index:"
             "17555",
-            404,
-        ),
-        (
-            "mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:",
             400,
         ),
-        ("this_scan_does_not_exist", 404),
+        (
+            "mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:scan:"
+            "this_scan_does_not_exist",
+            404,
+        ),
         ("mzspec:MOTIFDB::index:171163", 400),
         ("mzspec:MOTIFDB::accession:this_index_does_not_exist", 404),
     ]
