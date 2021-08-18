@@ -13,11 +13,13 @@ jobs:
           python-version: 3.8
       - name: Run black
         uses: psf/black@stable
-        run: black --line-length 79 --check metabolomics_spectrum_resolver
+        with:
+          options: "--check --diff --line-length 79"
+          src: "./metabolomics_spectrum_resolver"
       - name: Check for debugging print statements
         run: |
           if grep -rq "print(" metabolomics_spectrum_resolver; then
               echo "Found the following print statements:"
               grep -r "print(" metabolomics_spectrum_resolver
               exit 1
-          fi 
+          fi
