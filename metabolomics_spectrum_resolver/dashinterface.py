@@ -894,9 +894,7 @@ def _process_mirror_usi(
             dbc.Col(
                 [
                     html.Img(
-                        src=(
-                            mirror_url.replace("/svg/mirror/", "/qrcode")
-                        )
+                        src=(mirror_url.replace("/svg/mirror/", "/qrcode"))
                     )
                 ],
                 className="col-1",
