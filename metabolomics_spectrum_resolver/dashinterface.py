@@ -562,9 +562,7 @@ dash_app.clientside_callback(
 )
 def set_drawing_controls(
     _: str, search: str
-) -> Tuple[
-    str, str, str, str, str, str, str, str, str, str, str, str,
-]:
+) -> Tuple[str, str, str, str, str, str, str, str, str, str, str, str]:
     """
     Set the drawing controls from the URL query parameters.
 
@@ -781,7 +779,8 @@ def _process_usi(
     download_div = dbc.Row(
         [
             dbc.Col(
-                [html.Img(src=f"/qrcode?usi={quote(usi)}")], className="col-1",
+                [html.Img(src=f"/qrcode?usi={quote(usi)}")],
+                className="col-1",
             ),
             dbc.Col(
                 [

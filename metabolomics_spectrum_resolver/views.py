@@ -394,7 +394,9 @@ def _generate_labels(
 
 
 def _prepare_mirror_spectra(
-    spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum, **kwargs: Any,
+    spectrum1: sus.MsmsSpectrum,
+    spectrum2: sus.MsmsSpectrum,
+    **kwargs: Any,
 ) -> Tuple[sus.MsmsSpectrum, sus.MsmsSpectrum]:
     """
     Process two spectra for plotting in a mirror plot.
