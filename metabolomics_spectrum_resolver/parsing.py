@@ -102,30 +102,30 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         except ValueError:
             raise e
     try:
+        # Split off potential ProForma annotations because not all backends
+        # can handle those.
+        usi_base = usi[:match.start(5)] + usi[match.end(5):]
+        proforma = match.group(5)[1:] if match.group(5) is not None else None
+        # Retrieve the spectrum from its resource.
         collection = match.group(1).lower()
-        annotation = match.group(5)
-        # Send all proteomics USIs (by definition all annotated USIs) to
-        # MassIVE.
-        # mzdraft USIs are assumed to also use ProForma notation. If this
-        # changes, be sure to change this logic.
+        # Send all proteomics USIs to MassIVE.
         if (
-            annotation is not None
-            or collection.startswith("msv")
+            collection.startswith("msv")
             or collection.startswith("pxd")
             or collection.startswith("pxl")
             or collection.startswith("rpxd")
             or collection == "massivekb"
             or collection == "massive"
         ):
-            spectrum, source_link = _parse_msv_pxd(usi)
+            spectrum, source_link = _parse_msv_pxd(usi_base)
         elif collection == "gnps":
-            spectrum, source_link = _parse_gnps(usi)
+            spectrum, source_link = _parse_gnps(usi_base)
         elif collection == "massbank":
-            spectrum, source_link = _parse_massbank(usi)
+            spectrum, source_link = _parse_massbank(usi_base)
         elif collection == "ms2lda":
-            spectrum, source_link = _parse_ms2lda(usi)
+            spectrum, source_link = _parse_ms2lda(usi_base)
         elif collection == "motifdb":
-            spectrum, source_link = _parse_motifdb(usi)
+            spectrum, source_link = _parse_motifdb(usi_base)
         else:
             raise UsiError(f"Unknown USI collection: {match.group(1)}", 400)
         splash_key = splash_builder.splash(
