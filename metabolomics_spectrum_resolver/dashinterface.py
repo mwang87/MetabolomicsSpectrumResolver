@@ -725,10 +725,10 @@ def draw_figure(
         grid=grid,
         annotate_peaks=[
             [float(peak_table1[i]["m/z"]) for i in peak_table1_selected_rows]
-            if peak_table1_selected_rows
+            if peak_table1_selected_rows is not None
             else True,
             [float(peak_table2[i]["m/z"]) for i in peak_table2_selected_rows]
-            if peak_table2_selected_rows
+            if peak_table2_selected_rows is not None
             else True,
         ],
     )
