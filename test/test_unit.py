@@ -34,24 +34,14 @@ def _get_splash_remote(spectrum):
 
 
 def test_parse_usi():
-    # ValueError will be thrown if invalid USI.
     for usi in usis_to_test:
         spectrum, _, splash_key = parsing.parse_usi(usi)
         assert splash_key == _get_splash_remote(spectrum)
-        if any(
-            collection in usi
-            for collection in [
-                "MASSIVEKB",
-                "GNPS",
-                "MASSBANK",
-                "MS2LDA",
-                "MOTIFDB",
-            ]
-        ):
-            spectrum, _, splash_key = parsing.parse_usi(
-                usi.replace("mzspec", "mzdraft")
-            )
-            assert splash_key == _get_splash_remote(spectrum)
+    # Legacy USIs should also support the "mzdraft" prefix.
+    for usi in usis_to_test[-6:]:
+        spectrum, _, splash_key = parsing.parse_usi(
+            usi.replace('mzspec', 'mzdraft'))
+        assert splash_key == _get_splash_remote(spectrum)
 
 
 def test_parse_usi_invalid():
@@ -59,11 +49,10 @@ def test_parse_usi_invalid():
         parsing.parse_usi("this:is:an:invalid:usi")
     assert exc_info.value.error_code == 400
     # Invalid preamble.
-    # FIXME: Exception not thrown because of legacy parsing.
-    # with pytest.raises(UsiError) as exc_info:
-    #     parsing.parse_usi('not_mzspec:PXD000561:'
-    #                       'Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555')
-    # assert exc_info.value.error_code == 400
+    with pytest.raises(UsiError) as exc_info:
+        parsing.parse_usi('not_mzspec:PXD000561:'
+                          'Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555')
+    assert exc_info.value.error_code == 400
     # Invalid collection.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(
@@ -78,12 +67,11 @@ def test_parse_usi_invalid():
         )
     assert exc_info.value.error_code == 400
     # Invalid index.
-    # FIXME: Exception not thrown because of legacy parsing.
-    # with pytest.raises(UsiError) as exc_info:
-    #     parsing.parse_usi('mzspec:PXD000561:'
-    #                       'Adult_Frontalcortex_bRP_Elite_85_f09:'
-    #                       'not_scan:17555')
-    # assert exc_info.value.error_code == 400
+    with pytest.raises(UsiError) as exc_info:
+        parsing.parse_usi('mzspec:PXD000561:'
+                          'Adult_Frontalcortex_bRP_Elite_85_f09:'
+                          'not_scan:17555')
+    assert exc_info.value.error_code == 400
     # Missing index.
     with pytest.raises(UsiError) as exc_info:
         parsing.parse_usi(

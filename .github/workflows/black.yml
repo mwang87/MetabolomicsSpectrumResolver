@@ -18,8 +18,8 @@ jobs:
           src: "./metabolomics_spectrum_resolver"
       - name: Check for debugging print statements
         run: |
-          if grep -rq "print(" metabolomics_spectrum_resolver; then
+          if grep -rq "^\s*print(" metabolomics_spectrum_resolver; then
               echo "Found the following print statements:"
-              grep -r "print(" metabolomics_spectrum_resolver
+              grep -r "^\s*print(" metabolomics_spectrum_resolver
               exit 1
           fi
