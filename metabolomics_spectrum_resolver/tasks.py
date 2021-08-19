@@ -39,10 +39,18 @@ celery_instance.conf.ONCE = {
 }
 
 celery_instance.conf.task_routes = {
-    "metabolomics_spectrum_resolver.tasks.task_compute_heartbeat": {"queue": "worker"},
-    "metabolomics_spectrum_resolver.tasks._task_parse_usi": {"queue": "worker"},
-    "metabolomics_spectrum_resolver.tasks._task_generate_figure": {"queue": "worker"},
-    "metabolomics_spectrum_resolver.tasks._task_generate_mirror_figure": {"queue": "worker"},
+    "metabolomics_spectrum_resolver.tasks.task_compute_heartbeat": {
+        "queue": "worker"
+    },
+    "metabolomics_spectrum_resolver.tasks._task_parse_usi": {
+        "queue": "worker"
+    },
+    "metabolomics_spectrum_resolver.tasks._task_generate_figure": {
+        "queue": "worker"
+    },
+    "metabolomics_spectrum_resolver.tasks._task_generate_mirror_figure": {
+        "queue": "worker"
+    },
 }
 
 
