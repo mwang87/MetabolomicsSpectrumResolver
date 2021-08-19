@@ -1,4 +1,4 @@
-import json
+import ast
 from typing import Any, Dict, List, Tuple
 from urllib.parse import urlencode, quote, parse_qs
 
@@ -25,7 +25,7 @@ dash_app = dash.Dash(
     url_base_pathname="/dashinterface/",
     external_stylesheets=[dbc.themes.BOOTSTRAP],
 )
-dash_app.title = "USI"
+dash_app.title = "Metabolomics USI"
 
 dash_app.index_string = """<!DOCTYPE html>
 <html>
@@ -67,10 +67,9 @@ NAVBAR = dbc.Navbar(
         dbc.Nav(
             [
                 dbc.NavItem(
-                    dbc.NavLink("Metabolomics USI — Dash Interface", href="#"),
-                ),
-                dbc.NavItem(
-                    html.A("Homepage", href="/", className="nav-link")
+                    dbc.NavLink(
+                        "Metabolomics USI", href="/", className="nav-link"
+                    )
                 ),
             ],
             navbar=True,
@@ -125,14 +124,13 @@ DATASELECTION_CARD = [
                 [
                     dbc.Col(html.H4("Drawing Controls")),
                     dbc.Col(
-                        html.A(
-                            dbc.Badge(
-                                "Reset Figure",
-                                color="warning",
-                                className="mr-1",
-                            ),
+                        dbc.Button(
+                            "Reset Figure",
+                            color="warning",
+                            size="sm",
+                            className="mr-1",
                             id="reset_figure",
-                        )
+                        ),
                     ),
                 ]
             ),
@@ -242,12 +240,19 @@ DATASELECTION_CARD = [
                     dbc.Col("Label Precision"),
                     dbc.Col(
                         [
-                            dbc.Input(
-                                id="annotate_precision",
-                                min=0,
-                                placeholder="input number",
-                                value=4,
-                                type="number",
+                            dbc.InputGroup(
+                                [
+                                    dbc.Input(
+                                        id="annotate_precision",
+                                        min=0,
+                                        placeholder="input number",
+                                        value=4,
+                                        type="number",
+                                    ),
+                                    dbc.InputGroupAddon(
+                                        "decimals", addon_type="append"
+                                    ),
+                                ]
                             )
                         ]
                     ),
@@ -384,7 +389,10 @@ MIDDLE_DASHBOARD = [
                     dbc.Col(
                         DataTable(
                             id="peak_table1",
-                            columns=[{"name": "filename", "id": "filename"}],
+                            columns=[
+                                {"name": "m/z", "id": "m/z"},
+                                {"name": "Intensity", "id": "Intensity"},
+                            ],
                             data=[],
                             filter_action="native",
                             page_size=10,
@@ -396,7 +404,10 @@ MIDDLE_DASHBOARD = [
                     dbc.Col(
                         DataTable(
                             id="peak_table2",
-                            columns=[{"name": "filename", "id": "filename"}],
+                            columns=[
+                                {"name": "m/z", "id": "m/z"},
+                                {"name": "Intensity", "id": "Intensity"},
+                            ],
                             data=[],
                             filter_action="native",
                             page_size=10,
@@ -713,8 +724,12 @@ def draw_figure(
         fragment_mz_tolerance=fragment_mz_tolerance,
         grid=grid,
         annotate_peaks=[
-            [float(peak_table1[i]["m/z"]) for i in peak_table1_selected_rows],
-            [float(peak_table2[i]["m/z"]) for i in peak_table2_selected_rows],
+            [float(peak_table1[i]["m/z"]) for i in peak_table1_selected_rows]
+            if peak_table1_selected_rows is not None
+            else True,
+            [float(peak_table2[i]["m/z"]) for i in peak_table2_selected_rows]
+            if peak_table2_selected_rows is not None
+            else True,
         ],
     )
 
@@ -779,7 +794,7 @@ def _process_usi(
     download_div = dbc.Row(
         [
             dbc.Col(
-                [html.Img(src=f"/qrcode?usi={quote(usi)}")],
+                [html.Img(src=usi_url.replace("/svg/", "/qrcode"))],
                 className="col-1",
             ),
             dbc.Col(
@@ -879,10 +894,7 @@ def _process_mirror_usi(
             dbc.Col(
                 [
                     html.Img(
-                        src=(
-                            f"/qrcode?mirror=true&usi1={quote(usi1)}&"
-                            f"usi2={quote(usi2)}"
-                        )
+                        src=(mirror_url.replace("/svg/mirror/", "/qrcode"))
                     )
                 ],
                 className="col-1",
@@ -1028,8 +1040,9 @@ def draw_table(
         empty.
     """
     try:
-        annotate_peaks = json.loads(parse_qs(search[1:])["annotate_peaks"][0])
-        annotate_peaks1, annotate_peaks2 = annotate_peaks
+        annotate_peaks1, annotate_peaks2 = ast.literal_eval(
+            parse_qs(search[1:])["annotate_peaks"][0]
+        )
     except KeyError:
         # Annotate peaks by default.
         annotate_peaks1 = annotate_peaks2 = True
