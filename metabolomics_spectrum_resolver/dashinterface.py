@@ -13,9 +13,8 @@ from dash_table import DataTable, FormatTemplate
 from dash_table.Format import Format, Scheme
 from flask import request
 
-import tasks
-import views
-from app import app
+from metabolomics_spectrum_resolver import tasks, views
+from metabolomics_spectrum_resolver.app import app
 
 
 _example_usi = "mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077"
@@ -563,9 +562,7 @@ dash_app.clientside_callback(
 )
 def set_drawing_controls(
     _: str, search: str
-) -> Tuple[
-    str, str, str, str, str, str, str, str, str, str, str, str,
-]:
+) -> Tuple[str, str, str, str, str, str, str, str, str, str, str, str]:
     """
     Set the drawing controls from the URL query parameters.
 
@@ -782,7 +779,8 @@ def _process_usi(
     download_div = dbc.Row(
         [
             dbc.Col(
-                [html.Img(src=f"/qrcode?usi={quote(usi)}")], className="col-1",
+                [html.Img(src=f"/qrcode?usi={quote(usi)}")],
+                className="col-1",
             ),
             dbc.Col(
                 [

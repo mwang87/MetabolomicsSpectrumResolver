@@ -1,3 +1,4 @@
+import datetime
 import json
 import re
 from typing import Tuple
@@ -7,8 +8,8 @@ import urllib.parse
 import spectrum_utils.spectrum as sus
 import splash
 
-import parsing_legacy
-from error import UsiError
+from metabolomics_spectrum_resolver import parsing_legacy
+from metabolomics_spectrum_resolver.error import UsiError
 
 timeout = 45  # seconds
 
@@ -221,7 +222,9 @@ def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         # Use the most up-to-date spectrum annotation.
         annotations = sorted(
             spectrum_dict["annotations"],
-            key=lambda annotation: annotation["create_time"],
+            key=lambda annotation: datetime.datetime.strptime(
+                annotation["create_time"], "%Y-%m-%d %H:%M:%S.%f"
+            ),
             reverse=True,
         )[0]
         spectrum = sus.MsmsSpectrum(
@@ -332,8 +335,8 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     f"https://massive.ucsd.edu/ProteoSAFe/"
                     f"DownloadResultFile?"
                     f"task=4f2ac74ea114401787a7e96e143bb4a1&"
-                    f"invoke=annotatedSpectrumImageText&block=0&"
-                    f'file=FILE->{spectrum_file["file_descriptor"]}'
+                    f"invoke=annotatedSpectrumImageText&block=0&file=FILE->"
+                    f"{urllib.parse.quote(spectrum_file['file_descriptor'])}"
                     f"&scan={scan}&peptide=*..*&force=false&"
                     f"format=JSON&uploadfile=True"
                 )
