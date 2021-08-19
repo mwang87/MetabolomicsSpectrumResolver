@@ -45,6 +45,11 @@ def render_contributors():
     return flask.render_template("contributors.html")
 
 
+@blueprint.route("/dataprivacy", methods=["GET"])
+def render_dataprivacy():
+    return flask.render_template("dataprivacy.html")
+
+
 @blueprint.route("/heartbeat", methods=["GET"])
 def render_heartbeat():
     return json.dumps({"status": "success"})
