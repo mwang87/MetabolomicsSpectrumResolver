@@ -236,5 +236,5 @@ def task_compute_heartbeat() -> str:
     str
         Heartbeat string 'Up'.
     """
-    print("Up", file=sys.stderr, flush=True)
+    sys.stderr.write("Up")
     return "Up"
