@@ -173,3 +173,14 @@ Custom Title
 1. /mirror/
 1. /svg/mirror
 1. /png/mirror
+
+## Development
+
+### Unit Testing
+
+To run unit tests
+
+```
+export PYTHONPATH=${PYTHONPATH}:.
+pytest -v -n 4 ./test/
+```
