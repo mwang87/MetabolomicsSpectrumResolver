@@ -1,3 +1,4 @@
+import datetime
 import json
 import re
 from typing import Tuple
@@ -221,7 +222,9 @@ def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         # Use the most up-to-date spectrum annotation.
         annotations = sorted(
             spectrum_dict["annotations"],
-            key=lambda annotation: annotation["create_time"],
+            key=lambda annotation: datetime.datetime.strptime(
+                annotation["create_time"], "%Y-%m-%d %H:%M:%S.%f"
+            ),
             reverse=True,
         )[0]
         spectrum = sus.MsmsSpectrum(

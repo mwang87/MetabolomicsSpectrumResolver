@@ -142,6 +142,11 @@ def test_parse_gnps_library():
             )
         )
     assert exc_info.value.error_code == 404
+    # Verify that the most recent annotation is used.
+    spectrum, _, splash_key = parsing.parse_usi(
+        "mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00000001547"
+    )
+    assert spectrum.precursor_mz == pytest.approx(981.54)
 
 
 def test_parse_massbank():
