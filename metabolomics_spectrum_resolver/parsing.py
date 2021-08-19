@@ -186,35 +186,32 @@ def _convert_legacy_usi(usi: str) -> str:
     # Convert GNPS task legacy USI.
     match = re.compile(
         r"^(?:mzspec|mzdraft):GNPSTASK-([a-z0-9]{32}):(.+):scan:(\d+)$",
-        flags=re.IGNORECASE
+        flags=re.IGNORECASE,
     ).match(usi)
     if match is not None:
         return f"mzspec:GNPS:TASK-{match[1]}-{match[2]}:scan:{match[3]}"
     # Convert GNPS library legacy USI.
     match = re.compile(
-        r"^(?:mzspec|mzdraft):GNPSLIBRARY:(CCMSLIB\d+)$",
-        flags=re.IGNORECASE
+        r"^(?:mzspec|mzdraft):GNPSLIBRARY:(CCMSLIB\d+)$", flags=re.IGNORECASE
     ).match(usi)
     if match is not None:
         return f"mzspec:GNPS:GNPS-LIBRARY:accession:{match[1]}"
     # Convert MassBank legacy USI.
     match = re.compile(
-        r"^(?:mzspec|mzdraft):MASSBANK:([^:]+)$",
-        flags=re.IGNORECASE
+        r"^(?:mzspec|mzdraft):MASSBANK:([^:]+)$", flags=re.IGNORECASE
     ).match(usi)
     if match is not None:
         return f"mzspec:MASSBANK::accession:{match[1]}"
     # Convert MotifDB legacy USI.
     match = re.compile(
-        r"^(?:mzspec|mzdraft):MOTIFDB:motif:([^:]+)$",
-        flags=re.IGNORECASE
+        r"^(?:mzspec|mzdraft):MOTIFDB:motif:([^:]+)$", flags=re.IGNORECASE
     ).match(usi)
     if match is not None:
         return f"mzspec:MOTIFDB::accession:{match[1]}"
     # Convert MS2LDA legacy USI.
     match = re.compile(
         r"^(?:mzspec|mzdraft):MS2LDATASK-([^:]+):document:([^:]+)$",
-        flags=re.IGNORECASE
+        flags=re.IGNORECASE,
     ).match(usi)
     if match is not None:
         return f"mzspec:MS2LDA:TASK-{match[1]}:accession:{match[2]}"
