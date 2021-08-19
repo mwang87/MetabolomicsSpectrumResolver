@@ -6,40 +6,39 @@ on:
 
 jobs:
   load-test:
-
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7]
-
-### TODO: We probably should switch to using the Docker version.
+        python-version: [3.8]
+# TODO: We probably should switch to using the Docker version.
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-        bash miniconda.sh -b -p $HOME/miniconda
+        bash miniconda.sh -b -p $HOME/miniconda || true
         export PATH="$HOME/miniconda/bin:$PATH"
         conda config --set always_yes yes --set changeps1 no
         conda update -q conda
         conda create -n usi -c conda-forge -c bioconda -c defaults flake8 \
           flask flex-swagger gunicorn locust lxml matplotlib numba numpy \
-          pillow pytest pyzbar qrcode rdkit requests requests-cache scipy \
-          spectrum_utils werkzeug zbar
+          pillow pytest pytest-xdist pyzbar qrcode rdkit requests \
+          requests-cache scipy spectrum_utils werkzeug zbar
         apt-get update -y && apt-get install -y git-core
         source activate usi
         pip install "git+git://github.com/berlinguyinca/spectra-hash.git#egg=splash&subdirectory=python"
+        pip install celery celery-once joblib
         echo "source activate usi" > ~/.bashrc
     - name: Load testing with locust
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
         source ~/.bashrc
-        locust -f test/locustfile.py --headless -u 25 -r 10 \
+        locust -f ./test/locustfile.py --headless -u 25 -r 10 \
           -H https://metabolomics-usi.ucsd.edu/ -t 120s
 
 

@@ -10,9 +10,8 @@ import numpy as np
 import qrcode
 from spectrum_utils import spectrum as sus
 
-import similarity
-import tasks
-from error import UsiError
+from metabolomics_spectrum_resolver import similarity, tasks
+from metabolomics_spectrum_resolver.error import UsiError
 
 
 default_drawing_controls = {
@@ -44,6 +43,11 @@ def render_homepage():
 @blueprint.route("/contributors", methods=["GET"])
 def render_contributors():
     return flask.render_template("contributors.html")
+
+
+@blueprint.route("/dataprivacy", methods=["GET"])
+def render_dataprivacy():
+    return flask.render_template("dataprivacy.html")
 
 
 @blueprint.route("/heartbeat", methods=["GET"])
@@ -395,7 +399,9 @@ def _generate_labels(
 
 
 def _prepare_mirror_spectra(
-    spectrum1: sus.MsmsSpectrum, spectrum2: sus.MsmsSpectrum, **kwargs: Any,
+    spectrum1: sus.MsmsSpectrum,
+    spectrum2: sus.MsmsSpectrum,
+    **kwargs: Any,
 ) -> Tuple[sus.MsmsSpectrum, sus.MsmsSpectrum]:
     """
     Process two spectra for plotting in a mirror plot.
@@ -435,8 +441,11 @@ def peak_json():
             flask.request.args.get("usi1")
         )
         result_dict = {
-            "peaks": list(zip(spectrum.mz.astype(float),
-                              spectrum.intensity.astype(float))),
+            "peaks": list(
+                zip(
+                    spectrum.mz.astype(float), spectrum.intensity.astype(float)
+                )
+            ),
             "n_peaks": len(spectrum.mz),
             "precursor_mz": float(spectrum.precursor_mz),
             "precursor_charge": int(spectrum.precursor_charge),
@@ -474,16 +483,24 @@ def mirror_json():
             drawing_controls["cosine"] == "shifted",
         )
         spectrum1_dict = {
-            "peaks": list(zip(spectrum1.mz.astype(float),
-                              spectrum1.intensity.astype(float))),
+            "peaks": list(
+                zip(
+                    spectrum1.mz.astype(float),
+                    spectrum1.intensity.astype(float),
+                )
+            ),
             "n_peaks": len(spectrum1.mz),
             "precursor_mz": float(spectrum1.precursor_mz),
             "precursor_charge": int(spectrum1.precursor_charge),
             "splash": splash_key1,
         }
         spectrum2_dict = {
-            "peaks": list(zip(spectrum2.mz.astype(float),
-                              spectrum2.intensity.astype(float))),
+            "peaks": list(
+                zip(
+                    spectrum2.mz.astype(float),
+                    spectrum2.intensity.astype(float),
+                )
+            ),
             "n_peaks": len(spectrum2.mz),
             "precursor_mz": float(spectrum2.precursor_mz),
             "precursor_charge": int(spectrum2.precursor_charge),

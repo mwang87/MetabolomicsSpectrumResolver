@@ -8,43 +8,49 @@ import joblib
 import redis
 import spectrum_utils.spectrum as sus
 
-import parsing
-import drawing
+from metabolomics_spectrum_resolver import drawing, parsing
 
 
-memory = joblib.Memory('tmp/joblibcache', verbose=0)
+memory = joblib.Memory("tmp/joblibcache", verbose=0)
 cached_parse_usi = memory.cache(parsing.parse_usi)
 cached_generate_figure = memory.cache(drawing.generate_figure)
 cached_generate_mirror_figure = memory.cache(drawing.generate_mirror_figure)
 
 celery_instance = celery.Celery(
-    'tasks',
-    backend='redis://metabolomicsusi-redis',
-    broker='redis://metabolomicsusi-redis'
+    "tasks",
+    backend="redis://metabolomicsusi-redis",
+    broker="redis://metabolomicsusi-redis",
 )
 
 celery_instance.conf.update(
-    task_serializer='pickle',
-    result_serializer='pickle',
-    accept_content=['pickle', 'json']
+    task_serializer="pickle",
+    result_serializer="pickle",
+    accept_content=["pickle", "json"],
 )
 
 celery_instance.conf.ONCE = {
-    'backend': 'celery_once.backends.Redis',
-    'settings': {
-        'url': 'redis://metabolomicsusi-redis:6379/0',
-        'default_timeout': 60,
-        'blocking': True,
-        'blocking_timeout': 60
-    }
+    "backend": "celery_once.backends.Redis",
+    "settings": {
+        "url": "redis://metabolomicsusi-redis:6379/0",
+        "default_timeout": 60,
+        "blocking": True,
+        "blocking_timeout": 60,
+    },
 }
 
 celery_instance.conf.task_routes = {
-    'tasks.task_compute_heartbeat': {'queue': 'worker'},
-    'tasks._task_parse_usi': {'queue': 'worker'},
-    'tasks._task_generate_figure': {'queue': 'worker'},
-    'tasks._task_generate_mirror_figure': {'queue': 'worker'},
-    
+    "metabolomics_spectrum_resolver.tasks.task_compute_heartbeat": {
+        "queue": "worker"
+    },
+    "metabolomics_spectrum_resolver.tasks._task_parse_usi": {
+        "queue": "worker"
+    },
+    "metabolomics_spectrum_resolver.tasks._task_generate_figure": {
+        "queue": "worker"
+    },
+    "metabolomics_spectrum_resolver.tasks._task_generate_mirror_figure": {
+        "queue": "worker"
+    },
 }
 
 
@@ -127,8 +133,9 @@ def generate_figure(
 
 
 @celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
-def _task_generate_figure(spectrum: sus.MsmsSpectrum, extension: str,
-                          **kwargs: Any) -> io.BytesIO:
+def _task_generate_figure(
+    spectrum: sus.MsmsSpectrum, extension: str, **kwargs: Any
+) -> io.BytesIO:
     """
     Generate a spectrum plot.
 
@@ -187,9 +194,12 @@ def generate_mirror_figure(
 
 
 @celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
-def _task_generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
-                                 spectrum_bottom: sus.MsmsSpectrum,
-                                 extension: str, **kwargs: Any) -> io.BytesIO:
+def _task_generate_mirror_figure(
+    spectrum_top: sus.MsmsSpectrum,
+    spectrum_bottom: sus.MsmsSpectrum,
+    extension: str,
+    **kwargs: Any,
+) -> io.BytesIO:
     """
     Generate a mirror plot of two spectra.
 
@@ -212,7 +222,8 @@ def _task_generate_mirror_figure(spectrum_top: sus.MsmsSpectrum,
         Bytes buffer containing the mirror plot.
     """
     return cached_generate_mirror_figure(
-        spectrum_top, spectrum_bottom, extension, **kwargs)
+        spectrum_top, spectrum_bottom, extension, **kwargs
+    )
 
 
 @celery_instance.task(time_limit=60)
@@ -225,5 +236,5 @@ def task_compute_heartbeat() -> str:
     str
         Heartbeat string 'Up'.
     """
-    print('Up', file=sys.stderr, flush=True)
-    return 'Up'
+    print("Up", file=sys.stderr, flush=True)
+    return "Up"

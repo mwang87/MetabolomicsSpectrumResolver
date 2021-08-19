@@ -1,0 +1,25 @@
+name: Lint
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Run black
+        uses: psf/black@stable
+        with:
+          options: "--check --diff --line-length 79"
+          src: "./metabolomics_spectrum_resolver"
+      - name: Check for debugging print statements
+        run: |
+          if grep -rq "print(" metabolomics_spectrum_resolver; then
+              echo "Found the following print statements:"
+              grep -r "print(" metabolomics_spectrum_resolver
+              exit 1
+          fi
