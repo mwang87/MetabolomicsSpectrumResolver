@@ -8,7 +8,7 @@ import joblib
 import redis
 import spectrum_utils.spectrum as sus
 
-from metabolomics_spectrum_resolver import drawing, parsing
+import drawing, parsing
 
 
 memory = joblib.Memory("tmp/joblibcache", verbose=0)

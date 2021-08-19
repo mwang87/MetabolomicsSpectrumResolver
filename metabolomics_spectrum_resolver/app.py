@@ -2,7 +2,7 @@ import os
 
 from flask import Flask
 
-from metabolomics_spectrum_resolver import views
+import views
 
 
 APP_ROOT = os.path.dirname(os.path.realpath(__file__))

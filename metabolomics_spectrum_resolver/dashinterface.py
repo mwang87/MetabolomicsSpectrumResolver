@@ -13,8 +13,8 @@ from dash_table import DataTable, FormatTemplate
 from dash_table.Format import Format, Scheme
 from flask import request
 
-from metabolomics_spectrum_resolver import tasks, views
-from metabolomics_spectrum_resolver.app import app
+import tasks, views
+from app import app
 
 
 _example_usi = "mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077"
