@@ -11,7 +11,7 @@ from metabolomics_spectrum_resolver import similarity
 from metabolomics_spectrum_resolver.config import USI_SERVER
 
 
-matplotlib.use("Agg")
+matplotlib.use("svg")
 
 
 def generate_figure(
