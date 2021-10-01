@@ -547,13 +547,13 @@ dash_app.clientside_callback(
         }
     }
     """,
-    Output('copy_link_button', 'children'),
+    Output("copy_link_button", "children"),
     [
-        Input('copy_link_button', 'n_clicks'),
-        Input('copy_link_button', 'id'),
+        Input("copy_link_button", "n_clicks"),
+        Input("copy_link_button", "id"),
     ],
     [
-        State('query_link', 'href'),
+        State("query_link", "href"),
     ]
 )
 
