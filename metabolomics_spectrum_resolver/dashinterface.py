@@ -554,7 +554,7 @@ dash_app.clientside_callback(
     ],
     [
         State("query_link", "href"),
-    ]
+    ],
 )
 
 
