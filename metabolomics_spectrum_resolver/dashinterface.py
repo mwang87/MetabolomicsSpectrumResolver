@@ -527,29 +527,34 @@ dash_app.layout = html.Div(children=[NAVBAR, BODY])
 
 dash_app.clientside_callback(
     """
-    function(n_clicks, text_to_copy) {
-        original_text = "Copy Link to Plot"
+    function(n_clicks, button_id, text_to_copy) {
+        original_text = "Copy Link"
         if (n_clicks > 0) {
-            const el = document.createElement("textarea");
+            const el = document.createElement('textarea');
             el.value = text_to_copy;
             document.body.appendChild(el);
             el.select();
-            document.execCommand("copy");
+            document.execCommand('copy');
             document.body.removeChild(el);
-            setTimeout(function() {
-                       document.getElementById("copy_link_button").textContent = original_text
-                       }, 1000);
-            document.getElementById("copy_link_button").textContent = "Copied"
-            return "Copied";
+            setTimeout(function(id_to_update, text_to_update){ 
+                return function(){
+                    document.getElementById(id_to_update).textContent = text_to_update
+                }}(button_id, original_text), 1000);
+            document.getElementById(button_id).textContent = "Copied!"
+            return 'Copied!';
         } else {
-            document.getElementById("copy_link_button").textContent = original_text
             return original_text;
         }
     }
     """,
-    Output("copy_link_button", "children"),
-    [Input("copy_link_button", "n_clicks")],
-    [State("query_link", "href")],
+    Output('copy_link_button', 'children'),
+    [
+        Input('copy_link_button', 'n_clicks'),
+        Input('copy_link_button', 'id'),
+    ],
+    [
+        State('query_link', 'href'),
+    ]
 )
 
 
@@ -741,8 +746,9 @@ def draw_figure(
         spectrum_view = _process_mirror_usi(usi1, usi2, drawing_controls)
 
     url_query = f"?{urlencode(drawing_controls, quote_via=quote)}"
-    url = request.host_url + f"/dashinterface?{url_query}"
-    return spectrum_view, url_query, url
+    url_dash = request.host_url + f"dashinterface{url_query}"
+
+    return spectrum_view, url_query, url_dash
 
 
 def _process_usi(
