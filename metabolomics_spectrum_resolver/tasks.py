@@ -40,24 +40,21 @@ celery_instance.conf.ONCE = {
 }
 
 celery_instance.conf.task_routes = {
-    "metabolomics_spectrum_resolver.tasks.task_compute_heartbeat": {
-        "queue": "worker"
-    },
-    "metabolomics_spectrum_resolver.tasks._task_parse_usi": {
-        "queue": "worker"
-    },
+    "metabolomics_spectrum_resolver.tasks.task_compute_heartbeat": {"queue": "worker"},
+    "metabolomics_spectrum_resolver.tasks._task_parse_usi": {"queue": "worker"},
     "metabolomics_spectrum_resolver.tasks._task_parse_usi_or_spectrum": {
         "queue": "worker"
     },
-    "metabolomics_spectrum_resolver.tasks._task_generate_figure": {
-        "queue": "worker"
-    },
+    "metabolomics_spectrum_resolver.tasks._task_generate_figure": {"queue": "worker"},
     "metabolomics_spectrum_resolver.tasks._task_generate_mirror_figure": {
         "queue": "worker"
     },
 }
 
-def parse_usi_or_spectrum(usi: str, spectrum: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
+
+def parse_usi_or_spectrum(
+    usi: str, spectrum: dict
+) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
     Retrieve the spectrum associated with the given USI.
 
@@ -77,12 +74,13 @@ def parse_usi_or_spectrum(usi: str, spectrum: dict) -> Tuple[sus.MsmsSpectrum, s
     """
     # First attempt to schedule with Celery.
     try:
-        return _task_parse_usi_or_spectrum.apply_async(args=(usi,spectrum)).get()
+        return _task_parse_usi_or_spectrum.apply_async(args=(usi, spectrum)).get()
     except redis.exceptions.ConnectionError:
         # Fallback in case scheduling via Celery fails.
         # Mostly used for testing.
         # noinspection PyTypeChecker
-        return parsing.parse_usi_or_spectrum(usi,spectrum)
+        return parsing.parse_usi_or_spectrum(usi, spectrum)
+
 
 def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
@@ -111,8 +109,11 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         # noinspection PyTypeChecker
         return parsing.parse_usi(usi)
 
+
 @celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
-def _task_parse_usi_or_spectrum(usi: str, spectrum: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
+def _task_parse_usi_or_spectrum(
+    usi: str, spectrum: dict
+) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
     Retrieve the spectrum associated with the given USI.
 
@@ -130,7 +131,8 @@ def _task_parse_usi_or_spectrum(usi: str, spectrum: dict) -> Tuple[sus.MsmsSpect
         SPLASH.
     """
     # noinspection PyTypeChecker
-    return cached_parse_usi_or_spectrum(usi,spectrum)
+    return cached_parse_usi_or_spectrum(usi, spectrum)
+
 
 @celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
 def _task_parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
