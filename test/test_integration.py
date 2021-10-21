@@ -19,6 +19,7 @@ from metabolomics_spectrum_resolver import app
 from metabolomics_spectrum_resolver.error import UsiError
 
 from usi_test_data import usis_to_test
+from peak_test_data import peaks_to_test
 
 
 @functools.lru_cache(None)
@@ -194,6 +195,19 @@ def test_generate_svg_mirror(client):
         assert len(response.data) > 0
         assert b"<!DOCTYPE svg" in response.data
 
+
+def test_generate_svg_mirror_peaks(client):
+    for spectrum1, spectrum2 in pairwise(peaks_to_test):
+        response = client.post(
+            "/svg/mirror/",
+            json={
+                "spectrum1":spectrum1,
+                "spectrum2":spectrum2,
+            },
+        )
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert b"<!DOCTYPE svg" in response.data
 
 def test_generate_svg_mirror_drawing_controls(client):
     plotting_args = _get_custom_plotting_args_str()

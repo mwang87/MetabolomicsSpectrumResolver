@@ -88,15 +88,15 @@ def generate_png():
     return flask.send_file(buf, mimetype="image/png")
 
 
-@blueprint.route("/png/mirror/")
+@blueprint.route("/png/mirror/", methods=['GET'])
 def generate_mirror_png():
     drawing_controls = get_drawing_controls(
         **flask.request.args.to_dict(), mirror=True
     )
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
-        tasks.parse_usi(drawing_controls["usi1"])[0],
-        tasks.parse_usi(drawing_controls["usi2"])[0],
+        tasks.parse_usi_or_spectrum(drawing_controls.get("usi1"),None)[0],
+        tasks.parse_usi_or_spectrum(drawing_controls.get("usi2"),None)[0],
         **drawing_controls,
     )
     buf = tasks.generate_mirror_figure(
@@ -120,15 +120,18 @@ def generate_svg():
     return flask.send_file(buf, mimetype="image/svg+xml")
 
 
-@blueprint.route("/svg/mirror/")
+@blueprint.route("/svg/mirror/", methods=['GET','POST'])
 def generate_mirror_svg():
     drawing_controls = get_drawing_controls(
         **flask.request.args.to_dict(), mirror=True
     )
+    spectrum_peaks_json = flask.request.json if flask.request.json else {}
+
+    print(drawing_controls.get("usi1"))
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
-        tasks.parse_usi(drawing_controls["usi1"])[0],
-        tasks.parse_usi(drawing_controls["usi2"])[0],
+        tasks.parse_usi_or_spectrum(drawing_controls.get("usi1"),spectrum_peaks_json.get("spectrum1"))[0],
+        tasks.parse_usi_or_spectrum(drawing_controls.get("usi2"),spectrum_peaks_json.get("spectrum2"))[0],
         **drawing_controls,
     )
     buf = tasks.generate_mirror_figure(

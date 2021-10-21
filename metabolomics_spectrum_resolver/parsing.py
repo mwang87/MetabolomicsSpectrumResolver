@@ -132,6 +132,85 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         )
 
 
+def parse_spectrum(spectrum: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
+    """
+    Retrieve the spectrum associated with the given USI.
+
+    Parameters
+    ----------
+    spectrum : dict
+        The JSON dict for a spectrum.
+
+    Returns
+    -------
+    Tuple[sus.MsmsSpectrum, str, str]
+        A tuple of the `MsmsSpectrum`, its source link, and its SPLASH.
+    """
+
+    source_link = 'Peak Input'
+
+    spectrum_dict = spectrum['spectrum']
+
+    mz, intensity = zip(*spectrum_dict["peaks"])
+    if "precursor" in spectrum_dict:
+        precursor_mz = float(
+            spectrum_dict["precursor"].get("mz", 0)
+        )
+        charge = int(spectrum_dict["precursor"].get("charge", 0))
+    else:
+        precursor_mz, charge = 0, 0
+        
+    # Parse the peptide if available.
+    try:
+        # Get the peptide information from resolution,
+        # this dereferences proforma.
+        peptide = spectrum["annotation"]["variant"]
+        peptide_clean = spectrum["annotation"]["peptide"]
+        charge = spectrum["annotation"]["charge"]
+
+        peptide, peptide_clean, modifications = _parse_sequence(peptide, peptide_clean)
+
+        spectrum = sus.MsmsSpectrum(
+            spectrum.get('title','Peak Input'),
+            precursor_mz,
+            charge,
+            mz,
+            intensity,
+            peptide=peptide_clean,
+            modifications=modifications
+        )
+
+    except (TypeError, KeyError):
+        spectrum = sus.MsmsSpectrum(
+            spectrum.get('title','Peak Input'),
+            precursor_mz,
+            charge,
+            mz,
+            intensity
+        )
+
+    splash_key = splash_builder.splash(
+        splash.Spectrum(
+            list(zip(spectrum.mz, spectrum.intensity)),
+            splash.SpectrumType.MS,
+        )
+    )
+
+    return spectrum, source_link, splash_key
+
+def parse_usi_or_spectrum(usi: str, spectrum_dict: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
+        
+    print("Parsing USI or spectrum")
+
+    if usi and usi != "":
+        spectrum_output = parse_usi(usi)
+    elif spectrum_dict:
+        spectrum_output = parse_spectrum(spectrum_dict)
+    else:
+        raise UsiError("Neither USI nor peaks given as input")
+
+    return spectrum_output
+
 def _match_usi(usi: str) -> re.Match:
     """
     Parse a USI into its constituent parts.
@@ -454,30 +533,7 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     peptide = lookup_json["usi_components"]["variant"]
                     charge = int(lookup_json["usi_components"]["charge"])
 
-                    # Parse out gapped sequence (e.g. X+129.04259), faking it
-                    # with Glycine as the base residue and adding more mods to
-                    # it.
-                    gapmod_pattern = re.compile("X[+][0-9.]*")
-                    transformed_peptide = peptide
-                    for match in gapmod_pattern.finditer(peptide):
-                        gap_mass = float(match.group().replace("X", ""))
-                        # Fake the gap with glycine.
-                        transformed_peptide = transformed_peptide.replace(
-                            match.group(), f"G{gap_mass - 57.021463735:+}"
-                        )
-                    peptide_clean = peptide_clean.replace("X", "G")
-                    peptide = transformed_peptide
-
-                    # Parse out modifications.
-                    mod_pattern = re.compile("[-+][0-9.]*")
-                    modifications, previous_mod_len = {}, 0
-                    for match in mod_pattern.finditer(peptide):
-                        found_pos = match.start()
-                        found_len = len(match.group())
-                        i = max(0, found_pos - previous_mod_len - 1)
-                        modifications[i] = float(match.group())
-                        previous_mod_len += found_len
-
+                    peptide, peptide_clean, modifications = _parse_sequence(peptide, peptide_clean)
                     spectrum = sus.MsmsSpectrum(
                         usi,
                         precursor_mz,
@@ -519,3 +575,29 @@ def _parse_motifdb(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         return spectrum, source_link
     except requests.exceptions.HTTPError:
         raise UsiError("Unknown MOTIFDB USI", 404)
+
+def _parse_sequence(peptide: str, peptide_clean: str) -> Tuple[str,str,list]:
+    # Parse out gapped sequence (e.g. X+129.04259), faking it
+    # with Glycine as the base residue and adding more mods to
+    # it.
+    gapmod_pattern = re.compile("X[+][0-9.]*")
+    transformed_peptide = peptide
+    for match in gapmod_pattern.finditer(peptide):
+        gap_mass = float(match.group().replace("X", ""))
+        # Fake the gap with glycine.
+        transformed_peptide = transformed_peptide.replace(
+            match.group(), f"G{gap_mass - 57.021463735:+}"
+        )
+    peptide_clean = peptide_clean.replace("X", "G")
+    peptide = transformed_peptide
+
+    # Parse out modifications.
+    mod_pattern = re.compile("[-+][0-9.]*")
+    modifications, previous_mod_len = {}, 0
+    for match in mod_pattern.finditer(peptide):
+        found_pos = match.start()
+        found_len = len(match.group())
+        i = max(0, found_pos - previous_mod_len - 1)
+        modifications[i] = float(match.group())
+        previous_mod_len += found_len
+    return peptide, peptide_clean, modifications
