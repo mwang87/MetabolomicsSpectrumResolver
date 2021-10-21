@@ -203,8 +203,6 @@ def parse_usi_or_spectrum(
     usi: str, spectrum_dict: dict
 ) -> Tuple[sus.MsmsSpectrum, str, str]:
 
-    print("Parsing USI or spectrum")
-
     if usi and usi != "":
         spectrum_output = parse_usi(usi)
     elif spectrum_dict:
