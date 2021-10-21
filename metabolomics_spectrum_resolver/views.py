@@ -77,7 +77,9 @@ def mirror_forward():
 def generate_png():
     drawing_controls = get_drawing_controls(**flask.request.args.to_dict())
     if drawing_controls["annotate_peaks"] is not None:
-        drawing_controls["annotate_peaks"] = drawing_controls["annotate_peaks"][0]
+        drawing_controls["annotate_peaks"] = drawing_controls[
+            "annotate_peaks"
+        ][0]
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
         tasks.parse_usi(drawing_controls["usi1"])[0], **drawing_controls
@@ -88,7 +90,9 @@ def generate_png():
 
 @blueprint.route("/png/mirror/", methods=["GET", "POST"])
 def generate_mirror_png():
-    drawing_controls = get_drawing_controls(**flask.request.args.to_dict(), mirror=True)
+    drawing_controls = get_drawing_controls(
+        **flask.request.args.to_dict(), mirror=True
+    )
     spectrum_peaks_json = flask.request.json if flask.request.json else {}
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
@@ -100,7 +104,9 @@ def generate_mirror_png():
         )[0],
         **drawing_controls,
     )
-    buf = tasks.generate_mirror_figure(spectrum1, spectrum2, "png", **drawing_controls)
+    buf = tasks.generate_mirror_figure(
+        spectrum1, spectrum2, "png", **drawing_controls
+    )
     return flask.send_file(buf, mimetype="image/png")
 
 
@@ -108,7 +114,9 @@ def generate_mirror_png():
 def generate_svg():
     drawing_controls = get_drawing_controls(**flask.request.args.to_dict())
     if drawing_controls["annotate_peaks"] is not None:
-        drawing_controls["annotate_peaks"] = drawing_controls["annotate_peaks"][0]
+        drawing_controls["annotate_peaks"] = drawing_controls[
+            "annotate_peaks"
+        ][0]
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
         tasks.parse_usi(drawing_controls["usi1"])[0], **drawing_controls
@@ -119,7 +127,9 @@ def generate_svg():
 
 @blueprint.route("/svg/mirror/", methods=["GET", "POST"])
 def generate_mirror_svg():
-    drawing_controls = get_drawing_controls(**flask.request.args.to_dict(), mirror=True)
+    drawing_controls = get_drawing_controls(
+        **flask.request.args.to_dict(), mirror=True
+    )
     spectrum_peaks_json = flask.request.json if flask.request.json else {}
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
@@ -131,7 +141,9 @@ def generate_mirror_svg():
         )[0],
         **drawing_controls,
     )
-    buf = tasks.generate_mirror_figure(spectrum1, spectrum2, "svg", **drawing_controls)
+    buf = tasks.generate_mirror_figure(
+        spectrum1, spectrum2, "svg", **drawing_controls
+    )
     return flask.send_file(buf, mimetype="image/svg+xml")
 
 
@@ -243,11 +255,13 @@ def get_drawing_controls(
         ]
     drawing_controls["cosine"] = cosine
     try:
-        drawing_controls["fragment_mz_tolerance"] = float(fragment_mz_tolerance)
+        drawing_controls["fragment_mz_tolerance"] = float(
+            fragment_mz_tolerance
+        )
         if drawing_controls["fragment_mz_tolerance"] < 0:
-            drawing_controls["fragment_mz_tolerance"] = default_drawing_controls[
+            drawing_controls[
                 "fragment_mz_tolerance"
-            ]
+            ] = default_drawing_controls["fragment_mz_tolerance"]
     except (TypeError, ValueError):
         drawing_controls["fragment_mz_tolerance"] = default_drawing_controls[
             "fragment_mz_tolerance"
@@ -279,7 +293,9 @@ def get_drawing_controls(
     return drawing_controls
 
 
-def prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) -> sus.MsmsSpectrum:
+def prepare_spectrum(
+    spectrum: sus.MsmsSpectrum, **kwargs: Any
+) -> sus.MsmsSpectrum:
     """
     Process a spectrum for plotting.
 
@@ -327,7 +343,9 @@ def prepare_spectrum(spectrum: sus.MsmsSpectrum, **kwargs: Any) -> sus.MsmsSpect
         # Optionally set annotations.
         if kwargs["annotate_peaks"]:
             if kwargs["annotate_peaks"] is True:
-                kwargs["annotate_peaks"] = spectrum.mz[_generate_labels(spectrum)]
+                kwargs["annotate_peaks"] = spectrum.mz[
+                    _generate_labels(spectrum)
+                ]
             annotate_peaks_valid = []
             for mz in kwargs["annotate_peaks"]:
                 try:
@@ -429,10 +447,14 @@ def _prepare_mirror_spectra(
 @blueprint.route("/json/")
 def peak_json():
     try:
-        spectrum, _, splash_key = tasks.parse_usi(flask.request.args.get("usi1"))
+        spectrum, _, splash_key = tasks.parse_usi(
+            flask.request.args.get("usi1")
+        )
         result_dict = {
             "peaks": list(
-                zip(spectrum.mz.astype(float), spectrum.intensity.astype(float))
+                zip(
+                    spectrum.mz.astype(float), spectrum.intensity.astype(float)
+                )
             ),
             "n_peaks": len(spectrum.mz),
             "precursor_mz": float(spectrum.precursor_mz),
@@ -455,8 +477,12 @@ def mirror_json():
         drawing_controls = get_drawing_controls(
             **flask.request.args.to_dict(), mirror=True
         )
-        spectrum1, source1, splash_key1 = tasks.parse_usi(drawing_controls["usi1"])
-        spectrum2, source2, splash_key2 = tasks.parse_usi(drawing_controls["usi2"])
+        spectrum1, source1, splash_key1 = tasks.parse_usi(
+            drawing_controls["usi1"]
+        )
+        spectrum2, source2, splash_key2 = tasks.parse_usi(
+            drawing_controls["usi2"]
+        )
         _spectrum1, _spectrum2 = _prepare_mirror_spectra(
             spectrum1, spectrum2, **drawing_controls
         )

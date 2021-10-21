@@ -127,7 +127,8 @@ def test_generate_png_drawing_controls(client):
     for usi in usis_to_test:
         response = client.get(
             "/png/",
-            query_string=f"usi1={urllib.parse.quote_plus(usi)}&" f"{plotting_args}",
+            query_string=f"usi1={urllib.parse.quote_plus(usi)}&"
+            f"{plotting_args}",
         )
         assert response.status_code == 200
         assert len(response.data) > 0
@@ -175,7 +176,8 @@ def test_generate_svg_drawing_controls(client):
     for usi in usis_to_test:
         response = client.get(
             "/svg/",
-            query_string=f"usi1={urllib.parse.quote_plus(usi)}&" f"{plotting_args}",
+            query_string=f"usi1={urllib.parse.quote_plus(usi)}&"
+            f"{plotting_args}",
         )
         assert response.status_code == 200
         assert len(response.data) > 0
@@ -350,14 +352,16 @@ def test_mirror_json(client):
         assert "cosine" in response_dict
         assert "n_peak_matches" in response_dict
         assert "peak_matches" in response_dict
-        assert response_dict["n_peak_matches"] == len(response_dict["peak_matches"])
+        assert response_dict["n_peak_matches"] == len(
+            response_dict["peak_matches"]
+        )
         for peak_match in response_dict["peak_matches"]:
             assert len(peak_match) == 2
         for i, usi in enumerate((usi1, usi2), 1):
             mz, intensity = zip(*response_dict[f"spectrum{i}"]["peaks"])
-            assert response_dict[f"spectrum{i}"]["splash"] == _get_splash_remote(
-                sus.MsmsSpectrum(usi, 0, 0, mz, intensity)
-            )
+            assert response_dict[f"spectrum{i}"][
+                "splash"
+            ] == _get_splash_remote(sus.MsmsSpectrum(usi, 0, 0, mz, intensity))
 
 
 def test_generate_qr(client):
@@ -381,7 +385,8 @@ def test_generate_qr_drawing_controls(client):
     for usi in usis_to_test:
         response = client.get(
             "/qrcode/",
-            query_string=f"usi1={urllib.parse.quote_plus(usi)}&" f"{plotting_args}",
+            query_string=f"usi1={urllib.parse.quote_plus(usi)}&"
+            f"{plotting_args}",
         )
         assert response.status_code == 200
         assert len(response.data) > 0
@@ -515,7 +520,8 @@ def _get_invalid_usi_status_code():
         (None, 400),
         # Invalid collection.
         (
-            "mzspec:PXD000000000:Adult_Frontalcortex_bRP_Elite_85_f09:scan:" "17555",
+            "mzspec:PXD000000000:Adult_Frontalcortex_bRP_Elite_85_f09:scan:"
+            "17555",
             400,
         ),
         (
@@ -560,12 +566,14 @@ def _get_invalid_usi_status_code():
         ("mzspec:MS2LDA:TASK-666666666:accession:270684", 404),
         ("mzspec:MS2LDA:TASK-190:accession:this_document_does_not_exist", 404),
         (
-            "mzspec:MSV666666666:Adult_Frontalcortex_bRP_Elite_85_f09:scan:" "17555",
+            "mzspec:MSV666666666:Adult_Frontalcortex_bRP_Elite_85_f09:scan:"
+            "17555",
             404,
         ),
         ("mzspec:MSV000079514:this_filename_does_not_exist:scan:17555", 404),
         (
-            "mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:index:" "17555",
+            "mzspec:MSV000079514:Adult_Frontalcortex_bRP_Elite_85_f09:index:"
+            "17555",
             400,
         ),
         (

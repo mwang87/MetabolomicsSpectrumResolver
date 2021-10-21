@@ -68,7 +68,9 @@ usi_legacy_pattern = re.compile(
     r"((?:mzspec|mzdraft):MS2LDATASK-[^:]+:document:[^:]+)$",
     flags=re.IGNORECASE,
 )
-gnps_task_pattern = re.compile(r"^TASK-([a-z0-9]{32})-(.+)$", flags=re.IGNORECASE)
+gnps_task_pattern = re.compile(
+    r"^TASK-([a-z0-9]{32})-(.+)$", flags=re.IGNORECASE
+)
 ms2lda_task_pattern = re.compile(r"^TASK-(\d+)$", flags=re.IGNORECASE)
 
 splash_builder = splash.Splash()
@@ -164,7 +166,9 @@ def parse_spectrum(spectrum: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
         peptide_clean = spectrum["annotation"]["peptide"]
         charge = spectrum["annotation"]["charge"]
 
-        peptide, peptide_clean, modifications = _parse_sequence(peptide, peptide_clean)
+        peptide, peptide_clean, modifications = _parse_sequence(
+            peptide, peptide_clean
+        )
 
         spectrum = sus.MsmsSpectrum(
             spectrum.get("title", "Peak Input"),
@@ -178,7 +182,11 @@ def parse_spectrum(spectrum: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
 
     except (TypeError, KeyError):
         spectrum = sus.MsmsSpectrum(
-            spectrum.get("title", "Peak Input"), precursor_mz, charge, mz, intensity
+            spectrum.get("title", "Peak Input"),
+            precursor_mz,
+            charge,
+            mz,
+            intensity,
         )
 
     splash_key = splash_builder.splash(
@@ -328,7 +336,9 @@ def _parse_gnps_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         lookup_request.raise_for_status()
         spectrum_dict = lookup_request.json()
         mz, intensity = zip(*spectrum_dict["peaks"])
-        source_link = f"https://gnps.ucsd.edu/ProteoSAFe/status.jsp?" f"task={task}"
+        source_link = (
+            f"https://gnps.ucsd.edu/ProteoSAFe/status.jsp?" f"task={task}"
+        )
         if "precursor" in spectrum_dict:
             precursor_mz = float(spectrum_dict["precursor"].get("mz", 0))
             charge = int(spectrum_dict["precursor"].get("charge", 0))
@@ -346,7 +356,9 @@ def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag.lower() != "accession":
-        raise UsiError("Currently supported GNPS library index flags: accession", 400)
+        raise UsiError(
+            "Currently supported GNPS library index flags: accession", 400
+        )
     index = match.group(4)
     try:
         request_url = (
@@ -358,7 +370,9 @@ def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         spectrum_dict = lookup_request.json()
         if spectrum_dict["spectruminfo"]["peaks_json"] == "null":
             raise UsiError("Unknown GNPS library USI", 404)
-        mz, intensity = zip(*json.loads(spectrum_dict["spectruminfo"]["peaks_json"]))
+        mz, intensity = zip(
+            *json.loads(spectrum_dict["spectruminfo"]["peaks_json"])
+        )
         source_link = (
             f"https://gnps.ucsd.edu/ProteoSAFe/"
             f"gnpslibraryspectrum.jsp?SpectrumID={index}"
@@ -389,10 +403,14 @@ def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag.lower() != "accession":
-        raise UsiError("Currently supported MassBank index flags: accession", 400)
+        raise UsiError(
+            "Currently supported MassBank index flags: accession", 400
+        )
     index = match.group(4)
     try:
-        lookup_request = requests.get(f"{MASSBANK_SERVER}{index}", timeout=timeout)
+        lookup_request = requests.get(
+            f"{MASSBANK_SERVER}{index}", timeout=timeout
+        )
         lookup_request.raise_for_status()
         spectrum_dict = lookup_request.json()
         mz, intensity = [], []
@@ -405,7 +423,9 @@ def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             if metadata["name"] == "precursor m/z":
                 precursor_mz = float(metadata["value"])
                 break
-        source_link = f"https://massbank.eu/MassBank/" f"RecordDisplay.jsp?id={index}"
+        source_link = (
+            f"https://massbank.eu/MassBank/" f"RecordDisplay.jsp?id={index}"
+        )
 
         spectrum = sus.MsmsSpectrum(usi, precursor_mz, 0, mz, intensity)
         return spectrum, source_link
@@ -422,7 +442,9 @@ def _parse_ms2lda(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     experiment_id = ms2lda_task_match.group(1)
     index_flag = match.group(3)
     if index_flag.lower() != "accession":
-        raise UsiError("Currently supported MS2LDA index flags: accession", 400)
+        raise UsiError(
+            "Currently supported MS2LDA index flags: accession", 400
+        )
     index = match.group(4)
     try:
         lookup_request = requests.get(
@@ -476,7 +498,9 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     f"format=JSON&uploadfile=True"
                 )
                 try:
-                    spectrum_request = requests.get(request_url, timeout=timeout)
+                    spectrum_request = requests.get(
+                        request_url, timeout=timeout
+                    )
                     spectrum_request.raise_for_status()
                     spectrum_dict = spectrum_request.json()
                 except (
@@ -488,7 +512,9 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
                     continue
                 mz, intensity = zip(*spectrum_dict["peaks"])
                 if "precursor" in spectrum_dict:
-                    precursor_mz = float(spectrum_dict["precursor"].get("mz", 0))
+                    precursor_mz = float(
+                        spectrum_dict["precursor"].get("mz", 0)
+                    )
                     charge = int(spectrum_dict["precursor"].get("charge", 0))
                 else:
                     precursor_mz, charge = 0, 0
@@ -539,7 +565,9 @@ def _parse_motifdb(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     index_flag = match.group(3)
     if index_flag.lower() != "accession":
-        raise UsiError("Currently supported MOTIFDB index flags: accession", 400)
+        raise UsiError(
+            "Currently supported MOTIFDB index flags: accession", 400
+        )
     index = match.group(4)
     try:
         lookup_request = requests.get(

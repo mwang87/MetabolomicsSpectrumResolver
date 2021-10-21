@@ -40,12 +40,18 @@ celery_instance.conf.ONCE = {
 }
 
 celery_instance.conf.task_routes = {
-    "metabolomics_spectrum_resolver.tasks.task_compute_heartbeat": {"queue": "worker"},
-    "metabolomics_spectrum_resolver.tasks._task_parse_usi": {"queue": "worker"},
+    "metabolomics_spectrum_resolver.tasks.task_compute_heartbeat": {
+        "queue": "worker"
+    },
+    "metabolomics_spectrum_resolver.tasks._task_parse_usi": {
+        "queue": "worker"
+    },
     "metabolomics_spectrum_resolver.tasks._task_parse_usi_or_spectrum": {
         "queue": "worker"
     },
-    "metabolomics_spectrum_resolver.tasks._task_generate_figure": {"queue": "worker"},
+    "metabolomics_spectrum_resolver.tasks._task_generate_figure": {
+        "queue": "worker"
+    },
     "metabolomics_spectrum_resolver.tasks._task_generate_mirror_figure": {
         "queue": "worker"
     },
@@ -74,7 +80,9 @@ def parse_usi_or_spectrum(
     """
     # First attempt to schedule with Celery.
     try:
-        return _task_parse_usi_or_spectrum.apply_async(args=(usi, spectrum)).get()
+        return _task_parse_usi_or_spectrum.apply_async(
+            args=(usi, spectrum)
+        ).get()
     except redis.exceptions.ConnectionError:
         # Fallback in case scheduling via Celery fails.
         # Mostly used for testing.
