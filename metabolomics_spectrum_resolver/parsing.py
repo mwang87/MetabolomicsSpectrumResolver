@@ -10,7 +10,7 @@ import splash
 
 from metabolomics_spectrum_resolver.error import UsiError
 
-timeout = 45  # seconds
+timeout = 46  # seconds
 
 MS2LDA_SERVER = "http://ms2lda.org/basicviz/"
 MOTIFDB_SERVER = "http://ms2lda.org/motifdb/"
