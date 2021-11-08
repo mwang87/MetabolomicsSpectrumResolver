@@ -200,10 +200,11 @@ def test_generate_svg_mirror_peaks(client):
     for spectrum1, spectrum2 in pairwise(peaks_to_test):
         response = client.post(
             "/svg/mirror/",
+            query_string="usi1=&usi2=",
             json={
                 "spectrum1": spectrum1,
                 "spectrum2": spectrum2,
-            },
+            }
         )
         assert response.status_code == 200
         assert len(response.data) > 0
