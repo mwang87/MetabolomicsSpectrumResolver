@@ -170,6 +170,18 @@ def test_generate_svg(client):
         assert len(response.data) > 0
         assert b"<!DOCTYPE svg" in response.data
 
+def test_generate_svg_peaks(client):
+    for spectrum1 in peaks_to_test:
+        response = client.post(
+            "/svg/",
+            query_string="usi1=&",
+            json={
+                "spectrum1": spectrum1,
+            }
+        )
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert b"<!DOCTYPE svg" in response.data
 
 def test_generate_svg_drawing_controls(client):
     plotting_args = _get_custom_plotting_args_str()
