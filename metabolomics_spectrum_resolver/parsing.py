@@ -139,7 +139,7 @@ def parse_spectrum(spectrum: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
     Parameters
     ----------
     spectrum : dict
-        The JSON dict for a spectrum.
+        The JSON dict for a spectrum in PROXI format.
 
     Returns
     -------
@@ -149,29 +149,41 @@ def parse_spectrum(spectrum: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
 
     source_link = "Peak Input"
 
-    spectrum_dict = spectrum["spectrum"]
+    mz, intensity = spectrum["mzs"], spectrum["intensities"]
 
-    mz, intensity = zip(*spectrum_dict["peaks"])
-    if "precursor" in spectrum_dict:
-        precursor_mz = float(spectrum_dict["precursor"].get("mz", 0))
-        charge = int(spectrum_dict["precursor"].get("charge", 0))
-    else:
-        precursor_mz, charge = 0, 0
+    precursor_mz = 0
+    charge = 0
+    peptide = None
+    peptide_clean = None
+
+    for attribute in spectrum["attributes"]:
+        # isolation window target m/z
+        if attribute["accession"] == "MS:1000827":
+            precursor_mz = float(attribute["value"])
+        # selected ion m/z
+        elif attribute["accession"] == "MS:1000744":
+            precursor_mz = float(attribute["value"])
+        # charge state
+        elif attribute["accession"] == "MS:1000041":
+            charge = int(attribute["value"])
+        # spectrum name (peptidoform?)
+        elif attribute["accession"] == "MS:1003061":
+            peptide = attribute["value"].split("/")[0]
+        # peptidoform
+        elif attribute["accession"] == "MS:1003049":
+            peptide = attribute["value"]
+        # unmodified peptide sequence
+        elif attribute["accession"] == "MS:1000888":
+            peptide_clean = attribute["value"]
 
     # Parse the peptide if available.
     try:
-        # Get the peptide information from resolution,
-        # this dereferences proforma.
-        peptide = spectrum["annotation"]["variant"]
-        peptide_clean = spectrum["annotation"]["peptide"]
-        charge = spectrum["annotation"]["charge"]
-
         peptide, peptide_clean, modifications = _parse_sequence(
             peptide, peptide_clean
         )
 
         spectrum = sus.MsmsSpectrum(
-            spectrum.get("title", "Peak Input"),
+            spectrum.get("usi", "Peak Input"),
             precursor_mz,
             charge,
             mz,
@@ -182,7 +194,7 @@ def parse_spectrum(spectrum: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
 
     except (TypeError, KeyError):
         spectrum = sus.MsmsSpectrum(
-            spectrum.get("title", "Peak Input"),
+            spectrum.get("usi", "Peak Input"),
             precursor_mz,
             charge,
             mz,
