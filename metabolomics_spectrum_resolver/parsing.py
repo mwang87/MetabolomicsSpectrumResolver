@@ -134,7 +134,7 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
 
 def parse_spectrum(spectrum: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
-    Retrieve the spectrum associated with the given USI.
+    Parse the spectrum PROXI object into a MsmsSpectrum object.
 
     Parameters
     ----------
@@ -166,9 +166,6 @@ def parse_spectrum(spectrum: dict) -> Tuple[sus.MsmsSpectrum, str, str]:
         # charge state
         elif attribute["accession"] == "MS:1000041":
             charge = int(attribute["value"])
-        # spectrum name (peptidoform?)
-        elif attribute["accession"] == "MS:1003061":
-            peptide = attribute["value"].split("/")[0]
         # peptidoform
         elif attribute["accession"] == "MS:1003049":
             peptide = attribute["value"]

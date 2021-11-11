@@ -62,7 +62,7 @@ def parse_usi_or_spectrum(
     usi: str, spectrum: dict
 ) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
-    Retrieve the spectrum associated with the given USI.
+    Retrieve the spectrum associated with the given USI or spectrum PROXI object.
 
     The first attempt to parse the USI is via a Celery task. Alternatively, as
     a fallback option the USI can be parsed directly in this thread.
@@ -71,6 +71,8 @@ def parse_usi_or_spectrum(
     ----------
     usi : str
         The USI of the spectrum to be retrieved from its resource.
+    spectrum : dict
+        The JSON dict for a spectrum in PROXI format.
 
     Returns
     -------

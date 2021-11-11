@@ -110,16 +110,20 @@ def generate_mirror_png():
     return flask.send_file(buf, mimetype="image/png")
 
 
-@blueprint.route("/svg/")
+@blueprint.route("/svg/", methods=["GET", "POST"])
 def generate_svg():
     drawing_controls = get_drawing_controls(**flask.request.args.to_dict())
     if drawing_controls["annotate_peaks"] is not None:
         drawing_controls["annotate_peaks"] = drawing_controls[
             "annotate_peaks"
         ][0]
+    spectrum_peaks_json = flask.request.json if flask.request.json else {}
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
-        tasks.parse_usi(drawing_controls["usi1"])[0], **drawing_controls
+        tasks.parse_usi_or_spectrum(
+            drawing_controls.get("usi1"), spectrum_peaks_json.get("spectrum1")
+        )[0],
+        **drawing_controls,
     )
     buf = tasks.generate_figure(spectrum, "svg", **drawing_controls)
     return flask.send_file(buf, mimetype="image/svg+xml")
