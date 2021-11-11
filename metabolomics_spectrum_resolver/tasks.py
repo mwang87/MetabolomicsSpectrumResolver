@@ -125,7 +125,7 @@ def _task_parse_usi_or_spectrum(
     usi: str, spectrum: dict
 ) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
-    Retrieve the spectrum associated with the given USI.
+    Retrieve the spectrum associated with the given USI or spectrum PROXI object.
 
     Previously computed results will be retrieved from the cache.
 
@@ -133,6 +133,8 @@ def _task_parse_usi_or_spectrum(
     ----------
     usi : str
         The USI of the spectrum to be retrieved from its resource.
+    spectrum : dict
+        The JSON dict for a spectrum in PROXI format.
 
     Returns
     -------
