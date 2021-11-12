@@ -32,11 +32,11 @@ server-compose:
 
 server-compose-production-interactive:
 	docker-compose build
-	docker-compose -f docker-compose.yml -f docker-compose-production.yml up
+	docker-compose -f docker-compose.yml -f docker-compose-production.yml --compatibility up
 
 server-compose-production:
 	docker-compose build
-	docker-compose -f docker-compose.yml -f docker-compose-production.yml up -d
+	docker-compose -f docker-compose.yml -f docker-compose-production.yml --compatibility up -d
 
 attach:
 	docker exec -i -t metabolomicsusi-web /bin/bash
