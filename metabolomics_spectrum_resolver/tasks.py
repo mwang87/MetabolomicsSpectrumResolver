@@ -33,9 +33,9 @@ celery_instance.conf.ONCE = {
     "backend": "celery_once.backends.Redis",
     "settings": {
         "url": "redis://metabolomicsusi-redis:6379/0",
-        "default_timeout": 60,
+        "default_timeout": 30,
         "blocking": True,
-        "blocking_timeout": 60,
+        "blocking_timeout": 30,
     },
 }
 
@@ -120,7 +120,7 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         return parsing.parse_usi(usi)
 
 
-@celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
+@celery_instance.task(time_limit=30, base=celery_once.QueueOnce)
 def _task_parse_usi_or_spectrum(
     usi: str, spectrum: dict
 ) -> Tuple[sus.MsmsSpectrum, str, str]:
@@ -146,7 +146,7 @@ def _task_parse_usi_or_spectrum(
     return cached_parse_usi_or_spectrum(usi, spectrum)
 
 
-@celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
+@celery_instance.task(time_limit=30, base=celery_once.QueueOnce)
 def _task_parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
     """
     Retrieve the spectrum associated with the given USI.
@@ -196,7 +196,7 @@ def generate_figure(
         return drawing.generate_figure(spectrum, extension, **kwargs)
 
 
-@celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
+@celery_instance.task(time_limit=30, base=celery_once.QueueOnce)
 def _task_generate_figure(
     spectrum: sus.MsmsSpectrum, extension: str, **kwargs: Any
 ) -> io.BytesIO:
@@ -257,7 +257,7 @@ def generate_mirror_figure(
         )
 
 
-@celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
+@celery_instance.task(time_limit=30, base=celery_once.QueueOnce)
 def _task_generate_mirror_figure(
     spectrum_top: sus.MsmsSpectrum,
     spectrum_bottom: sus.MsmsSpectrum,
@@ -290,7 +290,7 @@ def _task_generate_mirror_figure(
     )
 
 
-@celery_instance.task(time_limit=60)
+@celery_instance.task(time_limit=10)
 def task_compute_heartbeat() -> str:
     """
     Return a heartbeat signal on sterr.

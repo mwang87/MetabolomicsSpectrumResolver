@@ -10,6 +10,22 @@ services:
       LETSENCRYPT_HOST: metabolomics-usi.ucsd.edu
       LETSENCRYPT_EMAIL: miw023@ucsd.edu
     command: /app/run_server.sh
+    deploy:
+      resources:
+        limits:
+          memory: 16000M
+
+  metabolomicsusi-worker:
+    deploy:
+      resources:
+        limits:
+          memory: 16000M
+
+  metabolomicsusi-redis:
+    deploy:
+      resources:
+        limits:
+          memory: 4000M
 
 networks:
   nginx-net:
