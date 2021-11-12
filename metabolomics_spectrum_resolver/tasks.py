@@ -13,6 +13,7 @@ from metabolomics_spectrum_resolver import drawing, parsing
 
 memory = joblib.Memory("tmp/joblibcache", verbose=0)
 cached_parse_usi = memory.cache(parsing.parse_usi)
+cached_parse_usi_or_spectrum = memory.cache(parsing.parse_usi_or_spectrum)
 cached_generate_figure = memory.cache(drawing.generate_figure)
 cached_generate_mirror_figure = memory.cache(drawing.generate_mirror_figure)
 
@@ -45,6 +46,9 @@ celery_instance.conf.task_routes = {
     "metabolomics_spectrum_resolver.tasks._task_parse_usi": {
         "queue": "worker"
     },
+    "metabolomics_spectrum_resolver.tasks._task_parse_usi_or_spectrum": {
+        "queue": "worker"
+    },
     "metabolomics_spectrum_resolver.tasks._task_generate_figure": {
         "queue": "worker"
     },
@@ -52,6 +56,40 @@ celery_instance.conf.task_routes = {
         "queue": "worker"
     },
 }
+
+
+def parse_usi_or_spectrum(
+    usi: str, spectrum: dict
+) -> Tuple[sus.MsmsSpectrum, str, str]:
+    """
+    Retrieve the spectrum associated with the given USI or spectrum PROXI object.
+
+    The first attempt to parse the USI is via a Celery task. Alternatively, as
+    a fallback option the USI can be parsed directly in this thread.
+
+    Parameters
+    ----------
+    usi : str
+        The USI of the spectrum to be retrieved from its resource.
+    spectrum : dict
+        The JSON dict for a spectrum in PROXI format.
+
+    Returns
+    -------
+    Tuple[sus.MsmsSpectrum, str, str]
+        A tuple of (i) the `MsmsSpectrum`, (ii) its source link, and (iii) its
+        SPLASH.
+    """
+    # First attempt to schedule with Celery.
+    try:
+        return _task_parse_usi_or_spectrum.apply_async(
+            args=(usi, spectrum)
+        ).get()
+    except redis.exceptions.ConnectionError:
+        # Fallback in case scheduling via Celery fails.
+        # Mostly used for testing.
+        # noinspection PyTypeChecker
+        return parsing.parse_usi_or_spectrum(usi, spectrum)
 
 
 def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
@@ -80,6 +118,32 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         # Mostly used for testing.
         # noinspection PyTypeChecker
         return parsing.parse_usi(usi)
+
+
+@celery_instance.task(time_limit=60, base=celery_once.QueueOnce)
+def _task_parse_usi_or_spectrum(
+    usi: str, spectrum: dict
+) -> Tuple[sus.MsmsSpectrum, str, str]:
+    """
+    Retrieve the spectrum associated with the given USI or spectrum PROXI object.
+
+    Previously computed results will be retrieved from the cache.
+
+    Parameters
+    ----------
+    usi : str
+        The USI of the spectrum to be retrieved from its resource.
+    spectrum : dict
+        The JSON dict for a spectrum in PROXI format.
+
+    Returns
+    -------
+    Tuple[sus.MsmsSpectrum, str, str]
+        A tuple of (i) the `MsmsSpectrum`, (ii) its source link, and (iii) its
+        SPLASH.
+    """
+    # noinspection PyTypeChecker
+    return cached_parse_usi_or_spectrum(usi, spectrum)
 
 
 @celery_instance.task(time_limit=60, base=celery_once.QueueOnce)

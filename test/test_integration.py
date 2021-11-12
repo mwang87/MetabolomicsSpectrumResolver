@@ -19,6 +19,7 @@ from metabolomics_spectrum_resolver import app
 from metabolomics_spectrum_resolver.error import UsiError
 
 from usi_test_data import usis_to_test
+from peak_test_data import peaks_to_test
 
 
 @functools.lru_cache(None)
@@ -35,6 +36,7 @@ def _get_splash_remote(spectrum):
         "https://splash.fiehnlab.ucdavis.edu/splash/it",
         data=json.dumps(payload),
         headers=headers,
+        verify=False,
     )
     if splash_response.status_code != 200:
         pytest.skip("external SPLASH unavailable")
@@ -170,6 +172,17 @@ def test_generate_svg(client):
         assert b"<!DOCTYPE svg" in response.data
 
 
+def test_generate_svg_peaks(client):
+    for spectrum1 in peaks_to_test:
+        response = client.post(
+            "/svg/",
+            query_string="usi1=&spectrum1={}".format(json.dumps(spectrum1)),
+        )
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert b"<!DOCTYPE svg" in response.data
+
+
 def test_generate_svg_drawing_controls(client):
     plotting_args = _get_custom_plotting_args_str()
     for usi in usis_to_test:
@@ -189,6 +202,19 @@ def test_generate_svg_mirror(client):
             "/svg/mirror/",
             query_string=f"usi1={urllib.parse.quote_plus(usi1)}&"
             f"usi2={urllib.parse.quote_plus(usi2)}",
+        )
+        assert response.status_code == 200
+        assert len(response.data) > 0
+        assert b"<!DOCTYPE svg" in response.data
+
+
+def test_generate_svg_mirror_peaks(client):
+    for spectrum1, spectrum2 in pairwise(peaks_to_test):
+        response = client.post(
+            "/svg/mirror/",
+            query_string="usi1=&usi2=&spectrum1={}&spectrum2={}".format(
+                json.dumps(spectrum1), json.dumps(spectrum2)
+            ),
         )
         assert response.status_code == 200
         assert len(response.data) > 0

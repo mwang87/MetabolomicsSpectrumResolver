@@ -73,30 +73,48 @@ def mirror_forward():
     return flask.redirect(f"/dashinterface?{params_string}", code=302)
 
 
-@blueprint.route("/png/")
+@blueprint.route("/png/", methods=["GET", "POST"])
 def generate_png():
-    drawing_controls = get_drawing_controls(**flask.request.args.to_dict())
+    request_params = flask.request.values.to_dict()
+
+    spectrum_peaks_json = json.loads(request_params.get("spectrum1", "{}"))
+    request_params.pop("spectrum1", None)
+
+    drawing_controls = get_drawing_controls(**request_params)
     if drawing_controls["annotate_peaks"] is not None:
         drawing_controls["annotate_peaks"] = drawing_controls[
             "annotate_peaks"
         ][0]
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
-        tasks.parse_usi(drawing_controls["usi1"])[0], **drawing_controls
+        tasks.parse_usi_or_spectrum(
+            drawing_controls.get("usi1"), spectrum_peaks_json
+        )[0],
+        **drawing_controls,
     )
     buf = tasks.generate_figure(spectrum, "png", **drawing_controls)
     return flask.send_file(buf, mimetype="image/png")
 
 
-@blueprint.route("/png/mirror/")
+@blueprint.route("/png/mirror/", methods=["GET", "POST"])
 def generate_mirror_png():
-    drawing_controls = get_drawing_controls(
-        **flask.request.args.to_dict(), mirror=True
-    )
+    request_params = flask.request.values.to_dict()
+
+    spectrum1_peaks_json = json.loads(request_params.get("spectrum1", "{}"))
+    spectrum2_peaks_json = json.loads(request_params.get("spectrum2", "{}"))
+    request_params.pop("spectrum1", None)
+    request_params.pop("spectrum2", None)
+
+    drawing_controls = get_drawing_controls(**request_params, mirror=True)
+
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
-        tasks.parse_usi(drawing_controls["usi1"])[0],
-        tasks.parse_usi(drawing_controls["usi2"])[0],
+        tasks.parse_usi_or_spectrum(
+            drawing_controls.get("usi1"), spectrum1_peaks_json
+        )[0],
+        tasks.parse_usi_or_spectrum(
+            drawing_controls.get("usi2"), spectrum2_peaks_json
+        )[0],
         **drawing_controls,
     )
     buf = tasks.generate_mirror_figure(
@@ -105,30 +123,48 @@ def generate_mirror_png():
     return flask.send_file(buf, mimetype="image/png")
 
 
-@blueprint.route("/svg/")
+@blueprint.route("/svg/", methods=["GET", "POST"])
 def generate_svg():
-    drawing_controls = get_drawing_controls(**flask.request.args.to_dict())
+    request_params = flask.request.values.to_dict()
+
+    spectrum_peaks_json = json.loads(request_params.get("spectrum1", "{}"))
+    request_params.pop("spectrum1", None)
+
+    drawing_controls = get_drawing_controls(**request_params)
     if drawing_controls["annotate_peaks"] is not None:
         drawing_controls["annotate_peaks"] = drawing_controls[
             "annotate_peaks"
         ][0]
     # noinspection PyTypeChecker
     spectrum = prepare_spectrum(
-        tasks.parse_usi(drawing_controls["usi1"])[0], **drawing_controls
+        tasks.parse_usi_or_spectrum(
+            drawing_controls.get("usi1"), spectrum_peaks_json
+        )[0],
+        **drawing_controls,
     )
     buf = tasks.generate_figure(spectrum, "svg", **drawing_controls)
     return flask.send_file(buf, mimetype="image/svg+xml")
 
 
-@blueprint.route("/svg/mirror/")
+@blueprint.route("/svg/mirror/", methods=["GET", "POST"])
 def generate_mirror_svg():
-    drawing_controls = get_drawing_controls(
-        **flask.request.args.to_dict(), mirror=True
-    )
+    request_params = flask.request.values.to_dict()
+
+    spectrum1_peaks_json = json.loads(request_params.get("spectrum1", "{}"))
+    spectrum2_peaks_json = json.loads(request_params.get("spectrum2", "{}"))
+    request_params.pop("spectrum1", None)
+    request_params.pop("spectrum2", None)
+
+    drawing_controls = get_drawing_controls(**request_params, mirror=True)
+
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
-        tasks.parse_usi(drawing_controls["usi1"])[0],
-        tasks.parse_usi(drawing_controls["usi2"])[0],
+        tasks.parse_usi_or_spectrum(
+            drawing_controls.get("usi1"), spectrum1_peaks_json
+        )[0],
+        tasks.parse_usi_or_spectrum(
+            drawing_controls.get("usi2"), spectrum2_peaks_json
+        )[0],
         **drawing_controls,
     )
     buf = tasks.generate_mirror_figure(

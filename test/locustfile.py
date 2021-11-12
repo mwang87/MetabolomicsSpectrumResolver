@@ -1,9 +1,11 @@
 import logging
 import random
+import json
 
 import locust
 
 from usi_test_data import usis_to_test
+from peak_test_data import peaks_to_test
 
 
 random.seed(42)
@@ -64,6 +66,11 @@ class UsiLoadTester(locust.HttpUser):
     def generate_png(self):
         usi = random.choice(usis_to_test)
         self.client.get(f"/png/?usi1={usi}", name="/png/")
+
+    @locust.task
+    def generate_svg_peaks(self):
+        peaks = random.choice(peaks_to_test)
+        self.client.post(f"/svg/?usi1=&spectrum1={json.dumps(peaks)}", name="peaks /png/")
 
     @locust.task
     def generate_svg(self):
