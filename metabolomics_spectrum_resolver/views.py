@@ -105,9 +105,8 @@ def generate_mirror_png():
     request_params.pop("spectrum1", None)
     request_params.pop("spectrum2", None)
 
-    drawing_controls = get_drawing_controls(
-        **request_params, mirror=True
-    )
+    drawing_controls = get_drawing_controls(**request_params, mirror=True)
+
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
         tasks.parse_usi_or_spectrum(
@@ -156,9 +155,8 @@ def generate_mirror_svg():
     request_params.pop("spectrum1", None)
     request_params.pop("spectrum2", None)
 
-    drawing_controls = get_drawing_controls(
-        **request_params, mirror=True
-    )
+    drawing_controls = get_drawing_controls(**request_params, mirror=True)
+
     # noinspection PyTypeChecker
     spectrum1, spectrum2 = _prepare_mirror_spectra(
         tasks.parse_usi_or_spectrum(
