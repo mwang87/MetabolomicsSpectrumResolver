@@ -36,7 +36,7 @@ def _get_splash_remote(spectrum):
         "https://splash.fiehnlab.ucdavis.edu/splash/it",
         data=json.dumps(payload),
         headers=headers,
-        verify=False
+        verify=False,
     )
     if splash_response.status_code != 200:
         pytest.skip("external SPLASH unavailable")
@@ -171,18 +171,17 @@ def test_generate_svg(client):
         assert len(response.data) > 0
         assert b"<!DOCTYPE svg" in response.data
 
+
 def test_generate_svg_peaks(client):
     for spectrum1 in peaks_to_test:
         response = client.post(
             "/svg/",
-            query_string="usi1=",
-            json={
-                "spectrum1": spectrum1,
-            }
+            query_string="usi1=&spectrum1={}".format(json.dumps(spectrum1)),
         )
         assert response.status_code == 200
         assert len(response.data) > 0
         assert b"<!DOCTYPE svg" in response.data
+
 
 def test_generate_svg_drawing_controls(client):
     plotting_args = _get_custom_plotting_args_str()
@@ -213,11 +212,9 @@ def test_generate_svg_mirror_peaks(client):
     for spectrum1, spectrum2 in pairwise(peaks_to_test):
         response = client.post(
             "/svg/mirror/",
-            query_string="usi1=&usi2=",
-            json={
-                "spectrum1": spectrum1,
-                "spectrum2": spectrum2,
-            }
+            query_string="usi1=&usi2=&spectrum1={}&spectrum2={}".format(
+                json.dumps(spectrum1), json.dumps(spectrum2)
+            ),
         )
         assert response.status_code == 200
         assert len(response.data) > 0
