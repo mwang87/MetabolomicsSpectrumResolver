@@ -562,7 +562,7 @@ def mirror_json():
 @blueprint.route("/proxi/v0.1/spectra")
 def peak_proxi_json():
     try:
-        usi = flask.request.args.get("usi1")
+        usi = flask.request.args.get("usi")
         spectrum, _, splash_key = tasks.parse_usi(usi)
         result_dict = {
             "usi": usi,
