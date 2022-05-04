@@ -31,7 +31,7 @@ jobs:
           requests-cache scipy spectrum_utils werkzeug zbar
         apt-get update -y && apt-get install -y git-core
         source activate usi
-        pip install "git+git://github.com/berlinguyinca/spectra-hash.git#egg=splash&subdirectory=python"
+        pip install "git+https://github.com/berlinguyinca/spectra-hash.git#subdirectory=python"
         pip install celery celery-once joblib
         echo "source activate usi" > ~/.bashrc
     - name: Run unit and integration tests
