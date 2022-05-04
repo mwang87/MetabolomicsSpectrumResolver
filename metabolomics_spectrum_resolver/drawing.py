@@ -12,6 +12,7 @@ from metabolomics_spectrum_resolver.config import USI_SERVER
 
 
 matplotlib.use("svg")
+plt.rcParams["svg.fonttype"] = "none"
 
 
 def generate_figure(
