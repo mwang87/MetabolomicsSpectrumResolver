@@ -414,6 +414,11 @@ def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             "Currently supported MassBank index flags: accession", 400
         )
     index = match.group(4)
+
+    # Cleaning up the new MassBank Accessions
+    if "-" in index:
+        index = index.split("-")[-1]
+
     try:
         lookup_request = requests.get(
             f"{MASSBANK_SERVER}{index}", timeout=timeout

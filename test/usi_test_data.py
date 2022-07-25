@@ -35,4 +35,5 @@ usis_to_test = [
     "mzspec:GNPSLIBRARY:CCMSLIB00005436077",
     "mzspec:MOTIFDB:motif:171163",
     "mzspec:MS2LDATASK-190:document:270684",
+    "mzspec:MASSBANK::accession:MSBNK-AAFC-AC000646"
 ]
