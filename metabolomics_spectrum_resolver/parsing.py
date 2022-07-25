@@ -4,6 +4,8 @@ import re
 from typing import Tuple
 
 import requests
+import pandas as pd
+from io import StringIO
 import urllib.parse
 import spectrum_utils.spectrum as sus
 import splash
@@ -25,7 +27,7 @@ usi_pattern = re.compile(
     #                                    PXLnnnnnn
     # Unofficial: MASSIVEKB
     # https://github.com/HUPO-PSI/usi/blob/master/CollectionIdentifiers.md
-    r":(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6}|MassIVE)"
+    r":(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6}|ST\d{6}|MassIVE)"
     # msRun identifier
     r":(.*)"
     # index flag
@@ -116,6 +118,8 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
             spectrum, source_link = _parse_ms2lda(usi)
         elif collection == "motifdb":
             spectrum, source_link = _parse_motifdb(usi)
+        elif collection.startswith("st"):
+            spectrum, source_link = _parse_metabolomics_workbench(usi)
         else:
             raise UsiError(f"Unknown USI collection: {match.group(1)}", 400)
         splash_key = splash_builder.splash(
@@ -589,6 +593,53 @@ def _parse_motifdb(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     except requests.exceptions.HTTPError:
         raise UsiError("Unknown MOTIFDB USI", 404)
 
+
+# Parse GNPS library.
+def _parse_metabolomics_workbench(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+    match = _match_usi(usi)
+    accession = match.group(1)
+    filename = match.group(2)
+    index_flag = match.group(3)
+    index = match.group(4)
+
+    if index_flag.lower() != "scan":
+        raise UsiError(
+            "Currently supported MW index flags: scan", 400
+        )
+    try:
+        request_url = (
+            f"https://www.metabolomicsworkbench.org/"
+            f"data/ms2.php?A={accession}.zip"
+            f"&F={urllib.parse.quote_plus(filename)}&S={index}"
+        )
+        lookup_request = requests.get(request_url, timeout=timeout)
+        lookup_request.raise_for_status()
+
+        response_text = lookup_request.text
+        response_text = response_text.replace("<pre>", "").replace("</pre></br>", "").lstrip().rstrip()
+
+        # Parsing the MW Response
+        precursor_mz = float(response_text.split("\n")[0].split(":")[-1].replace("\"", ""))
+        charge = int(response_text.split("\n")[2].split(":")[-1].replace("\"", ""))
+        peaks_df = pd.read_csv(StringIO(response_text), sep=r" +", skiprows=4)
+        mz = list(peaks_df["m/z"])
+        intensity = list(peaks_df["intensity"])
+
+        source_link = (
+            f"https://www.metabolomicsworkbench.org/"
+            f"data/DRCCMetadata.php?Mode=Study&StudyID={accession}&StudyType=MS&ResultType=1"
+        )
+
+        spectrum = sus.MsmsSpectrum(
+            usi,
+            float(precursor_mz),
+            int(charge),
+            mz,
+            intensity,
+        )
+        return spectrum, source_link
+    except requests.exceptions.HTTPError:
+        raise UsiError("Unknown MW USI", 404)
 
 def _parse_sequence(peptide: str, peptide_clean: str) -> Tuple[str, str, list]:
     # Parse out gapped sequence (e.g. X+129.04259), faking it
