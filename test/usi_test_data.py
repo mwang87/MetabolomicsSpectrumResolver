@@ -9,6 +9,7 @@ usis_to_test = [
     "mzspec:GNPS:TASK-9c27c9cc037c443dbecafb07039a8528-spectra/specs_ms.mgf:scan:1",
     "mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077",
     "mzspec:MASSBANK::accession:SM858102",
+    "mzspec:MASSBANK::accession:MSBNK-AAFC-AC000646",
     "mzspec:MS2LDA:TASK-190:accession:270684",
     "mzspec:MOTIFDB::accession:171163",
     "mzspec:MSV000082791:(-)-epigallocatechin:scan:2",
