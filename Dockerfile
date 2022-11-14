@@ -8,7 +8,7 @@ RUN apt-get update -y && \
 RUN conda create -y -n usi -c conda-forge -c bioconda -c defaults celery \
         dash=1.20.0 dash-bootstrap-components=0.9.2 flask gunicorn \
         joblib matplotlib numba numpy openssl qrcode rdkit requests \
-        requests-cache scipy spectrum_utils werkzeug
+        requests-cache scipy spectrum_utils werkzeug==2.0.0
 RUN /bin/bash -c 'source activate usi && pip install "git+https://github.com/berlinguyinca/spectra-hash.git#subdirectory=python" && pip install celery-once'
 
 RUN echo "source activate usi" > ~/.bashrc
