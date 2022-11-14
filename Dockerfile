@@ -5,7 +5,8 @@ WORKDIR /app
 RUN apt-get update -y && \
         apt-get install -y libxrender-dev && \
         apt-get install -y git-core
-RUN conda create -y -n usi -c conda-forge -c bioconda -c defaults celery \
+RUN conda install -c conda-forge mamba
+RUN mamba create -y -n usi -c conda-forge -c bioconda -c defaults celery \
         dash=1.20.0 dash-bootstrap-components=0.9.2 flask gunicorn \
         joblib matplotlib numba numpy openssl qrcode rdkit requests \
         requests-cache scipy spectrum_utils werkzeug==2.0.0
