@@ -426,7 +426,7 @@ CONTRIBUTORS_DASHBOARD = [
     dbc.CardHeader(html.H5("Contributors")),
     dbc.CardBody(
         [
-            "Mingxun Wang, PhD – UC San Diego",
+            "Mingxun Wang, PhD – UC Riverside",
             html.Br(),
             "Wout Bittremieux, PhD – UC San Diego",
             html.Br(),
