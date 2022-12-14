@@ -5,9 +5,11 @@ services:
       - default
       - nginx-net
     environment:
-      VIRTUAL_HOST: metabolomics-usi.ucsd.edu,metabolomics-usi.gnps2.org
+      #VIRTUAL_HOST: metabolomics-usi.ucsd.edu,metabolomics-usi.gnps2.org
+      VIRTUAL_HOST: metabolomics-usi.gnps2.org
       VIRTUAL_PORT: 5000
-      LETSENCRYPT_HOST: metabolomics-usi.ucsd.edu,metabolomics-usi.gnps2.org
+      #LETSENCRYPT_HOST: metabolomics-usi.ucsd.edu,metabolomics-usi.gnps2.org
+      LETSENCRYPT_HOST: metabolomics-usi.gnps2.org
       LETSENCRYPT_EMAIL: mwang87@gmail.com
     command: /app/run_server.sh
     deploy:
