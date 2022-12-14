@@ -26,4 +26,4 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Build Docker
       run: |
-        cd basic && docker build . 
+        docker build . 
