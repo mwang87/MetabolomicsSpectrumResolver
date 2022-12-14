@@ -618,16 +618,15 @@ def _parse_metabolomics_workbench(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             f"data/ms2.php?A={accession}.zip"
             f"&F={urllib.parse.quote_plus(filename)}&S={index}"
         )
+
+        # TODO: Do some extra exception handling if we don't find the filename directly. We might need to his another API to get the full filename
+        # Given the just the basename
+        
         lookup_request = requests.get(request_url, timeout=timeout)
         lookup_request.raise_for_status()
 
         response_text = lookup_request.text
-        response_text = (
-+            response_text.replace("<pre>", "")
-+            .replace("</pre></br>", "")
-+            .lstrip()
-+            .rstrip()
-+        )
+        response_text = (response_text.replace("<pre>", "").replace("</pre></br>", "").lstrip().rstrip())
 
         # Parsing the MW Response
         precursor_mz = float(response_text.split("\n")[0].split(":")[-1].replace("\"", ""))
