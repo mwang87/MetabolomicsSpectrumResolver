@@ -45,7 +45,7 @@ usi_metabolomics_pattern = re.compile(
     # collection identifier
     # Unofficial proteomics spectral library identifier: MASSIVEKB
     # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB
-    r":(MASSIVEKB|GNPS|MASSBANK|MS2LDA|MOTIFDB)"
+    r":(MASSIVEKB|GNPS|GNPS2|MASSBANK|MS2LDA|MOTIFDB)"
     # msRun identifier
     r":(.*)"
     # index flag
@@ -112,6 +112,8 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
             spectrum, source_link = _parse_msv_pxd(usi)
         elif collection == "gnps":
             spectrum, source_link = _parse_gnps(usi)
+        elif collection == "gnps2":
+            spectrum, source_link = _parse_gnps2(usi)
         elif collection == "massbank":
             spectrum, source_link = _parse_massbank(usi)
         elif collection == "ms2lda":
@@ -322,6 +324,11 @@ def _parse_gnps(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     else:
         return _parse_gnps_library(usi)
 
+def _parse_gnps2(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+    match = _match_usi(usi)
+    ms_run = match.group(2)
+    if ms_run.lower().startswith("task"):
+        return _parse_gnps2_task(usi)
 
 # Parse GNPS clustered spectra in Molecular Networking.
 def _parse_gnps_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
@@ -361,6 +368,41 @@ def _parse_gnps_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
         raise UsiError("Unknown GNPS task USI", 404)
 
+
+# Parse GNPS2 task spectra
+def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+    match = _match_usi(usi)
+    gnps_task_match = gnps_task_pattern.match(match.group(2))
+    if gnps_task_match is None:
+        raise UsiError("Incorrectly formatted GNPS2 task", 400)
+    task = gnps_task_match.group(1)
+    filename = gnps_task_match.group(2)
+    index_flag = match.group(3)
+    if index_flag.lower() != "scan":
+        raise UsiError("Currently supported GNPS2 TASK index flags: scan", 400)
+    scan = match.group(4)
+
+    try:
+        request_url = (
+            f"https://gnps2.org/spectrumpeaks?format=json&usi={usi}"
+        )
+        lookup_request = requests.get(request_url, timeout=timeout)
+        lookup_request.raise_for_status()
+        spectrum_dict = lookup_request.json()
+        mz, intensity = zip(*spectrum_dict["peaks"])
+        source_link = (
+            f"https://gnps2.org/status?task={task}"
+        )
+        if "precursor" in spectrum_dict:
+            precursor_mz = float(spectrum_dict["precursor"].get("mz", 0))
+            charge = int(spectrum_dict["precursor"].get("charge", 0))
+        else:
+            precursor_mz, charge = 0, 0
+
+        spectrum = sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity)
+        return spectrum, source_link
+    except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
+        raise UsiError("Unknown GNPS2 task USI", 404)
 
 # Parse GNPS library.
 def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
