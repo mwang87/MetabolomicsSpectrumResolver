@@ -112,6 +112,8 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
             spectrum, source_link = _parse_msv_pxd(usi)
         elif collection == "gnps":
             spectrum, source_link = _parse_gnps(usi)
+        elif collection == "gnps2":
+            spectrum, source_link = _parse_gnps2(usi)
         elif collection == "massbank":
             spectrum, source_link = _parse_massbank(usi)
         elif collection == "ms2lda":
@@ -389,7 +391,7 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         spectrum_dict = lookup_request.json()
         mz, intensity = zip(*spectrum_dict["peaks"])
         source_link = (
-            f"https://gnps2.org//status?task={task}"
+            f"https://gnps2.org/status?task={task}"
         )
         if "precursor" in spectrum_dict:
             precursor_mz = float(spectrum_dict["precursor"].get("mz", 0))
@@ -400,7 +402,7 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         spectrum = sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity)
         return spectrum, source_link
     except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
-        raise UsiError("Unknown GNPS task USI", 404)
+        raise UsiError("Unknown GNPS2 task USI", 404)
 
 # Parse GNPS library.
 def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
