@@ -45,7 +45,7 @@ usi_metabolomics_pattern = re.compile(
     # collection identifier
     # Unofficial proteomics spectral library identifier: MASSIVEKB
     # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB
-    r":(MASSIVEKB|GNPS|GNPS2|MASSBANK|MS2LDA|MOTIFDB)"
+    r":(MASSIVEKB|GNPS|GNPS2|MASSBANK|MS2LDA|MOTIFDB|TINYMASS)"
     # msRun identifier
     r":(.*)"
     # index flag
@@ -122,6 +122,8 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
             spectrum, source_link = _parse_motifdb(usi)
         elif collection.startswith("st"):
             spectrum, source_link = _parse_metabolomics_workbench(usi)
+        elif collection.startswith("tinymass"):
+            spectrum, source_link = _parse_tinymass(usi)
         else:
             raise UsiError(f"Unknown USI collection: {match.group(1)}", 400)
         splash_key = splash_builder.splash(
@@ -403,6 +405,32 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         return spectrum, source_link
     except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
         raise UsiError("Unknown GNPS2 task USI", 404)
+
+# Parse TINYMASS task spectra
+def _parse_tinymass(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+    match = _match_usi(usi)
+
+    try:
+        request_url = (
+            f"https://tinymass.gnps2.org/resolve?usi={usi}"
+        )
+        lookup_request = requests.get(request_url, timeout=timeout)
+        lookup_request.raise_for_status()
+        spectrum_dict = lookup_request.json()
+        mz, intensity = zip(*spectrum_dict["peaks"])
+        source_link = (
+            f"https://tinymass.gnps2.org/resolve?usi={usi}"
+        )
+        if "precursor" in spectrum_dict:
+            precursor_mz = float(spectrum_dict["precursor"])
+            charge = 0
+        else:
+            precursor_mz, charge = 0, 0
+
+        spectrum = sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity)
+        return spectrum, source_link
+    except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
+        raise UsiError("Unknown Tiny Mass task USI", 404)
 
 # Parse GNPS library.
 def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
