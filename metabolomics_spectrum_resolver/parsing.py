@@ -395,9 +395,9 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         source_link = (
             f"https://gnps2.org/status?task={task}"
         )
-        if "precursor" in spectrum_dict:
-            precursor_mz = float(spectrum_dict["precursor"].get("mz", 0))
-            charge = int(spectrum_dict["precursor"].get("charge", 0))
+        if "precursor_mz" in spectrum_dict:
+            precursor_mz = float(spectrum_dict["precursor_mz"])
+            charge = 0
         else:
             precursor_mz, charge = 0, 0
 
