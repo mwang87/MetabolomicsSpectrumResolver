@@ -39,6 +39,8 @@ dash_app.index_string = """<!DOCTYPE html>
 
         gtag('config', 'UA-8412213-8');
         </script>
+
+        <script async defer data-website-id="ce3d7d73-8edf-480d-83f6-5c3eab60deac" src="https://analytics.gnps2.org/umami.js"></script>
         
         {%metas%}
         <title>{%title%}</title>
