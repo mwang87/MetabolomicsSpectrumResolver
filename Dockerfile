@@ -4,7 +4,7 @@ MAINTAINER Mingxun Wang "mwang87@gmail.com"
 WORKDIR /app
 RUN apt-get update -y && \
         apt-get install -y libxrender-dev && \
-        apt-get install -y git-core
+        apt-get install -y git-core libarchive-dev
 RUN conda install -c conda-forge mamba
 RUN mamba create -y -n usi -c conda-forge -c bioconda -c defaults celery \
         dash=1.20.0 dash-bootstrap-components=0.9.2 flask gunicorn \
