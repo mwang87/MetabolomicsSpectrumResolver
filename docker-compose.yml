@@ -12,7 +12,7 @@ services:
         - ./logs/:/app/logs:rw
     networks:
       - default
-    restart: on-failure
+    restart: always
     command: /app/run_dev_server.sh
 
   metabolomicsusi-worker:
@@ -24,7 +24,7 @@ services:
       - ./tmp:/app/tmp:rw
       - ./logs:/app/logs:rw
     command: /app/run_worker.sh
-    restart: on-failure
+    restart: always
     depends_on:
       - metabolomicsusi-redis
     networks:
@@ -36,7 +36,7 @@ services:
     image: redis
     networks:
       - default
-    restart: on-failure
+    restart: always
 
 networks:
   nginx-net:
