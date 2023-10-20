@@ -443,8 +443,8 @@ def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     index = match.group(4)
     try:
         request_url = (
-            f"https://gnps.ucsd.edu/ProteoSAFe/"
-            f"SpectrumCommentServlet?SpectrumID={index}"
+            f"https://external.gnps2.org/"
+            f"gnpsspectrum?SpectrumID={index}"
         )
         lookup_request = requests.get(request_url, timeout=timeout)
         lookup_request.raise_for_status()
