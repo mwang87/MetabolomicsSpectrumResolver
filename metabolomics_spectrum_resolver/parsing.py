@@ -571,22 +571,28 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         lookup_request.raise_for_status()
         lookup_json = lookup_request.json()
         for spectrum_file in lookup_json["row_data"]:
+            # Checking if its an actual file we can resolve or if MSV will go to PX directly
             if any(
                 spectrum_file["file_descriptor"].lower().endswith(extension)
                 for extension in ["mzml", "mzxml", "mgf"]
-            ):
-                request_url = (
+            ) or spectrum_file["file_descriptor"].startswith("f.ProteomeCentral"):
+                file_descriptor = spectrum_file['file_descriptor']
+                if file_descriptor.startswith("f."):
+                    file_descriptor = file_descriptor[2:]
+
+                peaks_request_url = (
                     f"https://massive.ucsd.edu/ProteoSAFe/"
                     f"DownloadResultFile?"
                     f"task=4f2ac74ea114401787a7e96e143bb4a1&"
                     f"invoke=annotatedSpectrumImageText&block=0&file=FILE->"
-                    f"{urllib.parse.quote(spectrum_file['file_descriptor'])}"
+                    f"{urllib.parse.quote(file_descriptor)}"
                     f"&scan={scan}&peptide=*..*&force=false&"
                     f"format=JSON&uploadfile=True"
                 )
+                
                 try:
                     spectrum_request = requests.get(
-                        request_url, timeout=timeout
+                        peaks_request_url, timeout=timeout
                     )
                     spectrum_request.raise_for_status()
                     spectrum_dict = spectrum_request.json()
@@ -643,6 +649,7 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
 
                 return spectrum, source_link
     except requests.exceptions.HTTPError:
+        raise
         pass
     raise UsiError("Unsupported/unknown USI", 404)
 
