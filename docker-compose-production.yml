@@ -14,18 +14,33 @@ services:
       resources:
         limits:
           memory: 16000M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   metabolomicsusi-worker:
     deploy:
       resources:
         limits:
           memory: 16000M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   metabolomicsusi-redis:
     deploy:
       resources:
         limits:
           memory: 4000M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   nginx-net:
