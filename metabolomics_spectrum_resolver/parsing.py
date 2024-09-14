@@ -27,7 +27,7 @@ usi_pattern = re.compile(
     #                                    PXLnnnnnn
     # Unofficial: MASSIVEKB
     # https://github.com/HUPO-PSI/usi/blob/master/CollectionIdentifiers.md
-    r":(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6}|ST\d{6}|MassIVE)"
+    r":(MSV\d{9}|PXD\d{6}|PXL\d{6}|RPXD\d{6}|MassIVE)"
     # msRun identifier
     r":(.*)"
     # index flag
@@ -44,8 +44,8 @@ usi_metabolomics_pattern = re.compile(
     r"^mzspec"
     # collection identifier
     # Unofficial proteomics spectral library identifier: MASSIVEKB
-    # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB
-    r":(MASSIVEKB|GNPS|GNPS2|MASSBANK|MS2LDA|MOTIFDB|TINYMASS)"
+    # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB, MTBLS, ST
+    r":(MASSIVEKB|GNPS|GNPS2|MASSBANK|MS2LDA|MOTIFDB|TINYMASS|MTBLS\d+|ST\d{6}|)"
     # msRun identifier
     r":(.*)"
     # index flag
@@ -102,7 +102,6 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         # changes, be sure to change this logic.
         if (
             annotation is not None
-            or collection.startswith("msv")
             or collection.startswith("pxd")
             or collection.startswith("pxl")
             or collection.startswith("rpxd")
@@ -110,9 +109,18 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
             or collection == "massive"
         ):
             spectrum, source_link = _parse_msv_pxd(usi)
+        elif collection.startswith("msv"):
+            # Lets try to use GNPS2 for this first
+            try:
+                spectrum, source_link = _parse_gnps2(usi)
+            except:
+                spectrum, source_link = _parse_msv_pxd(usi)
         elif collection == "gnps":
             spectrum, source_link = _parse_gnps(usi)
         elif collection == "gnps2":
+            spectrum, source_link = _parse_gnps2(usi)
+        elif collection.startswith("mtbls"):
+            # Since they don't have their own resolver, we'll go here to GNPS2 for now
             spectrum, source_link = _parse_gnps2(usi)
         elif collection == "massbank":
             spectrum, source_link = _parse_massbank(usi)
@@ -331,6 +339,9 @@ def _parse_gnps2(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     ms_run = match.group(2)
     if ms_run.lower().startswith("task"):
         return _parse_gnps2_task(usi)
+    else:
+        # We are likely dealing with a dataset on the GNPS2 side
+        return _parse_gnps2_dataset(usi)
 
 # Parse GNPS clustered spectra in Molecular Networking.
 def _parse_gnps_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
@@ -405,6 +416,42 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         return spectrum, source_link
     except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
         raise UsiError("Unknown GNPS2 task USI", 404)
+
+def _parse_gnps2_dataset(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+    # TODO
+    match = _match_usi(usi)
+    dataset_identifier = match.group(1)
+    index_flag = match.group(3)
+    scan = match.group(4)
+    try:
+        request_url = (
+            f"https://gnps2.org/spectrumpeaks?format=json&usi={usi}"
+        )
+        lookup_request = requests.get(request_url, timeout=timeout)
+        lookup_request.raise_for_status()
+        spectrum_dict = lookup_request.json()
+        mz, intensity = zip(*spectrum_dict["peaks"])
+
+        if "MTBLS" in dataset_identifier:
+            source_link = (
+                f"https://www.ebi.ac.uk/metabolights/editor/{dataset_identifier}/descriptors"
+            )
+        elif "MSV" in dataset_identifier:
+            source_link = (
+                f"https://massive.ucsd.edu/ProteoSAFe/"
+                f"QueryMSV?id={dataset_identifier}"
+            )
+
+        if "precursor_mz" in spectrum_dict:
+            precursor_mz = float(spectrum_dict["precursor_mz"])
+            charge = 0
+        else:
+            precursor_mz, charge = 0, 0
+
+        spectrum = sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity)
+        return spectrum, source_link
+    except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
+        raise UsiError("Unknown GNPS2 Dataset USI", 404)
 
 # Parse TINYMASS task spectra
 def _parse_tinymass(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
