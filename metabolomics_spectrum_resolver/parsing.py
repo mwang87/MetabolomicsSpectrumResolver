@@ -391,8 +391,10 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     task = gnps_task_match.group(1)
     filename = gnps_task_match.group(2)
     index_flag = match.group(3)
-    if index_flag.lower() != "scan":
-        raise UsiError("Currently supported GNPS2 TASK index flags: scan", 400)
+
+    if not (index_flag.lower() == "scan" or index_flag.lower() == "nativeid"):
+        raise UsiError("Currently supported GNPS2 TASK index flags: scan and nativeId", 400)
+    
     scan = match.group(4)
 
     try:
@@ -423,6 +425,10 @@ def _parse_gnps2_dataset(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     dataset_identifier = match.group(1)
     index_flag = match.group(3)
     scan = match.group(4)
+
+    if not (index_flag.lower() == "scan" or index_flag.lower() == "nativeid"):
+        raise UsiError("Currently supported GNPS2 Dataset index flags: scan and nativeId", 400)
+
     try:
         request_url = (
             f"https://gnps2.org/spectrumpeaks?format=json&usi={usi}"
