@@ -420,7 +420,6 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         raise UsiError("Unknown GNPS2 task USI", 404)
 
 def _parse_gnps2_dataset(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
-    # TODO
     match = _match_usi(usi)
     dataset_identifier = match.group(1)
     index_flag = match.group(3)
