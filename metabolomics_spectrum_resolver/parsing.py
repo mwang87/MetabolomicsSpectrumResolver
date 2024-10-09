@@ -397,28 +397,39 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     
     scan = match.group(4)
 
-    try:
-        request_url = (
-            f"https://gnps2.org/spectrumpeaks?format=json&usi={usi}"
-        )
-        lookup_request = requests.get(request_url, timeout=timeout)
-        lookup_request.raise_for_status()
-        spectrum_dict = lookup_request.json()
-        mz, intensity = zip(*spectrum_dict["peaks"])
-        source_link = (
-            f"https://gnps2.org/status?task={task}"
-        )
-        if "precursor_mz" in spectrum_dict:
-            precursor_mz = float(spectrum_dict["precursor_mz"])
-            charge = 0
-        else:
-            precursor_mz, charge = 0, 0
+    # We will try in order these GNPS2 URLs to see if the task is actually there
+    gnps2_server_url_list = [
+        "https://gnps2.org",
+        "https://beta.gnps2.org",
+        "https://dev.gnps2.org",
+        "https://de.gnps2.org",
+    ]
 
-        spectrum = sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity)
-        return spectrum, source_link
-    except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
-        raise UsiError("Unknown GNPS2 task USI", 404)
+    for gnps2server_url in gnps2_server_url_list:
+        try:
+            request_url = (
+                f"{gnps2server_url}/spectrumpeaks?format=json&usi={usi}"
+            )
+            lookup_request = requests.get(request_url, timeout=timeout)
+            lookup_request.raise_for_status()
+            spectrum_dict = lookup_request.json()
+            mz, intensity = zip(*spectrum_dict["peaks"])
+            source_link = (
+                f"{gnps2server_url}/status?task={task}"
+            )
+            if "precursor_mz" in spectrum_dict:
+                precursor_mz = float(spectrum_dict["precursor_mz"])
+                charge = 0
+            else:
+                precursor_mz, charge = 0, 0
 
+            spectrum = sus.MsmsSpectrum(usi, precursor_mz, charge, mz, intensity)
+            return spectrum, source_link
+        except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
+            pass
+            
+    raise UsiError("Unknown GNPS2 task USI", 404)
+    
 def _parse_gnps2_dataset(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     dataset_identifier = match.group(1)
