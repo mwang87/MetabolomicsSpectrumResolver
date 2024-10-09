@@ -625,6 +625,10 @@ def generate_qr():
     qr_bytes.seek(0)
     return flask.send_file(qr_bytes, "image/png")
 
+@blueprint.route("/robot.txt")
+def robot():
+    # Disallow all
+    return "User-agent: *\nDisallow: /", 200
 
 @blueprint.errorhandler(Exception)
 def render_error(error):

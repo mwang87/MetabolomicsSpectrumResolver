@@ -5,27 +5,42 @@ services:
       - default
       - nginx-net
     environment:
-      VIRTUAL_HOST: metabolomics-usi.ucsd.edu,metabolomics-usi.gnps2.org
-      VIRTUAL_PORT: 5087
-      LETSENCRYPT_HOST: metabolomics-usi.ucsd.edu,metabolomics-usi.gnps2.org
+      VIRTUAL_HOST: ${HOSTNAME:-metabolomics-usi.gnps2.org}
+      VIRTUAL_PORT: 5000
+      LETSENCRYPT_HOST: ${HOSTNAME:-metabolomics-usi.gnps2.org}
       LETSENCRYPT_EMAIL: mwang87@gmail.com
     command: /app/run_server.sh
     deploy:
       resources:
         limits:
           memory: 16000M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   metabolomicsusi-worker:
     deploy:
       resources:
         limits:
           memory: 16000M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   metabolomicsusi-redis:
     deploy:
       resources:
         limits:
           memory: 4000M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   nginx-net:
