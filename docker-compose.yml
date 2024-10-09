@@ -33,7 +33,8 @@ services:
 
   metabolomicsusi-redis:
     container_name: metabolomicsusi-redis
-    image: valkey/valkey:alpine3.20
+    #image: valkey/valkey:alpine3.20
+    image: redis:alpine
     networks:
       - default
     restart: always
