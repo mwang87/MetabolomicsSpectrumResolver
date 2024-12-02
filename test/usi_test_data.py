@@ -10,6 +10,8 @@ usis_to_test = [
     "mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00005436077",
     "mzspec:MASSBANK::accession:SM858102",
     "mzspec:MASSBANK::accession:MSBNK-AAFC-AC000646",
+    # New Massbank identifier with lowercase
+    "mzspec:MASSBANK::accession:MSBNK-Athens_Univ-AU259904",
     "mzspec:MS2LDA:TASK-190:accession:270684",
     "mzspec:MOTIFDB::accession:171163",
     "mzspec:MSV000082791:(-)-epigallocatechin:scan:2",
