@@ -23,19 +23,19 @@ clear-cache:
 
 #Docker Compose
 server-compose-interactive:
-	docker-compose build
-	docker-compose up
+	docker-compose --compatibility build
+	docker-compose --compatibility up
 
 server-compose:
-	docker-compose build
-	docker-compose up -d
+	docker-compose --compatibility build
+	docker-compose --compatibility up -d
 
 server-compose-production-interactive:
-	docker-compose build
+	docker-compose --compatibility build
 	docker-compose -f docker-compose.yml -f docker-compose-production.yml --compatibility up
 
 server-compose-production:
-	docker-compose build
+	docker-compose --compatibility build
 	docker-compose -f docker-compose.yml -f docker-compose-production.yml --compatibility up -d
 
 attach:

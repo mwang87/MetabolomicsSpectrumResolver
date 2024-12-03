@@ -31,6 +31,8 @@ usis_to_test = [
     "mzspec:MassIVE:TASK-f4b86b150a164ee4a440b661e97a7193-spectra/specs_ms.mgf:scan:287215:HPYFYAPELLF[-10.059]FAKR/3",
     # MassIVE Task USIs disguised as GNPS Task USIs
     "mzspec:GNPS:TASK-f4b86b150a164ee4a440b661e97a7193-spectra/specs_ms.mgf:scan:287215:HPYFYAPELLF[-10.059]FAKR/3",
+    # Metabolomics Workbench USIs
+    "mzspec:ST000003:StemCell+Data+and+Raw+Files/iPSC-T1R1:scan:3",
     # Legacy cases.
     "mzspec:GNPSTASK-c95481f0c53d42e78a61bf899e9f9adb:spectra/specs_ms.mgf:scan:1943",
     "mzspec:GNPSTASK-64b22841ab3548f987b3cfc18696a581:spectra/specs_ms.mgf:scan:1469",
