@@ -39,6 +39,8 @@ dash_app.index_string = """<!DOCTYPE html>
 
         gtag('config', 'UA-8412213-8');
         </script>
+
+        <script async defer data-website-id="ce3d7d73-8edf-480d-83f6-5c3eab60deac" src="https://analytics.gnps2.org/umami.js"></script>
         
         {%metas%}
         <title>{%title%}</title>
@@ -59,10 +61,10 @@ NAVBAR = dbc.Navbar(
     children=[
         dbc.NavbarBrand(
             html.Img(
-                src="https://gnps-cytoscape.ucsd.edu/static/img/GNPS_logo.png",
+                src="https://gnps2.org/static/img/logo.png",
                 width="120px",
             ),
-            href="https://gnps.ucsd.edu",
+            href="https://gnps2.org",
         ),
         dbc.Nav(
             [
@@ -426,7 +428,7 @@ CONTRIBUTORS_DASHBOARD = [
     dbc.CardHeader(html.H5("Contributors")),
     dbc.CardBody(
         [
-            "Mingxun Wang, PhD – UC San Diego",
+            "Mingxun Wang, PhD – UC Riverside",
             html.Br(),
             "Wout Bittremieux, PhD – UC San Diego",
             html.Br(),
