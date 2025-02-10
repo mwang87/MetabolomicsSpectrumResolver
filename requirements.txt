@@ -19,5 +19,5 @@ requests
 requests_cache
 scipy
 spectrum_utils
-werkzeug
+werkzeug==2.0.0
 git+https://github.com/berlinguyinca/spectra-hash.git#subdirectory=python
