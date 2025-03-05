@@ -627,11 +627,20 @@ def _parse_msv_pxd(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     scan = match.group(4)
     try:
         lookup_url = (
-            f"https://massive.ucsd.edu/ProteoSAFe/"
+            f"https://proteomics3.ucsd.edu/ProteoSAFe/"
             f"QuerySpectrum?id={urllib.parse.quote_plus(usi)}"
         )
         lookup_request = requests.get(lookup_url, timeout=timeout)
-        lookup_request.raise_for_status()
+        try:
+            lookup_request.raise_for_status()
+        except:
+            lookup_url = (
+                f"https://proteomics3.ucsd.edu/ProteoSAFe/"
+                f"QuerySpectrum?id={urllib.parse.quote_plus(usi)}"
+            )
+            lookup_request = requests.get(lookup_url, timeout=timeout)
+            lookup_request.raise_for_status()
+            
         lookup_json = lookup_request.json()
         for spectrum_file in lookup_json["row_data"]:
             # Checking if its an actual file we can resolve or if MSV will go to PX directly
