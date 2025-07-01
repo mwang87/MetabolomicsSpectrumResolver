@@ -405,7 +405,7 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     gnps2_server_url_list = [
         "https://gnps2.org",
         "https://beta.gnps2.org",
-        "https://dev.gnps2.org",
+        "http://dev.gnps2.org:4000",
         "https://de.gnps2.org",
     ]
 
