@@ -9,7 +9,7 @@ import redis
 import spectrum_utils.spectrum as sus
 
 from metabolomics_spectrum_resolver import drawing, parsing
-
+from metabolomics_spectrum_resolver import tasks_analytics
 
 memory = joblib.Memory("tmp/joblibcache", verbose=0)
 cached_parse_usi = memory.cache(parsing.parse_usi)
@@ -110,6 +110,12 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         A tuple of (i) the `MsmsSpectrum`, (ii) its source link, and (iii) its
         SPLASH.
     """
+
+    # We are going to do the analytics now
+    tasks_analytics.task_analytics_event(
+        "parse_usi_or_spectrum"
+    )
+
     # First attempt to schedule with Celery.
     try:
         return _task_parse_usi.apply_async(args=(usi,)).get()
@@ -142,6 +148,7 @@ def _task_parse_usi_or_spectrum(
         A tuple of (i) the `MsmsSpectrum`, (ii) its source link, and (iii) its
         SPLASH.
     """
+
     # noinspection PyTypeChecker
     return cached_parse_usi_or_spectrum(usi, spectrum)
 
