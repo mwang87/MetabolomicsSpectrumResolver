@@ -17,6 +17,9 @@ RUN /bin/bash -c 'source activate usi && pip install redis'
 # installing hash
 RUN /bin/bash -c 'source activate usi && pip install "git+https://github.com/berlinguyinca/spectra-hash.git#subdirectory=python" && pip install celery-once'
 
+# installing analytics
+RUN /bin/bash -c 'source activate usi && pip install umami-analytics'
+
 RUN echo "source activate usi" > ~/.bashrc
 
 COPY . /app
