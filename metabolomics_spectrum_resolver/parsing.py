@@ -17,7 +17,7 @@ timeout = 45  # seconds
 MS2LDA_SERVER = "http://ms2lda.org/basicviz/"
 MOTIFDB_SERVER = "http://ms2lda.org/motifdb/"
 MONA_SERVER = "https://massbank.us/rest/spectra/"
-MASSBANKEUROPE_SERVER = "https://msbi.ipb-halle.de/MassBank-api/v1/records/"
+MASSBANKEUROPE_SERVER = "https://msbi.ipb-halle.de/MassBank-api/records/"
 
 # USI specification: http://www.psidev.info/usi
 usi_pattern = re.compile(
