@@ -965,15 +965,6 @@ def _parse_sequence(peptide: str, peptide_clean: str) -> Tuple[str, str, list]:
         previous_mod_len += found_len
     return peptide, peptide_clean, modifications
 
-from typing import Tuple
-import urllib.parse
-import requests
-
-# import spectrum_utils.spectrum as sus
-# class UsiError(Exception): ...
-
-
-
 def _parse_norman(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     NORMAN_FILES_BASE = "https://files.dsfp.norman-data.eu/"
 
