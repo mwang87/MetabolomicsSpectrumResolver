@@ -126,7 +126,7 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         return parsing.parse_usi(usi)
 
 
-@celery_instance.task(time_limit=30, base=celery_once.QueueOnce)
+@celery_instance.task(time_limit=45, base=celery_once.QueueOnce)
 def _task_parse_usi_or_spectrum(
     usi: str, spectrum: dict
 ) -> Tuple[sus.MsmsSpectrum, str, str]:
