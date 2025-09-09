@@ -218,7 +218,6 @@ def test_parse_motifdb():
         parsing.parse_usi(usi.replace(":171163", ":this_index_does_not_exist"))
     assert exc_info.value.error_code == 404
 
-
 def test_parse_timeout():
     with unittest.mock.patch(
         "metabolomics_spectrum_resolver.parsing.requests.get",
