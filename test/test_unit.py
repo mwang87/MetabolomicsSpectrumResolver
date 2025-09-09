@@ -219,6 +219,10 @@ def test_parse_motifdb():
     assert exc_info.value.error_code == 404
 
 
+# def test_zenodo():
+#     usi = ""
+#     spectrum, _, splash_key = parsing.parse_usi(usi)
+
 def test_parse_timeout():
     with unittest.mock.patch(
         "metabolomics_spectrum_resolver.parsing.requests.get",

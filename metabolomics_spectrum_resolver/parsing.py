@@ -12,6 +12,9 @@ import splash
 
 from metabolomics_spectrum_resolver.error import UsiError
 
+from metabolomics_spectrum_resolver.zenodo_mzml_repo import mzml_repo
+
+
 timeout = 45  # seconds
 
 MS2LDA_SERVER = "http://ms2lda.org/basicviz/"
@@ -46,7 +49,7 @@ usi_metabolomics_pattern = re.compile(
     # collection identifier
     # Unofficial proteomics spectral library identifier: MASSIVEKB
     # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB, MTBLS, ST
-    r":(MASSIVEKB|GNPS|GNPS2|MASSBANK|MS2LDA|MOTIFDB|TINYMASS|MTBLS\d+|ST\d{6}|)"
+    r":(MASSIVEKB|GNPS|GNPS2|MASSBANK|MS2LDA|MOTIFDB|TINYMASS|MTBLS\d+|ST\d{6}|ZENODO-\d+|)"
     # msRun identifier
     r":(.*)"
     # index flag
@@ -136,6 +139,8 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
             spectrum, source_link = _parse_metabolomics_workbench(usi)
         elif collection.startswith("tinymass"):
             spectrum, source_link = _parse_tinymass(usi)
+        elif collection.startswith("zenodo"):
+            spectrum, source_link = _parse_zenodo(usi)
         else:
             raise UsiError(f"Unknown USI collection: {match.group(1)}", 400)
         splash_key = splash_builder.splash(
@@ -472,6 +477,31 @@ def _parse_gnps2_dataset(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         return spectrum, source_link
     except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
         raise UsiError("Unknown GNPS2 Dataset USI", 404)
+
+# parsing from Zenodo
+def _parse_zenodo(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+    match = _match_usi(usi)
+    zenodo_id = match.group(1).split("-")[-1]
+    filename = match.group(2)
+    index_flag = match.group(3)
+    if index_flag.lower() == "scan":
+        scan = match.group(4)
+
+    zenodo_obj = mzml_repo(zenodo_id)
+    zenodo_obj.partial_indexing = False
+    scan_obj = zenodo_obj.get_scan(filename, int(scan))
+
+    # get peaks
+    intensity_list = scan_obj["intensities"]
+    mz_list = scan_obj["mz"]
+    charge = scan_obj["charge"]
+    precursor_mz = 0
+
+    source_link = f"https://zenodo.org/record/{zenodo_id}"
+
+    spectrum = sus.MsmsSpectrum(usi, precursor_mz, charge, mz_list, intensity_list)
+
+    return spectrum, source_link
 
 # Parse TINYMASS task spectra
 def _parse_tinymass(usi: str) -> Tuple[sus.MsmsSpectrum, str]:

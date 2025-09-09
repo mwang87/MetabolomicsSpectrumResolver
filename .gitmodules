@@ -1,0 +1,3 @@
+[submodule "metabolomics_spectrum_resolver/mass-spec-package"]
+	path = metabolomics_spectrum_resolver/mass-spec-package
+	url = https://github.com/AkJay1722/mass-spec-package.git
