@@ -495,7 +495,17 @@ def _parse_zenodo(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     intensity_list = scan_obj["intensities"]
     mz_list = scan_obj["mz"]
     charge = scan_obj["charge"]
-    precursor_mz = 0
+    precursor_mz = scan_obj["precursor_mz"]
+
+    try:
+        charge = int(charge)
+    except:
+        charge = 0
+
+    try:
+        precursor_mz = float(precursor_mz)
+    except:
+        precursor_mz = 0
 
     source_link = f"https://zenodo.org/record/{zenodo_id}"
 
