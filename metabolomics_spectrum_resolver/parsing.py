@@ -21,6 +21,7 @@ MS2LDA_SERVER = "http://ms2lda.org/basicviz/"
 MOTIFDB_SERVER = "http://ms2lda.org/motifdb/"
 MONA_SERVER = "https://massbank.us/rest/spectra/"
 MASSBANKEUROPE_SERVER = "https://msbi.ipb-halle.de/MassBank-api/records/"
+NORMAN_SERVER = "http://server.norman-data.eu:8770/getScan"
 
 # USI specification: http://www.psidev.info/usi
 usi_pattern = re.compile(
@@ -49,7 +50,7 @@ usi_metabolomics_pattern = re.compile(
     # collection identifier
     # Unofficial proteomics spectral library identifier: MASSIVEKB
     # Metabolomics collection identifiers: GNPS, MASSBANK, MS2LDA, MOTIFDB, MTBLS, ST
-    r":(MASSIVEKB|GNPS|GNPS2|MASSBANK|MS2LDA|MOTIFDB|TINYMASS|MTBLS\d+|ST\d{6}|ZENODO-\d+|)"
+    r":(MASSIVEKB|GNPS|GNPS2|MASSBANK|MS2LDA|MOTIFDB|TINYMASS|MTBLS\d+|ST\d{6}|ZENODO-\d+|NORMAN-[0-9a-fA-F-]+|)"
     # msRun identifier
     r":(.*)"
     # index flag
@@ -139,6 +140,8 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
             spectrum, source_link = _parse_metabolomics_workbench(usi)
         elif collection.startswith("tinymass"):
             spectrum, source_link = _parse_tinymass(usi)
+        elif collection.startswith("norman"):
+            spectrum, source_link = _parse_norman(usi)
         elif collection.startswith("zenodo"):
             spectrum, source_link = _parse_zenodo(usi)
         else:
@@ -1001,3 +1004,74 @@ def _parse_sequence(peptide: str, peptide_clean: str) -> Tuple[str, str, list]:
         modifications[i] = float(match.group())
         previous_mod_len += found_len
     return peptide, peptide_clean, modifications
+
+def _parse_norman(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+    NORMAN_FILES_BASE = "https://files.dsfp.norman-data.eu/"
+
+    match = _match_usi(usi)
+    _accession = match.group(1)  # not used
+    file_path  = match.group(2)  # relative path, e.g. "webform/sample/.../file.mzML"
+    index_flag = match.group(3)
+    scan_no    = match.group(4)
+
+    if index_flag.lower() != "scan":
+        raise UsiError("Currently supported index flag: scan", 400)
+
+    # Construct full URL from path
+    file_url = f"{NORMAN_FILES_BASE}{file_path.lstrip('/')}"
+    print(f"[DEBUG] Constructed NORMAN file URL: {file_url}")
+
+    if not file_url.lower().endswith(".mzml"):
+        raise UsiError("NORMAN file URL must point to an .mzML file.", 400)
+
+    # The service expects an URL-encoded file_path (not the full URL!) in the query parameters
+    encoded_path = urllib.parse.quote_plus(file_url, safe=":/")
+    params = {
+        "file_path": encoded_path,
+        "scan_number": str(scan_no),
+    }
+    print(f"[DEBUG] Request params: {params}")
+
+    try:
+        r = requests.post(NORMAN_SERVER, params=params, headers={"accept": "*/*"}, data="")
+        print(f"[DEBUG] Requesting: {r.url}")  # Shows full request URL with params
+
+        r.raise_for_status()
+
+        payload = r.json()
+        if not isinstance(payload, dict):
+            raise UsiError("Unexpected response format (not a JSON object).", 502)
+
+        precursor_list = payload.get("precursormz", [])
+        try:
+            precursor_mz = float(precursor_list[0]) if precursor_list else 0.0
+        except Exception:
+            precursor_mz = 0.0
+
+        charge = 0  # not provided by API
+        spec = payload.get("spectrum", [])
+        if not isinstance(spec, list) or not spec:
+            raise UsiError("No peaks in NORMAN scan response.", 502)
+
+        try:
+            mz = [float(p["mz"]) for p in spec]
+            intensity = [float(p["intensity"]) for p in spec]
+        except Exception as e:
+            raise UsiError(f"Malformed peaks in NORMAN scan response: {e}", 502)
+
+        spectrum = sus.MsmsSpectrum(
+            usi,
+            precursor_mz,
+            charge,
+            mz,
+            intensity,
+        )
+        return spectrum, file_url  # return the constructed full URL
+
+    except requests.exceptions.HTTPError as e:
+        status = getattr(e.response, "status_code", 502)
+        raise UsiError(f"NORMAN scan lookup failed (HTTP {status}).", status)
+    except ValueError as e:
+        raise UsiError(f"NORMAN scan parsing error (invalid JSON): {e}", 502)
+    except Exception as e:
+        raise UsiError(f"NORMAN scan parsing error: {e}", 502)
