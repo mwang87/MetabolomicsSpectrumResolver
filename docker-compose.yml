@@ -17,7 +17,7 @@ services:
     labels:
       autoheal: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/heartbeat"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -28,6 +28,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: metabolomicsusi-api1
+    ports:
+    - "5088:5000"
     volumes:
         - ./tmp:/app/tmp:rw
         - ./logsapi/:/app/logs:rw
@@ -38,7 +40,7 @@ services:
     labels:
       autoheal: true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/heartbeat"]
       interval: 30s
       timeout: 10s
       retries: 3
