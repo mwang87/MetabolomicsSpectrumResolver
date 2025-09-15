@@ -39,7 +39,6 @@ blueprint = flask.Blueprint("ui", __name__)
 def render_homepage():
     return flask.render_template("homepage.html")
 
-
 @blueprint.route("/contributors", methods=["GET"])
 def render_contributors():
     return flask.render_template("contributors.html")

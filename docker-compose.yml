@@ -14,6 +14,37 @@ services:
       - default
     restart: always
     command: /app/run_dev_server.sh
+    labels:
+      autoheal: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  metabolomicsusi-api1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: metabolomicsusi-api1
+    ports:
+    - "5088:5000"
+    volumes:
+        - ./tmp:/app/tmp:rw
+        - ./logsapi/:/app/logs:rw
+    networks:
+      - default
+    restart: always
+    command: /app/run_dev_server.sh
+    labels:
+      autoheal: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   metabolomicsusi-worker:
     build:
