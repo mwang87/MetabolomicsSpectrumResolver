@@ -55,7 +55,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4000M
+          memory: 8000M
     logging:
       driver: "json-file"
       options:
