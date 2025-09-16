@@ -118,7 +118,7 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
 
     # Debugging logging
     import sys
-    sys.stderr.write("Parsing {}\n".format(usi), file=sys.stderr, flush=True)
+    print("Parsing {}\n".format(usi), file=sys.stderr, flush=True)
 
     # First attempt to schedule with Celery.
     try:
