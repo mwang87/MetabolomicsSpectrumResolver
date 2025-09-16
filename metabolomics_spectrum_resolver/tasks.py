@@ -116,6 +116,10 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         "parse_usi_or_spectrum"
     )
 
+    # Debugging logging
+    import sys
+    sys.stderr.write(f"Parsing USI: {usi}\n", file=sys.stderr, flush=True)
+
     # First attempt to schedule with Celery.
     try:
         return _task_parse_usi.apply_async(args=(usi,)).get()
