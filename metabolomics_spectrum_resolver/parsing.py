@@ -14,13 +14,17 @@ from metabolomics_spectrum_resolver.error import UsiError
 
 from metabolomics_spectrum_resolver.zenodo_mzml_repo import mzml_repo
 
+import logging
+
+# Init logging
+logging.basicConfig(level=logging.INFO)
 
 timeout = 45  # seconds
 
 MS2LDA_SERVER = "http://ms2lda.org/basicviz/"
 MOTIFDB_SERVER = "http://ms2lda.org/motifdb/"
 MONA_SERVER = "https://massbank.us/rest/spectra/"
-MASSBANKEUROPE_SERVER = "https://msbi.ipb-halle.de/MassBank-api/records/"
+MASSBANKEUROPE_SERVER = "https://massbank.eu/MassBank-api/records/"
 NORMAN_SERVER = "http://server.norman-data.eu:8770/getScan"
 
 # USI specification: http://www.psidev.info/usi
