@@ -633,7 +633,7 @@ def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             return _parse_massbankEurope(usi)
             
         except UsiError:
-            pass
+            return _parse_mona(usi)
 
     # Either MassBank EU Failed or it's a MoNA entry, fallback to MoNA.
     # Let the exception propagate if it fails
@@ -700,7 +700,7 @@ def _parse_mona(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         return spectrum, source_link
     
     except requests.exceptions.HTTPError:
-        raise UsiError("Unknown MassBank USI", 404)
+        raise UsiError("Unknown MONA USI", 404)
 
 # Parse MassBank entry.
 def _parse_massbankEurope(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
