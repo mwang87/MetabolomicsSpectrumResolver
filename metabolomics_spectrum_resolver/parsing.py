@@ -284,7 +284,6 @@ def _match_usi(usi: str) -> re.Match:
         raise UsiError(f"Incorrectly formatted USI: {usi}", 400)
     return match
 
-
 def _convert_legacy_usi(usi: str) -> str:
     """
     Convert a legacy format metabolomics USI to the proper metabolomics USI
@@ -413,6 +412,9 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     
     scan = match.group(4)
 
+    # Reconstruct the USI for URL usage
+    request_usi = f"mzspec:GNPS2:TASK-{task}-{urllib.parse.quote_plus(filename)}:scan:{scan}"
+
     # We will try in order these GNPS2 URLs to see if the task is actually there
     gnps2_server_url_list = [
         "https://gnps2.org",
@@ -427,7 +429,7 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     for gnps2server_url in gnps2_server_url_list:
         try:
             request_url = (
-                f"{gnps2server_url}/spectrumpeaks?format=json&usi={usi}"
+                f"{gnps2server_url}/spectrumpeaks?format=json&usi={request_usi}"
             )
             lookup_request = requests.get(request_url, timeout=timeout)
             lookup_request.raise_for_status()
