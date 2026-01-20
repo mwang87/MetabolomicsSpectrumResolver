@@ -14,6 +14,8 @@ jobs:
 # TODO: We probably should switch to using the Docker version.
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: 'true'
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -32,7 +34,7 @@ jobs:
         apt-get update -y && apt-get install -y git-core
         source activate usi
         pip install "git+https://github.com/berlinguyinca/spectra-hash.git#subdirectory=python"
-        pip install celery celery-once joblib
+        pip install celery celery-once joblib umami-analytics
         echo "source activate usi" > ~/.bashrc
     - name: Run unit and integration tests
       run: |

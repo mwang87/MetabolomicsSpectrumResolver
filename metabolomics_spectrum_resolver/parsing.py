@@ -14,13 +14,17 @@ from metabolomics_spectrum_resolver.error import UsiError
 
 from metabolomics_spectrum_resolver.zenodo_mzml_repo import mzml_repo
 
+import logging
+
+# Init logging
+logging.basicConfig(level=logging.INFO)
 
 timeout = 45  # seconds
 
 MS2LDA_SERVER = "http://ms2lda.org/basicviz/"
 MOTIFDB_SERVER = "http://ms2lda.org/motifdb/"
 MONA_SERVER = "https://massbank.us/rest/spectra/"
-MASSBANKEUROPE_SERVER = "https://msbi.ipb-halle.de/MassBank-api/records/"
+MASSBANKEUROPE_SERVER = "https://massbank.eu/MassBank-api/records/"
 NORMAN_SERVER = "http://server.norman-data.eu:8770/getScan"
 
 # USI specification: http://www.psidev.info/usi
@@ -280,7 +284,6 @@ def _match_usi(usi: str) -> re.Match:
         raise UsiError(f"Incorrectly formatted USI: {usi}", 400)
     return match
 
-
 def _convert_legacy_usi(usi: str) -> str:
     """
     Convert a legacy format metabolomics USI to the proper metabolomics USI
@@ -409,6 +412,9 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     
     scan = match.group(4)
 
+    # Reconstruct the USI for URL usage
+    request_usi = f"mzspec:GNPS2:TASK-{task}-{urllib.parse.quote_plus(filename)}:scan:{scan}"
+
     # We will try in order these GNPS2 URLs to see if the task is actually there
     gnps2_server_url_list = [
         "https://gnps2.org",
@@ -423,7 +429,7 @@ def _parse_gnps2_task(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     for gnps2server_url in gnps2_server_url_list:
         try:
             request_url = (
-                f"{gnps2server_url}/spectrumpeaks?format=json&usi={usi}"
+                f"{gnps2server_url}/spectrumpeaks?format=json&usi={request_usi}"
             )
             lookup_request = requests.get(request_url, timeout=timeout)
             lookup_request.raise_for_status()
@@ -629,7 +635,7 @@ def _parse_massbank(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             return _parse_massbankEurope(usi)
             
         except UsiError:
-            pass
+            return _parse_mona(usi)
 
     # Either MassBank EU Failed or it's a MoNA entry, fallback to MoNA.
     # Let the exception propagate if it fails
@@ -696,7 +702,7 @@ def _parse_mona(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
         return spectrum, source_link
     
     except requests.exceptions.HTTPError:
-        raise UsiError("Unknown MassBank USI", 404)
+        raise UsiError("Unknown MONA USI", 404)
 
 # Parse MassBank entry.
 def _parse_massbankEurope(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
