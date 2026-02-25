@@ -26,6 +26,10 @@ server-compose-interactive:
 	docker-compose --compatibility build
 	docker-compose --compatibility up
 
+server-compose-autotest-interactive:
+	docker-compose --compatibility build
+	docker-compose -f docker-compose.yml -f docker-compose-autotest.yml --compatibility up
+
 server-compose:
 	docker-compose --compatibility build
 	docker-compose --compatibility up -d

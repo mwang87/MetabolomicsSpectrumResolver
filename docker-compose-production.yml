@@ -1,4 +1,3 @@
-version: '3'
 services:
   metabolomicsusi-web:
     networks:
@@ -64,5 +63,5 @@ services:
 
 networks:
   nginx-net:
-    external:
-      name: nginx-net
+    name: nginx-net
+    external: true
