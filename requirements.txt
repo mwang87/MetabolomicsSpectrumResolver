@@ -18,6 +18,7 @@ redis
 requests
 requests_cache
 scipy
+setuptools
 umami-analytics
 spectrum_utils
 werkzeug==2.0.0

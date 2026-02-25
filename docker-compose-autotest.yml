@@ -1,0 +1,16 @@
+services:
+  metabolomicsusi-web:
+    command: /app/run_dev_server.sh
+    restart: "no"
+
+  metabolomicsusi-api1:
+    restart: "no"
+
+  metabolomicsusi-worker:
+    restart: "no"
+
+
+networks:
+  nginx-net:
+    name: nginx-net
+    external: true

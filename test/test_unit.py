@@ -491,3 +491,5 @@ def test_cosine():
         + intensity[2] * intensity[3]
     )
     assert peak_matches == [(2, 3), (1, 1), (0, 0)]
+
+
