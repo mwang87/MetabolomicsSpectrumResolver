@@ -12,7 +12,12 @@ RUN wget https://github.com/conda-forge/miniforge/releases/latest/download/Minif
 ENV PATH=$CONDA_DIR/bin:$PATH
 RUN echo "export PATH=$CONDA_DIR:$PATH" >> ~/.bashrc
 
-RUN mamba create -y -n usi -c conda-forge -c bioconda -c defaults celery==5.3.6 \
+# Ensure packages resolve only from conda-forge/bioconda (no defaults/anaconda).
+RUN mamba config --system --set channel_priority strict && \
+        mamba config --system --set show_channel_urls true && \
+        mamba config --system --remove channels defaults || true
+
+RUN mamba create -y -n usi -c conda-forge -c bioconda celery==5.3.6 \
         dash=1.20.0 dash-bootstrap-components=0.9.2 flask gunicorn \
         joblib matplotlib==3.6.3 numba numpy openssl qrcode rdkit requests \
         requests-cache scipy setuptools spectrum_utils==0.3.5 werkzeug==2.0.0 \
