@@ -23,31 +23,27 @@ clear-cache:
 
 #Docker Compose
 server-compose-interactive:
-	docker-compose --compatibility build
-	docker-compose --compatibility up
+	docker compose --compatibility build
+	docker compose --compatibility up
 
 server-compose-autotest-interactive:
-	docker-compose --compatibility build
-	docker-compose -f docker-compose.yml -f docker-compose-autotest.yml --compatibility up
+	docker compose --compatibility build
+	docker compose -f docker-compose.yml -f docker-compose-autotest.yml --compatibility up
 
 server-compose:
-	docker-compose --compatibility build
-	docker-compose --compatibility up -d
+	docker compose --compatibility build
+	docker compose --compatibility up -d
 
 server-compose-production-interactive:
-	docker-compose --compatibility build
-	docker-compose -f docker-compose.yml -f docker-compose-production.yml --compatibility up
+	docker compose --compatibility build
+	docker compose -f docker-compose.yml -f docker-compose-production.yml --compatibility up
 
 server-compose-production:
-	docker-compose --compatibility build
-	docker-compose -f docker-compose.yml -f docker-compose-production.yml --compatibility up -d
+	docker compose --compatibility build
+	docker compose -f docker-compose.yml -f docker-compose-production.yml --compatibility up -d
 
 attach:
 	docker exec -i -t metabolomicsusi-web /bin/bash
 
-# Github Testing with Act
-test-actions-unit:
-	act -j unit-test -P ubuntu-latest=nektos/act-environments-ubuntu:18.04
-
-test-actions-locust:
-	act -j load-test -P ubuntu-latest=nektos/act-environments-ubuntu:18.04
+submodule_init:
+	git submodule update --init --recursive
