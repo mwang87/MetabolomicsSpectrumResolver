@@ -4,7 +4,8 @@ import flask
 from flask_limiter import Limiter
 
 WHITELISTED_RANGES = [
-    ipaddress.ip_network("138.23.0.0/16"),    # UCR
+    ipaddress.ip_network("127.0.0.0/8"),       # Localhost / health checks
+    ipaddress.ip_network("138.23.0.0/16"),     # UCR
     ipaddress.ip_network("169.235.0.0/16"),    # UCR
     ipaddress.ip_network("132.239.0.0/16"),    # UCSD
     ipaddress.ip_network("137.110.0.0/16"),    # UCSD
