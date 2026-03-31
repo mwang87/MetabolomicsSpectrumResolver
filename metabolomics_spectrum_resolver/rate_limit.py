@@ -20,19 +20,25 @@ def get_ip():
     return ip.split(",")[0].strip()
 
 
-def get_ip_or_exempt():
+def is_whitelisted():
     try:
         client_ip = ipaddress.ip_address(get_ip())
         for network in WHITELISTED_RANGES:
             if client_ip in network:
-                return "whitelisted-user"
+                return True
     except ValueError:
         pass
-    return get_ip()
+    return False
 
 
 limiter = Limiter(
-    key_func=get_ip_or_exempt,
+    key_func=get_ip,
     default_limits=[],
     storage_uri="redis://metabolomicsusi-redis:6379",
+    request_identifier=get_ip,
 )
+
+
+@limiter.request_filter
+def whitelist_filter():
+    return is_whitelisted()
