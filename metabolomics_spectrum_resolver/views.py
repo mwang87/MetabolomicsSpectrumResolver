@@ -11,7 +11,7 @@ import qrcode
 from spectrum_utils import spectrum as sus
 
 from metabolomics_spectrum_resolver import similarity, tasks
-from metabolomics_spectrum_resolver.app import limiter
+from metabolomics_spectrum_resolver.rate_limit import limiter
 from metabolomics_spectrum_resolver.error import UsiError
 
 
