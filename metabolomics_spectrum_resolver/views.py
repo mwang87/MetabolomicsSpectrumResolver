@@ -11,6 +11,7 @@ import qrcode
 from spectrum_utils import spectrum as sus
 
 from metabolomics_spectrum_resolver import similarity, tasks
+from metabolomics_spectrum_resolver.app import limiter
 from metabolomics_spectrum_resolver.error import UsiError
 
 
@@ -73,6 +74,7 @@ def mirror_forward():
 
 
 @blueprint.route("/png/", methods=["GET", "POST"])
+@limiter.limit("10/minute")
 def generate_png():
     request_params = flask.request.values.to_dict()
 
@@ -96,6 +98,7 @@ def generate_png():
 
 
 @blueprint.route("/png/mirror/", methods=["GET", "POST"])
+@limiter.limit("10/minute")
 def generate_mirror_png():
     request_params = flask.request.values.to_dict()
 
@@ -123,6 +126,7 @@ def generate_mirror_png():
 
 
 @blueprint.route("/svg/", methods=["GET", "POST"])
+@limiter.limit("10/minute")
 def generate_svg():
     request_params = flask.request.values.to_dict()
 
@@ -146,6 +150,7 @@ def generate_svg():
 
 
 @blueprint.route("/svg/mirror/", methods=["GET", "POST"])
+@limiter.limit("10/minute")
 def generate_mirror_svg():
     request_params = flask.request.values.to_dict()
 
@@ -470,6 +475,7 @@ def _prepare_mirror_spectra(
 
 
 @blueprint.route("/json/")
+@limiter.limit("10/minute")
 def peak_json():
     try:
         spectrum, _, splash_key = tasks.parse_usi(
@@ -497,6 +503,7 @@ def peak_json():
 
 
 @blueprint.route("/json/mirror/")
+@limiter.limit("10/minute")
 def mirror_json():
     try:
         drawing_controls = get_drawing_controls(

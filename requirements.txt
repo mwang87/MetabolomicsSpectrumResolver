@@ -3,6 +3,7 @@ celery_once
 dash
 dash-bootstrap-components
 flask
+Flask-Limiter
 flex
 joblib
 locust
