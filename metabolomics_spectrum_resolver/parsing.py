@@ -141,7 +141,10 @@ def parse_usi(usi: str) -> Tuple[sus.MsmsSpectrum, str, str]:
         elif collection == "motifdb":
             spectrum, source_link = _parse_motifdb(usi)
         elif collection.startswith("st"):
-            spectrum, source_link = _parse_metabolomics_workbench(usi)
+            try:
+                spectrum, source_link = _parse_gnps2(usi)
+            except:
+                spectrum, source_link = _parse_metabolomics_workbench(usi)
         elif collection.startswith("tinymass"):
             spectrum, source_link = _parse_tinymass(usi)
         elif collection.startswith("norman"):
@@ -477,6 +480,13 @@ def _parse_gnps2_dataset(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             source_link = (
                 f"https://massive.ucsd.edu/ProteoSAFe/"
                 f"QueryMSV?id={dataset_identifier}"
+            )
+        elif dataset_identifier.upper().startswith("ST"):
+            source_link = (
+                f"https://www.metabolomicsworkbench.org/"
+                f"data/DRCCMetadata.php?Mode=Study"
+                f"&StudyID={dataset_identifier}"
+                f"&StudyType=MS&ResultType=1"
             )
 
         if "precursor_mz" in spectrum_dict:
