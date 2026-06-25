@@ -138,6 +138,96 @@ def test_parse_gnps_library():
     assert spectrum.precursor_mz == pytest.approx(981.54)
 
 
+# --- GNPS2 library server routing (library.gnps2.org) --------------------------
+
+_GNPS_LIBRARY_DICT = {
+    "spectruminfo": {"peaks_json": "[[100.0, 50.0], [200.0, 80.0]]"},
+    "annotations": [
+        {
+            "create_time": "2020-01-01 00:00:00.0",
+            "Precursor_MZ": "123.45",
+            "Charge": "1",
+        }
+    ],
+}
+
+
+class _FakeResponse:
+    def __init__(self, payload, status_code=200):
+        self._payload = payload
+        self.status_code = status_code
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.exceptions.HTTPError(response=self)
+
+    def json(self):
+        return self._payload
+
+
+def test_parse_gnps2_library_uses_our_endpoint_only():
+    calls = []
+
+    def fake_get(url, timeout=None):
+        calls.append(url)
+        return _FakeResponse(_GNPS_LIBRARY_DICT)
+
+    with unittest.mock.patch.object(parsing.requests, "get", side_effect=fake_get):
+        spectrum, source_link, _ = parsing.parse_usi(
+            "mzspec:GNPS2:GNPS2-LIBRARY:accession:GNPS2LIB00000000001"
+        )
+    assert calls and all("library.gnps2.org/gnpsspectrum" in u for u in calls), calls
+    assert source_link == "https://library.gnps2.org"
+    assert spectrum.precursor_mz == pytest.approx(123.45)
+
+
+def test_parse_gnps2_library_no_fallback():
+    def fake_get(url, timeout=None):
+        raise requests.exceptions.ConnectionError("down")
+
+    with unittest.mock.patch.object(parsing.requests, "get", side_effect=fake_get):
+        with pytest.raises(UsiError) as exc_info:
+            parsing.parse_usi(
+                "mzspec:GNPS2:GNPS2-LIBRARY:accession:GNPS2LIB00000000001"
+            )
+    assert exc_info.value.error_code == 404
+
+
+def test_parse_gnps_library_prefers_our_endpoint():
+    calls = []
+
+    def fake_get(url, timeout=None):
+        calls.append(url)
+        return _FakeResponse(_GNPS_LIBRARY_DICT)
+
+    with unittest.mock.patch.object(parsing.requests, "get", side_effect=fake_get):
+        spectrum, source_link, _ = parsing.parse_usi(
+            "mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00000001547"
+        )
+    assert "library.gnps2.org/gnpsspectrum" in calls[0]
+    assert not any("external.gnps2.org" in u for u in calls)  # ours worked
+    assert "gnpslibraryspectrum.jsp" in source_link
+    assert spectrum.precursor_mz == pytest.approx(123.45)
+
+
+def test_parse_gnps_library_falls_back_to_external():
+    calls = []
+
+    def fake_get(url, timeout=None):
+        calls.append(url)
+        if "library.gnps2.org" in url:
+            raise requests.exceptions.ConnectionError("ours down")
+        return _FakeResponse(_GNPS_LIBRARY_DICT)
+
+    with unittest.mock.patch.object(parsing.requests, "get", side_effect=fake_get):
+        spectrum, source_link, _ = parsing.parse_usi(
+            "mzspec:GNPS:GNPS-LIBRARY:accession:CCMSLIB00000001547"
+        )
+    assert any("library.gnps2.org" in u for u in calls)  # tried ours first
+    assert any("external.gnps2.org/gnpsspectrum" in u for u in calls)  # fell back
+    assert spectrum.precursor_mz == pytest.approx(123.45)
+
+
 def test_parse_massbank():
     usi = "mzspec:MASSBANK::accession:SM858102"
     spectrum, _, splash_key = parsing.parse_usi(usi)
