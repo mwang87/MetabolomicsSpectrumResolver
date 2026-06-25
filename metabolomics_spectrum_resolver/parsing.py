@@ -357,6 +357,9 @@ def _parse_gnps2(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     ms_run = match.group(2)
     if ms_run.lower().startswith("task"):
         return _parse_gnps2_task(usi)
+    elif match.group(3).lower() == "accession":
+        # A GNPS2 library accession (e.g. GNPS2LIB...).
+        return _parse_gnps2_library(usi)
     else:
         # We are likely dealing with a dataset on the GNPS2 side
         return _parse_gnps2_dataset(usi)
@@ -561,7 +564,49 @@ def _parse_tinymass(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
         raise UsiError("Unknown Tiny Mass task USI", 404)
 
-# Parse GNPS library.
+# Fetch a gnpsspectrum-shaped record from the first responding URL and build the
+# spectrum. library.gnps2.org and external.gnps2.org both serve this shape.
+# Raises UsiError(404) if none of the URLs return a usable spectrum.
+def _fetch_gnps_library_spectrum(
+    usi: str, request_urls
+) -> sus.MsmsSpectrum:
+    for request_url in request_urls:
+        try:
+            lookup_request = requests.get(request_url, timeout=timeout)
+            lookup_request.raise_for_status()
+            spectrum_dict = lookup_request.json()
+            if spectrum_dict["spectruminfo"]["peaks_json"] == "null":
+                continue
+            mz, intensity = zip(
+                *json.loads(spectrum_dict["spectruminfo"]["peaks_json"])
+            )
+            # Use the most up-to-date spectrum annotation.
+            annotations = sorted(
+                spectrum_dict["annotations"],
+                key=lambda annotation: datetime.datetime.strptime(
+                    annotation["create_time"], "%Y-%m-%d %H:%M:%S.%f"
+                ),
+                reverse=True,
+            )[0]
+            return sus.MsmsSpectrum(
+                usi,
+                float(annotations["Precursor_MZ"]),
+                int(annotations["Charge"]),
+                mz,
+                intensity,
+            )
+        except (
+            requests.exceptions.RequestException,
+            json.decoder.JSONDecodeError,
+            KeyError,
+            ValueError,
+        ):
+            continue
+    raise UsiError("Unknown GNPS library USI", 404)
+
+
+# Parse GNPS library (legacy CCMSLIB accessions). Resolve against our GNPS2
+# library server first, then fall back to external.gnps2.org.
 def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
     match = _match_usi(usi)
     index_flag = match.group(3)
@@ -570,42 +615,34 @@ def _parse_gnps_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
             "Currently supported GNPS library index flags: accession", 400
         )
     index = match.group(4)
-    try:
-        request_url = (
-            f"https://external.gnps2.org/"
-            f"gnpsspectrum?SpectrumID={index}"
-        )
-        lookup_request = requests.get(request_url, timeout=timeout)
-        lookup_request.raise_for_status()
-        spectrum_dict = lookup_request.json()
-        if spectrum_dict["spectruminfo"]["peaks_json"] == "null":
-            raise UsiError("Unknown GNPS library USI", 404)
-        mz, intensity = zip(
-            *json.loads(spectrum_dict["spectruminfo"]["peaks_json"])
-        )
-        source_link = (
-            f"https://gnps.ucsd.edu/ProteoSAFe/"
-            f"gnpslibraryspectrum.jsp?SpectrumID={index}"
-        )
+    spectrum = _fetch_gnps_library_spectrum(
+        usi,
+        [
+            f"https://library.gnps2.org/gnpsspectrum?SpectrumID={index}",
+            f"https://external.gnps2.org/gnpsspectrum?SpectrumID={index}",
+        ],
+    )
+    source_link = (
+        f"https://gnps.ucsd.edu/ProteoSAFe/"
+        f"gnpslibraryspectrum.jsp?SpectrumID={index}"
+    )
+    return spectrum, source_link
 
-        # Use the most up-to-date spectrum annotation.
-        annotations = sorted(
-            spectrum_dict["annotations"],
-            key=lambda annotation: datetime.datetime.strptime(
-                annotation["create_time"], "%Y-%m-%d %H:%M:%S.%f"
-            ),
-            reverse=True,
-        )[0]
-        spectrum = sus.MsmsSpectrum(
-            usi,
-            float(annotations["Precursor_MZ"]),
-            int(annotations["Charge"]),
-            mz,
-            intensity,
+
+# Parse GNPS2 library (our minted GNPS2LIB accessions). Resolved only against our
+# GNPS2 library server — no legacy fallback for these ids.
+def _parse_gnps2_library(usi: str) -> Tuple[sus.MsmsSpectrum, str]:
+    match = _match_usi(usi)
+    index_flag = match.group(3)
+    if index_flag.lower() != "accession":
+        raise UsiError(
+            "Currently supported GNPS2 library index flags: accession", 400
         )
-        return spectrum, source_link
-    except requests.exceptions.HTTPError:
-        raise UsiError("Unknown GNPS library USI", 404)
+    index = match.group(4)
+    spectrum = _fetch_gnps_library_spectrum(
+        usi, [f"https://library.gnps2.org/gnpsspectrum?SpectrumID={index}"]
+    )
+    return spectrum, "https://library.gnps2.org"
 
 
 # Parse MassBank entry.
