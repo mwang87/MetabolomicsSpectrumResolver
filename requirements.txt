@@ -3,6 +3,7 @@ celery_once
 dash
 dash-bootstrap-components
 flask
+Flask-Cors
 Flask-Limiter
 flex
 joblib
