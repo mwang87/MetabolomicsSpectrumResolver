@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask
+from flask_cors import CORS
 
 from metabolomics_spectrum_resolver import views
 from metabolomics_spectrum_resolver.rate_limit import limiter
@@ -25,5 +26,7 @@ class CustomFlask(Flask):
 
 app = CustomFlask(__name__)
 app.config.from_object(__name__)
+# Allow cross-origin requests from gnps2.org and any of its subdomains.
+CORS(app, origins=[r"https?://(.*\.)?gnps2\.org$"])
 limiter.init_app(app)
 app.register_blueprint(views.blueprint)
