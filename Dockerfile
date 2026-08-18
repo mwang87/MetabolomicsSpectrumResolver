@@ -21,7 +21,7 @@ RUN mamba create -y -n usi -c conda-forge -c bioconda celery==5.3.6 \
         dash=1.20.0 dash-bootstrap-components=0.9.2 flask gunicorn \
         joblib matplotlib==3.6.3 numba numpy openssl qrcode rdkit requests \
         requests-cache scipy setuptools spectrum_utils==0.3.5 werkzeug==2.0.0 \
-        flask-limiter \
+        flask-limiter flask-cors \
         python=3.11
 
 
