@@ -176,6 +176,15 @@ Custom Title
 
 ## Development
 
+### Production access-log rotation
+
+Gunicorn writes the web and API access logs to the bind-mounted `logs/` and
+`logsapi/` directories. The production Compose configuration includes a small
+`metabolomicsusi-logrotate` sidecar that checks the files every 15 minutes.
+Each access log is rotated at 100 MB, five rotated files are retained, and
+older files are compressed. Rotation uses `copytruncate`, so it requires no
+host cron configuration or access to the Docker socket.
+
 ### Unit Testing
 
 To run unit tests

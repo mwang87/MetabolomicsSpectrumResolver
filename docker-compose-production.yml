@@ -61,6 +61,21 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  metabolomicsusi-logrotate:
+    build:
+      context: .
+      dockerfile: Dockerfile.logrotate
+    container_name: metabolomicsusi-logrotate
+    volumes:
+      - ./logs:/var/log/metabolomicsusi/web:rw
+      - ./logsapi:/var/log/metabolomicsusi/api:rw
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 networks:
   nginx-net:
     name: nginx-net

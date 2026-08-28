@@ -1,0 +1,12 @@
+FROM alpine:3.20
+
+RUN apk add --no-cache logrotate
+
+COPY deploy/logrotate.conf /etc/logrotate.conf
+COPY deploy/run_logrotate.sh /usr/local/bin/run_logrotate.sh
+
+RUN chmod 0644 /etc/logrotate.conf \
+    && chmod 0755 /usr/local/bin/run_logrotate.sh \
+    && mkdir -p /var/lib/logrotate
+
+CMD ["/usr/local/bin/run_logrotate.sh"]
