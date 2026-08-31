@@ -7,7 +7,6 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
-import requests
 from dash.dependencies import Input, Output, State
 from dash_table import DataTable, FormatTemplate
 from dash_table.Format import Format, Scheme
@@ -776,9 +775,6 @@ def _process_usi(
     _, source_link, splash_key = tasks.parse_usi(usi)
 
     usi_url = f"/svg/?{urlencode(drawing_controls, quote_via=quote)}"
-    # Pre-fetch the spectrum plot to warm the cache.
-    requests.get(f"http://localhost:5000{usi_url}")
-
     image_obj = html.Img(src=usi_url)
 
     json_button = html.A(
@@ -878,9 +874,6 @@ def _process_mirror_usi(
     _, source_link2, splash_key2 = tasks.parse_usi(usi2)
 
     mirror_url = f"/svg/mirror/?{urlencode(drawing_controls, quote_via=quote)}"
-    # Pre-fetch the mirror plot to warm the cache.
-    requests.get(f"http://localhost:5000{mirror_url}")
-
     image_obj = html.Img(src=mirror_url)
 
     json_button = html.A(
